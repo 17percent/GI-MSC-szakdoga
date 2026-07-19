@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tudásbázis — PROTOTÍPUS</title>
+
+  <!-- Téma-bootstrap a CSS betöltése ELŐTT, hogy ne villanjon (FOUC) -->
+  <script>
+    document.documentElement.dataset.theme =
+      localStorage.getItem('tb-theme') ||
+      (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- PROTOTÍPUS: eldobható kód. Egyetlen leegyszerűsített HTML+JS+CSS mock a
+       tudasbazis-architektura-dontesi-naplo.md specifikáció alapján.
+       Minden adat memóriában él (dummy), újratöltéskor visszaáll a seed.
+       Design system: design.md (Hallmark · Cobalt, light + dark). -->
+
+  <div id="app"></div>
+  <div id="modal-root"></div>
+  <div id="toast-root"></div>
+
+  <div class="proto-badge" title="Ez egy eldobható prototípus — nem éles kód">Prototípus · adatok memóriában</div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

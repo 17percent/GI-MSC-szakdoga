@@ -1,0 +1,158 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench (app shell, preserved) · theme: Cobalt (light + dark)
+ * design-system: design.md · designed-as-app · nav/footer: app-scope, skipped
+ * Hallmark · pre-emit critique: P4 H5 E4 S4 R5 V4
+ *
+ * Megjegyzés az elevációhoz: --color-paper a KÁRTYA-felület, --color-paper-2 az OLDAL-háttér.
+ * Sötét módban az eleváció fordított logikájú: a magasabb felület világosabb.
+ */
+
+:root,
+[data-theme="light"] {
+  /* — Cobalt · light — */
+  --color-paper:        oklch(98% 0.005 250);   /* kártya / felület */
+  --color-paper-2:      oklch(95.2% 0.008 250); /* oldal-háttér */
+  --color-paper-3:      oklch(91.5% 0.012 250); /* hover / süllyesztett */
+  --color-rule:         oklch(88% 0.012 250);
+  --color-rule-strong:  oklch(79% 0.015 252);
+  --color-ink:          oklch(20% 0.028 262);
+  --color-ink-2:        oklch(44% 0.022 258);
+  --color-muted:        oklch(57% 0.02 256);
+
+  --color-accent:        oklch(49% 0.21 262);   /* elektromos kobalt */
+  --color-accent-strong: oklch(42% 0.20 262);
+  --color-accent-soft:   oklch(93.5% 0.035 262);
+  --color-accent-ink:    oklch(98% 0.005 250);  /* szöveg akcent-kitöltésen */
+  --color-focus:         oklch(56% 0.19 262);
+
+  --color-danger:       oklch(50% 0.19 25);
+  --color-danger-soft:  oklch(94% 0.03 25);
+  --color-ok:           oklch(50% 0.13 155);
+  --color-warn:         oklch(57% 0.13 75);
+  --color-warn-ink:     oklch(40% 0.10 70);
+  --color-warn-soft:    oklch(95% 0.045 90);
+
+  --color-inverse:      oklch(23% 0.03 262);    /* toast */
+  --color-inverse-ink:  oklch(96% 0.006 250);
+  --color-code-bg:      oklch(22% 0.03 262);    /* kódblokk */
+  --color-code-ink:     oklch(90% 0.012 255);
+
+  /* státusz-címkék */
+  --st-draft-bg:  oklch(91.5% 0.012 250); --st-draft-fg:  oklch(44% 0.022 258);
+  --st-review-bg: oklch(94% 0.06 90);     --st-review-fg: oklch(45% 0.11 78);
+  --st-tested-bg: oklch(93.5% 0.035 262); --st-tested-fg: oklch(42% 0.20 262);
+  --st-pub-bg:    oklch(93% 0.05 155);    --st-pub-fg:    oklch(38% 0.12 155);
+  --tpl-bg:       oklch(93% 0.04 300);    --tpl-fg:       oklch(45% 0.16 300);
+
+  /* diff, kiemelés, csillag */
+  --diff-add-bg: oklch(93.5% 0.06 150);
+  --diff-del-bg: oklch(94% 0.05 25);
+  --hl-bg:       oklch(90% 0.10 95);
+  --star-off:    oklch(79% 0.015 252);
+  --star-on:     oklch(70% 0.15 80);
+
+  --shadow-1: 0 1px 2px oklch(20% 0.03 262 / .06), 0 1px 3px oklch(20% 0.03 262 / .05);
+  --shadow-2: 0 8px 30px oklch(20% 0.03 262 / .14);
+  --shadow-lift: 0 4px 14px oklch(20% 0.03 262 / .10);
+  --backdrop: oklch(18% 0.03 262 / .5);
+}
+
+[data-theme="dark"] {
+  /* — Cobalt · dark: azonos horgony-hue, csak L és C mozdul — */
+  --color-paper:        oklch(21% 0.016 256);
+  --color-paper-2:      oklch(15.5% 0.013 256);
+  --color-paper-3:      oklch(26.5% 0.018 256);
+  --color-rule:         oklch(31% 0.016 256);
+  --color-rule-strong:  oklch(41% 0.018 256);
+  --color-ink:          oklch(93% 0.008 255);
+  --color-ink-2:        oklch(73% 0.014 255);
+  --color-muted:        oklch(59% 0.016 255);
+
+  --color-accent:        oklch(67% 0.17 262);
+  --color-accent-strong: oklch(74% 0.15 262);
+  --color-accent-soft:   oklch(28% 0.07 262);
+  --color-accent-ink:    oklch(15% 0.03 262);
+  --color-focus:         oklch(72% 0.16 262);
+
+  --color-danger:       oklch(68% 0.17 25);
+  --color-danger-soft:  oklch(26% 0.06 25);
+  --color-ok:           oklch(72% 0.13 155);
+  --color-warn:         oklch(76% 0.13 85);
+  --color-warn-ink:     oklch(86% 0.09 88);
+  --color-warn-soft:    oklch(27% 0.05 85);
+
+  --color-inverse:      oklch(32% 0.02 260);
+  --color-inverse-ink:  oklch(94% 0.008 255);
+  --color-code-bg:      oklch(13% 0.016 258);
+  --color-code-ink:     oklch(88% 0.012 255);
+
+  --st-draft-bg:  oklch(28% 0.014 256);  --st-draft-fg:  oklch(76% 0.014 255);
+  --st-review-bg: oklch(30% 0.06 85);    --st-review-fg: oklch(84% 0.10 90);
+  --st-tested-bg: oklch(28% 0.08 262);   --st-tested-fg: oklch(80% 0.11 262);
+  --st-pub-bg:    oklch(28% 0.06 155);   --st-pub-fg:    oklch(81% 0.11 155);
+  --tpl-bg:       oklch(29% 0.06 300);   --tpl-fg:       oklch(80% 0.11 300);
+
+  --diff-add-bg: oklch(27% 0.055 150);
+  --diff-del-bg: oklch(27% 0.05 25);
+  --hl-bg:       oklch(36% 0.09 95);
+  --star-off:    oklch(41% 0.018 256);
+  --star-on:     oklch(78% 0.14 82);
+
+  --shadow-1: 0 1px 2px oklch(5% 0.01 260 / .4), 0 1px 3px oklch(5% 0.01 260 / .3);
+  --shadow-2: 0 8px 30px oklch(5% 0.01 260 / .55);
+  --shadow-lift: 0 4px 14px oklch(5% 0.01 260 / .45);
+  --backdrop: oklch(8% 0.015 260 / .62);
+}
+
+:root {
+  /* tipográfia — 2+1 párosítás */
+  --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body:    "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", Consolas, monospace;
+
+  /* 4 pontos térköz-skála */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs:  0.75rem;
+  --space-sm:  1rem;
+  --space-md:  1.5rem;
+  --space-lg:  2rem;
+  --space-xl:  3rem;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.85rem;
+  --text-md: 0.95rem;
+  --text-lg: 1.15rem;
+  --text-xl: 1.45rem;
+
+  --radius-input: 6px;
+  --radius-card:  10px;
+  --radius-pill:  999px;
+
+  /* motion — belépő: ease-out · kilépő: ease-in · állapotváltás: ease-in-out */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:     cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-short: 160ms;  /* hover, fókusz, kis fade-ek */
+  --dur-med:   260ms;  /* modal, nézet-belépés, tab-tartalom */
+  --dur-toast: 400ms;  /* toast beúszás (kilépés: ~60%-a) */
+}
+
+/* ——— Örökölt alias-réteg ———
+   Az app.js inline stílusai és a korábbi osztályok ezekre a nevekre hivatkoznak.
+   Minden alias nevesített tokenre mutat — nyers színérték itt sincs. */
+:root, [data-theme] {
+  --bg:          var(--color-paper-2);
+  --surface:     var(--color-paper);
+  --border:      var(--color-rule);
+  --text:        var(--color-ink);
+  --text-2:      var(--color-ink-2);
+  --text-3:      var(--color-muted);
+  --accent:      var(--color-accent);
+  --accent-soft: var(--color-accent-soft);
+  --danger:      var(--color-danger);
+  --danger-soft: var(--color-danger-soft);
+  --ok:          var(--color-ok);
+  --warn:        var(--color-warn);
+  --radius:      var(--radius-input);
+  --shadow:      var(--shadow-1);
+}
