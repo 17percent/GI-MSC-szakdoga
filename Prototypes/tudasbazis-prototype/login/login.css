@@ -1,0 +1,180 @@
+/* login.css — a Táltos bejelentkező stílusai.
+ *
+ * A tokenek MOST GLOBÁLISAK (`tokens.css`, :root + [data-theme="dark"]), mert a
+ * prototípus teljes egészében a Táltos rendszerre állt át — a korábbi, `.login`-ra
+ * skálázott token-sziget megszűnt. Itt csak komponens-stílus van, kizárólag
+ * szemantikus tokenekkel; a gomb/alert alaprecept a `styles.css`-ből jön.
+ */
+
+/* ============ elrendezés & rétegek ============ */
+.login {
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-8);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  overflow: hidden;
+}
+.login__field {                          /* Canvas — legalsó réteg */
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  z-index: var(--z-base);
+}
+.login__card {
+  position: relative;
+  z-index: var(--z-raised);
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-10) var(--space-8);
+  text-align: center;
+  transform: translate3d(var(--px, 0), var(--py, 0), 0);
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+/* A bejelentkező a belépés után fix rétegként úszik el az alkalmazás fölött,
+   miközben az app alatta beúszik (crossfade — nincs vágás). */
+.login--handoff {
+  position: fixed; inset: 0;
+  z-index: var(--z-overlay);
+  pointer-events: none;
+}
+
+/* ============ jel + szövegek ============ */
+.login__theme {
+  position: absolute;
+  top: var(--space-3); right: var(--space-3);
+  display: inline-flex; align-items: center; justify-content: center;
+  width: var(--space-8); height: var(--space-8);
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: var(--text-base);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+.login__theme:hover { background: var(--surface-sunken); color: var(--text); }
+
+.login__mark {
+  display: inline-flex;
+  color: var(--primary);
+  margin-bottom: var(--space-4);
+}
+.login__mark svg { width: var(--space-12); height: auto; }
+.login__mark .mark__nodes circle { fill: var(--accent); }
+
+/* SHARED ELEMENT: a jel klónja, ami a bejelentkezőből az app fejlécébe úszik át.
+   Fix pozíciós, a méretét/helyét JS állítja; a rétegsorrendben a handoff-overlay
+   fölött van, hogy a repülés közben mindig látszódjon. */
+.login__mark--flying {
+  position: fixed;
+  z-index: var(--z-modal);
+  margin: 0;
+  pointer-events: none;
+  color: var(--primary);
+  will-change: transform;
+}
+.login__mark--flying svg { width: 100%; height: 100%; display: block; }
+
+.login__eyebrow {
+  font: var(--weight-semibold) var(--text-xs)/1 var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-subtle);
+  margin: 0;
+}
+.login__title {
+  font: var(--weight-semibold) var(--text-4xl)/var(--leading-tight) var(--font-display);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text);
+  margin: var(--space-3) 0 var(--space-2);
+}
+.login__lead {
+  color: var(--text-muted);
+  margin: 0 0 var(--space-8);
+  line-height: var(--leading-normal);
+}
+
+/* ============ akciók (provider gombok) ============ */
+.login__actions { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.login__provider {
+  width: 100%;
+  height: var(--space-12);               /* 48px — nagy célfelület a színes logóknak */
+  justify-content: flex-start;
+  gap: var(--space-3);
+}
+.login__provider:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.login__provider .login__logo { transition: transform var(--duration-fast) var(--ease-standard); }
+.login__provider:hover:not(:disabled) .login__logo { transform: scale(1.04); }
+.login__provider:disabled { cursor: not-allowed; }
+
+.login__logo {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: var(--space-5); height: var(--space-5);
+  flex: none;
+  color: var(--primary);                 /* a töltő-ív színe connectingben */
+}
+.login__provider-label { display: inline-block; }
+
+/* determinált töltő-ív */
+.login__spin-track { opacity: .25; }
+.login__spin-arc { stroke-dasharray: 56.55; }  /* 2πr, r=9 */
+
+/* ============ státusz / alert ============ */
+.login__status {
+  min-height: var(--space-6);            /* HELY FENNTARTVA — nincs snap */
+  margin-top: var(--space-5);
+  text-align: left;
+}
+.login__alert {
+  display: flex; gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--danger-bg);
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+  color: var(--text);
+}
+.login__alert-icon { color: var(--danger); flex: none; margin-top: 1px; }
+.login__alert-body { display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--text-sm); }
+.login__retry {
+  align-self: flex-start;
+  height: var(--space-8); padding: 0 var(--space-3);
+  background: var(--danger); color: var(--bark-0);
+  border: none; border-radius: var(--radius-md);
+  font: var(--weight-semibold) var(--text-sm)/1 var(--font-body);
+  cursor: pointer;
+}
+.login__retry:hover { filter: brightness(1.06); }
+
+/* ============ fókusz (a11y floor) ============ */
+.login .btn:focus-visible,
+.login__theme:focus-visible,
+.login__retry:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ============ reszponzív ============ */
+@media (max-width: 480px) {
+  .login { padding: var(--space-4); }
+  .login__card { padding: var(--space-8) var(--space-5); }
+  .login__title { font-size: var(--text-3xl); }
+}
+
+/* ============ mozgáscsökkentés ============ */
+@media (prefers-reduced-motion: reduce) {
+  .login__card,
+  .login .btn,
+  .login__provider .login__logo,
+  .login__theme { transition: none; }
+  .login__provider:hover:not(:disabled) { transform: none; }
+}

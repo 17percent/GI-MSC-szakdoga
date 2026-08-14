@@ -1,0 +1,361 @@
+/* home.css — az „Élő Atlasz" kezdőoldal stílusai.
+ *
+ * Csak szemantikus tokenek (tokens.css); a gomb/input/badge alaprecept a
+ * styles.css-ből jön. Nincs komponens-szintű sötét override — a téma a
+ * szemantikus rétegből jár.
+ *
+ * „Nincs snap": a panelek és a státuszsáv fix helyet kapnak; állapotváltáskor
+ * opacity/transform/kamera animál, sosem display-ugrás vagy layout-reflow.
+ */
+
+/* Az atlasz teljes szélességben ül a tartalmi területen (nincs kártya-margó) */
+.main--atlas { padding: 0; max-width: none; }
+
+.atlas {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  font-family: var(--font-body);
+}
+
+/* ============ felső sáv: keresés + facetek ============ */
+.atlas__bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.atlas__search { position: relative; flex: 1 1 240px; max-width: 560px; }
+.atlas__search-icon {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  color: var(--text-subtle);
+  pointer-events: none;
+}
+.atlas__input { width: 100%; padding-left: var(--space-10); }
+
+.atlas__facets { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.atlas__select { height: var(--space-8); font-size: var(--text-xs); }
+
+/* aktív facet: nem csak szín — kitöltés + hangsúlyos súly + belső gyűrű */
+.atlas__facets [aria-pressed="true"] {
+  background: var(--primary-soft);
+  color: var(--primary-soft-text);
+  border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+  font-weight: var(--weight-semibold);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+.atlas__new { margin-left: auto; white-space: nowrap; }
+
+/* ============ színpad: térkép + lista ============ */
+.atlas__stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+}
+
+.atlas__map { position: relative; min-width: 0; overflow: hidden; }
+.atlas__field,
+.atlas__graph { position: absolute; inset: 0; width: 100%; height: 100%; }
+.atlas__field { z-index: var(--z-base); }                        /* ambient mező */
+.atlas__graph { z-index: var(--z-raised); cursor: grab; }        /* kurált térkép */
+.atlas__graph:active { cursor: grabbing; }
+
+.atlas__hud {
+  position: absolute;
+  left: var(--space-4);
+  bottom: var(--space-4);
+  z-index: var(--z-raised);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.atlas__zoomout {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  /* a hely FENNTARTVA: áttekintésben csak elhalványul, nem tűnik el a flow-ból */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+.atlas[data-view="focused"] .atlas__zoomout { opacity: 1; pointer-events: auto; }
+
+/* ============ kategória-szűrő: multiszelekt dropdown ============ */
+/* A kategória a modellben már csak facet (nincs fizikai helye a térképen) —
+   ez a vezérlő ezt tükrözi: több egyszerre kiválasztható, checkbox-listával,
+   a kiválasztottak a vezérlőn belül tag-ként törölhetők. */
+.catfilter { position: relative; }
+
+.catfilter__control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 160px;
+  max-width: 320px;
+  min-height: var(--space-8);
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: border-color var(--duration-base) var(--ease-standard),
+              box-shadow var(--duration-base) var(--ease-standard);
+}
+.catfilter__control:hover { border-color: var(--text-subtle); }
+.catfilter__control:focus-visible {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: var(--focus-ring);
+}
+.catfilter__control[aria-expanded="true"] .catfilter__caret { transform: rotate(180deg); }
+
+.catfilter__tags {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.catfilter__placeholder { color: var(--text-subtle); }
+
+.catfilter__tag { padding-right: var(--space-1); }
+.catfilter__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-4);
+  height: var(--space-4);
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+.catfilter__remove:hover { background: var(--surface); color: var(--danger); }
+.catfilter__remove:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.catfilter__caret {
+  flex: none;
+  color: var(--text-subtle);
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+/* position:fixed + JS-igazítás (atlasView.js `positionCategoryPanel`) — nem
+   `absolute`, mert a facet-sáv 640px alatt horizontális scroll-konténer
+   (`overflow-x:auto`), ami levágná az abszolút pozicionált panelt. */
+.catfilter__panel {
+  position: fixed;
+  z-index: var(--z-overlay);
+  min-width: 220px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+.catfilter__option {
+  display: flex;
+  padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+.catfilter__option:hover { background: var(--surface-sunken); }
+.catfilter__empty { margin: 0; padding: var(--space-2); color: var(--text-subtle); font-size: var(--text-sm); }
+
+/* ============ kategória-színjelek (a térkép jelmagyarázata) ============ */
+/* A legördülő és a tag-ek színpontja UGYANAZT a paletta-slotot mutatja, amit a
+   térkép csomópontja — így a térkép színei dekódolhatók. A név mindig ott van
+   mellette: a szín soha nem egyedüli jelentéshordozó. */
+.catfilter__swatch {
+  flex: none;
+  width: var(--space-3);
+  height: var(--space-3);
+  border-radius: var(--radius-full);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 18%, transparent);
+}
+.catfilter__tag .catfilter__swatch { width: var(--space-2); height: var(--space-2); }
+
+/* a listasor kategória-címkéjén kis színpont, ugyanabból a palettából */
+.badge.cat[data-slot]::before {
+  content: '';
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: var(--radius-full);
+  flex: none;
+}
+
+.catfilter__swatch[data-slot="1"], .badge.cat[data-slot="1"]::before { background: var(--catcolor-1); }
+.catfilter__swatch[data-slot="2"], .badge.cat[data-slot="2"]::before { background: var(--catcolor-2); }
+.catfilter__swatch[data-slot="3"], .badge.cat[data-slot="3"]::before { background: var(--catcolor-3); }
+.catfilter__swatch[data-slot="4"], .badge.cat[data-slot="4"]::before { background: var(--catcolor-4); }
+.catfilter__swatch[data-slot="5"], .badge.cat[data-slot="5"]::before { background: var(--catcolor-5); }
+.catfilter__swatch[data-slot="6"], .badge.cat[data-slot="6"]::before { background: var(--catcolor-6); }
+.catfilter__swatch[data-slot="7"], .badge.cat[data-slot="7"]::before { background: var(--catcolor-7); }
+.catfilter__swatch[data-slot="8"], .badge.cat[data-slot="8"]::before { background: var(--catcolor-8); }
+
+/* ============ találati lista (a11y-elsődleges) ============ */
+.atlas__results {
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+.atlas__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  margin: 0;
+  padding: var(--space-2);
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.atlas__list:focus-visible { outline: none; box-shadow: inset var(--focus-ring); }
+.atlas__spacer { flex: none; }
+
+.atlas__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard),
+              box-shadow var(--duration-fast) var(--ease-standard);
+}
+.atlas__row:hover,
+.atlas__row[data-hover="true"] { background: var(--surface-sunken); }
+/* kiválasztás: kitöltés + bal oldali jelzősáv (nem csak szín) */
+.atlas__row[aria-selected="true"] {
+  background: var(--primary-soft);
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+.atlas__list:focus-visible .atlas__row[data-active="true"] { box-shadow: var(--focus-ring); }
+.atlas__row[aria-selected="true"][data-active="true"] {
+  box-shadow: inset 3px 0 0 var(--primary), var(--focus-ring);
+}
+
+.atlas__row-main { min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.atlas__row-title {
+  font: var(--weight-semibold) var(--text-sm)/var(--leading-snug) var(--font-body);
+  color: var(--text);
+  display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+}
+.atlas__row-snippet { font-size: var(--text-xs); color: var(--text-muted); line-height: var(--leading-normal); }
+.atlas__row-snippet mark {
+  background: var(--hl-bg); color: var(--text);
+  padding: 0 var(--space-1); border-radius: var(--radius-sm);
+}
+.atlas__row-meta {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--space-1) var(--space-3);
+  font-size: var(--text-xs); color: var(--text-subtle);
+}
+
+.atlas__fav { flex: none; }
+.atlas__open {
+  flex: none;
+  width: var(--space-8); height: var(--space-8);
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--text-subtle);
+  font-size: var(--text-base);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard),
+              transform var(--duration-fast) var(--ease-standard);
+}
+.atlas__row:hover .atlas__open { background: var(--surface); color: var(--text); }
+.atlas__open:hover { transform: translateX(2px); color: var(--primary); }
+
+/* ============ üres / hiba állapot + élő régió ============ */
+.atlas__empty { padding: var(--space-4); }
+.atlas__status {
+  flex: none;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border);
+  color: var(--text-subtle);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  min-height: var(--space-10);          /* HELY FENNTARTVA */
+}
+
+.atlas__alert {
+  display: flex; gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--danger-bg);
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+.atlas__alert-icon { color: var(--danger); flex: none; display: inline-flex; }
+.atlas__alert-body { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; }
+
+/* ============ „Csak lista" mód + hibafallback ============ */
+.atlas[data-listonly="true"] .atlas__map { display: none; }
+.atlas[data-listonly="true"] .atlas__stage { grid-template-columns: 1fr; }
+.atlas[data-listonly="true"] .atlas__results { border-left: 0; }
+
+/* ============ reszponzív ============ */
+@media (max-width: 900px) {
+  /* A LISTA az elsődleges: a térkép fölé kerül, kisebb sávban. A magasság a
+     SZÍNPAD arányában megy (nem vh-ban), különben a fejléc+sáv elfogyasztja a
+     helyet, és a térkép nyomná el a listát. */
+  .atlas__stage {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 35%) minmax(0, 1fr);
+  }
+  .atlas__results { border-left: 0; border-top: 1px solid var(--border); }
+}
+@media (max-width: 640px) {
+  .atlas__bar { padding: var(--space-3) var(--space-4); }
+  .atlas__stage { grid-template-rows: minmax(0, 28%) minmax(0, 1fr); }
+  .atlas__new { margin-left: 0; }
+  .atlas__facets { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: var(--space-1); }
+}
+@media (max-width: 400px) {
+  .atlas__row { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .atlas__open { display: none; }        /* dupla katt / Enter nyit; a sor kattintható */
+}
+
+/* ============ mozgáscsökkentés ============ */
+@media (prefers-reduced-motion: reduce) {
+  .atlas__row,
+  .atlas__open,
+  .atlas__zoomout,
+  .catfilter__control,
+  .catfilter__caret,
+  .catfilter__remove,
+  .catfilter__option { transition: none; }
+}

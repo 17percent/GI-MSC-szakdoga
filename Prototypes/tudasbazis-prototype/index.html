@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tudásbázis — PROTOTÍPUS</title>
+  <title>Táltos — Tudástár · PROTOTÍPUS</title>
 
   <!-- Téma-bootstrap a CSS betöltése ELŐTT, hogy ne villanjon (FOUC) -->
   <script>
@@ -14,15 +14,19 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <!-- Táltos betűkészlet: Fraunces (display) · Inter (törzs/UI) · JetBrains Mono (adat) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="login/login.css">
+  <link rel="stylesheet" href="home/home.css">
 </head>
 <body>
   <!-- PROTOTÍPUS: eldobható kód. Egyetlen leegyszerűsített HTML+JS+CSS mock a
        tudasbazis-architektura-dontesi-naplo.md specifikáció alapján.
        Minden adat memóriában él (dummy), újratöltéskor visszaáll a seed.
-       Design system: design.md (Hallmark · Cobalt, light + dark). -->
+       Design system: Táltos (taltos-design-system.md) — a korábbi Cobalt eldobva. -->
 
   <div id="app"></div>
   <div id="modal-root"></div>
@@ -31,6 +35,21 @@
   <div class="proto-badge" title="Ez egy eldobható prototípus — nem éles kód">Prototípus · adatok memóriában</div>
 
   <script src="data.js"></script>
+
+  <!-- Bejelentkező modulok -->
+  <script src="login/login.config.js"></script>
+  <script src="login/authMachine.js"></script>
+  <script src="login/constellation.js"></script>
+  <script src="login/loginView.js"></script>
+
+  <!-- Kezdőoldal („Élő Atlasz") modulok — függőségi sorrendben -->
+  <script src="home/graphModel.js"></script>
+  <script src="home/atlasRenderer.js"></script>
+  <script src="home/selectionStore.js"></script>
+  <script src="home/atlasMachine.js"></script>
+  <script src="home/resultsList.js"></script>
+  <script src="home/atlasView.js"></script>
+
   <script src="app.js"></script>
 </body>
 </html>

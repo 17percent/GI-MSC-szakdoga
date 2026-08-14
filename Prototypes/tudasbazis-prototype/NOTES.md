@@ -75,6 +75,155 @@ Minden user-interakció fade/slide visszajelzést kapott; a specifikáció a
 - `prefers-reduced-motion` alatt minden ≤1ms-ra esik vissza; a fókuszgyűrű megjelenése
   soha nem animált.
 
+## Visszajelzések alapján beépítve (4. kör — Táltos design system + Élő Atlasz)
+
+> **A Cobalt/Hallmark rendszer eldobva.** A prototípus teljes egészében a **Táltos
+> Design Systemre** állt át (`taltos-design-system.md` · `taltos-design-tokens.json`
+> · `taltos-design-system.html`). A [`design.md`](design.md) ezzel **elavult** —
+> csak történeti dokumentáció, kódot ne emitálj belőle.
+
+**Design system csere.** A [`tokens.css`](tokens.css) most a Táltos token-készlet
+(`:root` + `[data-theme="dark"]` remap), plusz egy **app-szemantikus réteg** azokra a
+jelentésekre, amiket a rendszer nem nevez meg (státusz-címkék, diff, keresés-kiemelés,
+avatár-paletta, kód-felület) — mind a rendszer szemantikus tokenjeire épül, nyers érték
+nélkül. A [`styles.css`](styles.css) teljesen újraírva a Táltos komponens-receptekkel.
+Fontok: **Fraunces** (display, csak címben) · **Inter** (törzs/UI) · **JetBrains Mono**
+(adat). Az `app.js`-ből minden inline nyers érték kikerült (az avatárszín is: `data.js`
+már palettaindexet tárol, nem hexet).
+
+**Bejelentkezés** (`login/`) — reaktív, élő tudásgráf-háttérrel; részletek a
+`taltos-login-handoff.md`-ben. Modulok: `constellation.js` (Canvas ambient mező),
+`authMachine.js` (FSM), `loginView.js` (koreográfia), `login.config.js` (OAuth
+placeholderek). Két belépési mód: Google + Microsoft; valódi backend nélkül a redirect
+helyén mock belépés fut (a valódi `loginRedirect()` helye a kódban megjelölve).
+
+**Kezdőoldal: „Élő Atlasz"** (`home/`) — a szűrős lista helyén kurált **tudás-térkép +
+gyors találati lista**, egyetlen közös kiválasztással. Modulok: `graphModel.js`
+(Tier 0: származtatott gráf címke/szerző együttes-előfordulásból, determinisztikus
+elrendezés), `atlasRenderer.js` (Canvas térkép, semantic zoom L0/L1/L2 crossfade-del,
+kamera-tween, rács hit-test, culling), `selectionStore.js` (egyetlen igazságforrás),
+`atlasMachine.js` (FSM: overview/focused/searching/empty/error), `resultsList.js`
+(`role="listbox"`, FLIP-átrendezés, billentyűzet-navigáció), `atlasView.js` (koreográfia).
+
+- **Soha nincs teljes gráf a képernyőn:** kurálás (≤150 csomópont) + LOD + culling.
+- **Térkép ↔ lista szinkron:** hover és kiválasztás kétirányú, egy store-ból.
+- **A lista az a11y-elsődleges nézet:** nyilak lépnek, Enter kiválaszt (kamera ráközelít),
+  még egy Enter megnyit; „Csak lista" mód elrejti a térképet. 900px alatt a lista a fő nézet.
+- **Térkép-kattintás:** üres terület = kizoomolás · domén-csomópont = szűrés arra a
+  kategóriára · dokumentum = kiválasztás.
+- A keresés címben **és tartalomban** talál (MVP-4), snippet-kiemeléssel.
+- A régi szűrők **facetekké** lettek (Ma / Enyém / Csapat / Kedvenc / Sablon + státusz +
+  kategória), és egyszerre szűrik a listát és a térképet.
+
+**Folyékony átmenet login → kezdőoldal.** Két trükk viszi át a szemet vágás nélkül:
+1. **Részecskemező-folytonosság:** a bejelentkező `constellation`-je átadja a pontok
+   normalizált pillanatképét (`getSnapshot()`), a kezdőoldal ambient mezője ezzel indul
+   (`applySnapshot()`) — a csillagkép **folytatódik**, nem keveredik újra.
+2. **Shared element:** a világfa-jel ugyanaz a glyph a loginon és a fejlécben; a belépéskor
+   egy fix pozíciós klón **átrepül** a kártyából a sidebar márkajelébe, miközben a login
+   overlay elhalványul és az app alatta beúszik (crossfade, `app.js` `runHandoff()`).
+
+Az app-váz **egyszer épül fel és megmarad** (`ensureShell`), így a kedvencezés, userváltás
+és témaváltás nem indítja újra a térkép élő animációját.
+
+**Ismert kompromisszumok:**
+- A soron belüli ikongombok (kedvenc, megnyitás) `tabindex="-1"`-esek, mert egy
+  `role="option"` nem tartalmazhat fókuszálható vezérlőt; a kedvenc billentyűzetről a
+  dokumentumnézetben állítható. A kedvenc-állapotot glyph (★/☆) + `aria-pressed` is jelzi,
+  nem csak szín.
+- Lista-virtualizáció 200 tétel felett kapcsol be (a prototípus korpusza ennél kisebb);
+  ilyenkor a FLIP-átrendezés kikapcsol.
+- `--accent` világos témán `--bg`-n 2.79:1 — dekoratív canvas-elemekhez rendben, de
+  **jelentéshordozó** grafikai elemre (pl. a Tier 1-ben megjelenő „személy" csomópont)
+  erősebb tokent kell választani.
+
+## Visszajelzések alapján beépítve (5. kör — a kategória facet, nem hely)
+
+**A kiinduló kérdés:** hova kerül egy dokumentum, amely több kategória alá tartozik?
+A válasz feltárta, miért volt követhetetlen a gráf: a dokumentum **csak az első**
+kategóriája körében élt (`primary: myCats[0]`), így egy témakörre szűrve/kattintva
+sosem látszott az összes hozzá tartozó dokumentum. Döntés: a **kategória kikerül a
+térkép szerkezetéből**, és tisztán szűrővé válik.
+
+- **`graphModel.js`** — nincs domén-csomópont, klaszter, `clusterId`, gyűrűs elrendezés
+  és `primary`. Egyetlen csomóponttípus van: a dokumentum. A helyet a **kapcsolat**
+  adja: determinisztikus erő-szimuláció (páronkénti taszítás + rugók a közös
+  kategória/szerző éleken + enyhe középre-húzás, hash-alapú kezdőpozíció, fix
+  iterációszám), majd a korábbi kemény ütközésfeloldás — a csomópontok továbbra sem
+  fedhetik egymást. A getterek `{nodes, edges}`-t adnak. Az `applyFacets` mostantól
+  `categories: [név…]` tömböt vár, **VAGY**-kapcsolattal.
+- **`atlasRenderer.js`** — a LOD-szintek (0/1/2) is megszűntek (`setLOD`, `onLOD`,
+  „Domének" chip): nincs többé mit elkülöníteni. A részletesség **folytonosan**
+  skálázódik a zoomból, nem ugrik szinteken. Az `onViewport` csomópont-id-ket jelent,
+  és a zoom↔lista szűrés pontos csomópont-egyezésre megy, nem kategórián keresztül.
+- **`atlasView.js`** — a natív `<select>` helyén **multiszelekt dropdown**: a vezérlőn
+  belül a kiválasztott kategóriák tag-ként, „×" gombbal törölhetők; a legördülő
+  panelben checkbox-listával több is kiválasztható. A kiválasztás sorrendje a
+  `data.categories` sorrendjére kanonizálódik, így a store tömbje stabilan
+  összehasonlítható. A panel `position: fixed`, JS-ből igazítva — **nem** `absolute`,
+  mert a facet-sáv 640px alatt `overflow-x: auto`, ami levágná.
+- Kitakarítva: a pre-Atlasz időkből maradt, már senki által nem hívott
+  `filteredDocs()` és `state.filters`.
+
+**Ellenőrzés:** a Browser panel akciótooljai kiestek (biztonsági osztályozó), ezért a
+valódi modulfájlokat **jsdom**-ban futtatva teszteltük (30 + 18 állítás), majd a
+böngészőben újra. Igazolva: egy kétkategóriás dokumentum **mindkét** kategória
+szűrőjében megjelenik, pontosan **egyszer**, és fókuszban a szomszédsága mindkét
+kategória dokumentumait eléri; a kiválasztás halványít (nem töröl); a jelentés→
+újraszámolás→újrarajzolás lánc **stabilizálódik** (nincs végtelen ciklus).
+
+> ⚠️ **Modulszerkesztés után kényszerített újratöltés kell** (Ctrl+Shift+R). A beépített
+> böngésző agresszíven cache-eli a JS-t, és sima újratöltésnél **vegyes verziójú** oldal
+> jön létre (új `atlasView.js` + régi `selectionStore.js`), ami valódi hibának látszik.
+
+## Visszajelzések alapján beépítve (6. kör — méret, kategória-színek, zoom-toggle)
+
+**1. Kattintható csomópont-méret.** Mérés szerint a legkisebb csomópont sugara
+**2,5 px** volt áttekintésben (a modell 4–11 px-es skáláját a renderer 0,62-tel
+szorozta), miközben a legközelebbi szomszédok között **114 px** szabad hely volt —
+bőven volt hova növekedni. Két ponton javítva:
+- a modell sugárskálája **8–18 px** (`NODE_R_MIN`/`NODE_R_MAX`), és áttekintésben a
+  renderer már 1,0-val skáláz (nem 0,62-tel) → a `r` egy-az-egyben px;
+- `MIN_NODE_R = 7` px **padló** a rajzolt sugárra, hogy kis panelen vagy alacsony
+  súlynál se essen pont-méretűre. A hit-test +6 px ráhagyásával a legkisebb
+  célfelület **26 px átmérőjű** (WCAG 2.5.8 minimum 24 px).
+  Mérve: sugarak 7–11 px, a legkisebb átfedés-tartalék 106 px → nincs ütközés.
+
+**2. Kategória-színek.** Új app-szemantikus paletta a `tokens.css`-ben
+(`--catcolor-1..8`), témánként külön (világoson sötét, sötéten világos telítés).
+A slot-sorrend szándékos: 4 hue-ból úgy áll össze 8 slot, hogy se a szomszédos, se
+a 4 távolságra lévő slotok ne osztozzanak hue-n — különben egy többkategóriás
+dokumentum átmenete ugyanannak a színnek két árnyalata közt futna, azaz
+láthatatlan lenne. A slotot a **modell** adja (`categorySlots()`, `node.catSlots`),
+így egyetlen igazságforrás van.
+- egy kategória → tömör szín;
+- **több kategória → finom színátmenet** a kategóriái színei között. A gradienst
+  slot-kombinációnként EGYSZER rendereljük egy kis offscreen canvasre, és
+  `drawImage`-zsel méretezzük → nincs per-frame gradiens-allokáció. A megállók a
+  szegmensek közepén vannak, ezért a színek folyamatosan olvadnak egymásba.
+- **A szín soha nem egyedüli jelentéshordozó:** a legördülő minden opciója és a
+  kiválasztott tag-ek színjelet kapnak (ez EGYBEN jelmagyarázat), és a listasorok
+  kategória-címkéin is ott a színpont — a térkép színe így visszakereshető.
+
+**3. Újra-kattintás = kizoomolás.** A térképen ugyanarra a dokumentumra másodszor
+kattintva a fókusz megszűnik, és a kamera visszatér a kezdeti áttekintésre (a
+`backToOverview()` egy helyre vonja össze ezt az utat: a HUD-gomb és az Esc is
+ezt hívja). Más csomópontra kattintva átvált (nem zoomol ki).
+
+**Közben talált és javított hiba:** a `setData` csak akkor illesztette újra a
+kamerát, ha még nem volt kész (`!camReady`). Szűréskor viszont változik a
+befoglaló (és így az `ovZoom`), tehát a kamera a régi értéken „zoomoltnak" tűnt
+az új adathoz képest — és a nézet-alapú lista-szűrés indokolatlanul leszűkítette a
+találatokat. Most `!camReady || !camTouched` esetén újraillesztünk: ha a
+felhasználó nem mozgatta a kamerát, a szűrés az áttekintésben marad; ha mozgatta
+(pan/zoom/fókusz), tiszteletben tartjuk.
+
+**Ellenőrzés:** a két jsdom-suite **63 állítása** zöld (a valódi modulfájlokkal),
+köztük a kamera pontos visszatérése az áttekintés-geometriára. A böngészőben
+canvas-pixel mintavétellel igazolva: az egykategóriás csomópontok a saját
+kategória-színüket kapják (Δ 0–5), a négy többkategóriás csomópont pedig a két
+színe KÖZÖTT keveredik (91–142 RGB-távolság).
+
 ## Verdikt (kitöltendő átnézés után)
 
 - Mi működik jól: …

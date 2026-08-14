@@ -16,7 +16,6 @@ const state = {
   events: SEED_EVENTS.map(e => ({ ...e })),
   favorites: Object.fromEntries(Object.entries(SEED_FAVORITES).map(([k, v]) => [k, new Set(v)])),
   locks: {},          // docId -> { userId, acquiredAt, lastHeartbeat }
-  filters: { q: '', status: '', category: '', onlyFav: false, onlyTpl: false },
   docTab: {},         // docId -> 'tartalom' | 'feed' | 'verziok'
   sort: { feed: 'asc', versions: 'desc' }, // rendezési irány fülönként
   diffSelection: {},  // docId -> [hash, hash]
@@ -37,7 +36,7 @@ function esc(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function user(id) { return state.users.find(u => u.id === id) || { name: '?', initials: '?', color: '#888' }; }
+function user(id) { return state.users.find(u => u.id === id) || { name: '?', initials: '?', avatar: 4 }; }
 function doc(id) { return state.docs.find(d => d.id === id); }
 function head(d) { return d.versions[d.versions.length - 1]; }
 
@@ -51,8 +50,10 @@ function fmtDate(ts) {
 
 function norm(s) { return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
 
-function avatarHtml(u, size) {
-  return `<span class="avatar" style="background:${u.color};${size ? `width:${size}px;height:${size}px;font-size:${Math.round(size * .4)}px;` : ''}">${esc(u.initials)}</span>`;
+// Avatár: a háttérszín a design system avatár-palettájából jön (tokens.css
+// --avatar-1..4), nem inline hexből — így a téma és a rendszer kézben tartja.
+function avatarHtml(u, small) {
+  return `<span class="avatar avatar--${u.avatar || 4}${small ? ' avatar--sm' : ''}">${esc(u.initials)}</span>`;
 }
 
 function isFav(docId) {
@@ -80,6 +81,9 @@ function toggleTheme() {
   localStorage.setItem('tb-theme', next);
   setTimeout(() => document.documentElement.classList.remove('theme-anim'), 300);
   render();
+  // A Canvas nem CSS: a térkép és az ambient mező újraolvassa a token-színeket,
+  // így a háttér is témával együtt vált.
+  if (atlasHandle) atlasHandle.refreshColors();
 }
 
 function themeToggleHtml() {
@@ -179,7 +183,7 @@ function mdInline(s) {
   // kép: csak belső assets-útvonal engedélyezett (D16) — külső URL blokkolva
   out = out.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (m, alt, src) =>
     src.startsWith('/assets/')
-      ? `<img src="${src}" alt="${alt}" style="max-width:100%">`
+      ? `<img src="${src}" alt="${alt}">`
       : `<span class="img-blocked-note">🚫 külső kép blokkolva: ${esc(src)}</span>`);
   out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" onclick="return false">$1</a>');
   out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -342,60 +346,105 @@ function route() {
 
 // ================= Fő render =================
 
+// Az app-váz EGYSZER épül fel és utána megmarad: így a kezdőoldal élő térképe
+// nem indul újra minden állapotváltásnál (kedvencezés, userváltás, témaváltás).
+// A route-tartalom a topbar utáni testben cserélődik.
+
 function render() {
   stopHeartbeat();
   if (!state.currentUser) { renderLogin(); return; }
+  if (!handoffActive) teardownLogin();       // handoff közben a login még átúszik
 
   const r = route();
-  let bodyHtml = '', title = '';
+  ensureShell();
+  updateChrome(r);
 
-  switch (r.name) {
-    case 'doc':        { const d = doc(r.arg); if (!d) { navigate('docs'); return; } bodyHtml = viewDoc(d); title = ''; break; }
-    case 'edit':       { const d = doc(r.arg); if (!d) { navigate('docs'); return; } bodyHtml = viewEdit(d); title = ''; break; }
-    case 'new':        bodyHtml = viewNew(); title = 'Új dokumentum'; break;
-    case 'categories': bodyHtml = viewCategories(); title = 'Kategóriák'; break;
-    case 'archive':    bodyHtml = viewArchive(); title = 'Archívum'; break;
-    case 'audit':      bodyHtml = viewAudit(); title = 'Audit-napló'; break;
-    default:           bodyHtml = viewDocs(); title = 'Dokumentumok'; break;
+  // Kezdőoldal = „Élő Atlasz": saját életciklusa van, nem innerHTML-ből él
+  if (r.name === 'docs') {
+    const h = pendingHandoff; pendingHandoff = null;
+    mountOrRefreshAtlas(h);
+    afterRender('docs');
+    return;
   }
 
-  const cu = state.currentUser;
+  teardownAtlas();
+
+  let bodyHtml = '';
+  switch (r.name) {
+    case 'doc':        { const d = doc(r.arg); if (!d) { navigate('docs'); return; } bodyHtml = viewDoc(d); break; }
+    case 'edit':       { const d = doc(r.arg); if (!d) { navigate('docs'); return; } bodyHtml = viewEdit(d); break; }
+    case 'new':        bodyHtml = viewNew(); break;
+    case 'categories': bodyHtml = viewCategories(); break;
+    case 'archive':    bodyHtml = viewArchive(); break;
+    case 'audit':      bodyHtml = viewAudit(); break;
+    default:           navigate('docs'); return;
+  }
+  setRouteBody(bodyHtml);
+  afterRender(r.name + '/' + (r.arg || '') + '/' + (r.arg ? state.docTab[r.arg] || '' : ''));
+}
+
+const ROUTE_TITLES = {
+  docs: 'Tudástár', new: 'Új dokumentum', categories: 'Kategóriák',
+  archive: 'Archívum', audit: 'Audit-napló', doc: '', edit: ''
+};
+
+function ensureShell() {
+  if ($('.layout')) return;
   $('#app').innerHTML = `
     <div class="layout">
       <aside class="sidebar">
-        <div class="brand"><span class="logo">T</span> Tudásbázis</div>
-        ${navItem('docs', '📄', 'Dokumentumok', r.name === 'docs' || r.name === 'doc' || r.name === 'edit')}
-        ${navItem('new', '＋', 'Új dokumentum', r.name === 'new')}
-        ${navItem('categories', '🏷️', 'Kategóriák', r.name === 'categories')}
-        ${navItem('archive', '🗄️', 'Archívum', r.name === 'archive')}
-        ${navItem('audit', '📜', 'Audit-napló', r.name === 'audit')}
+        <div class="brand"><span class="logo" data-mark></span> Táltos</div>
+        <nav id="nav-slot" aria-label="Fő navigáció"></nav>
         <div class="spacer"></div>
         <div class="git-status">
           <span class="dot">●</span> Git szinkron: naprakész<br>
           push-lemaradás: 0 commit<br>
-          <span style="opacity:.7">(szimulált /status — D12)</span>
+          (szimulált /status — D12)
         </div>
       </aside>
       <main class="main">
         <div class="topbar">
-          <h1>${esc(title)}</h1>
-          <div class="userchip" title="Felhasználóváltás — a lock és a privát kedvencek demójához">
-            ${avatarHtml(cu)}
-            <select onchange="switchUser(this.value)">
-              ${state.users.map(u => `<option value="${u.id}" ${u.id === cu.id ? 'selected' : ''}>${esc(u.name)}</option>`).join('')}
-            </select>
-          </div>
-          ${themeToggleHtml()}
+          <h1 id="route-title"></h1>
+          <div class="userchip" id="userchip" title="Felhasználóváltás — a lock és a privát kedvencek demójához"></div>
+          <span id="theme-slot"></span>
           <button class="btn sm" onclick="logout()">Kijelentkezés</button>
         </div>
-        ${bodyHtml}
       </main>
     </div>`;
+  // A világfa-jel UGYANAZ a glyph, mint a bejelentkezőn — ez teszi hihetővé a
+  // shared-element átúszást a belépés után.
+  const logo = $('.brand .logo');
+  if (logo) logo.innerHTML = window.TALTOS_MARK_SVG || '';
+}
 
-  const searchEl = $('#doc-search');
-  if (searchEl) { const val = searchEl.value; searchEl.focus(); searchEl.setSelectionRange(val.length, val.length); }
+function updateChrome(r) {
+  const cu = state.currentUser;
+  const titleEl = $('#route-title');
+  if (titleEl) titleEl.textContent = ROUTE_TITLES[r.name] || '';
 
-  afterRender(r.name + '/' + (r.arg || '') + '/' + (r.arg ? state.docTab[r.arg] || '' : ''));
+  const docsActive = r.name === 'docs' || r.name === 'doc' || r.name === 'edit';
+  $('#nav-slot').innerHTML =
+    navItem('docs', '📄', 'Tudástár', docsActive) +
+    navItem('new', '＋', 'Új dokumentum', r.name === 'new') +
+    navItem('categories', '🏷️', 'Kategóriák', r.name === 'categories') +
+    navItem('archive', '🗄️', 'Archívum', r.name === 'archive') +
+    navItem('audit', '📜', 'Audit-napló', r.name === 'audit');
+
+  $('#userchip').innerHTML = `
+    ${avatarHtml(cu)}
+    <select onchange="switchUser(this.value)" aria-label="Aktív felhasználó">
+      ${state.users.map(u => `<option value="${u.id}" ${u.id === cu.id ? 'selected' : ''}>${esc(u.name)}</option>`).join('')}
+    </select>`;
+  $('#theme-slot').innerHTML = themeToggleHtml();
+}
+
+// A route-test = a `.main` topbar utáni gyermekei (így a meglévő `.scroll-area`
+// szerződés — csak a tartalom görget — érvényben marad).
+function setRouteBody(html) {
+  const main = $('.main');
+  if (!main) return;
+  while (main.children.length > 1) main.removeChild(main.lastChild);
+  if (html) main.insertAdjacentHTML('beforeend', html);
 }
 
 // Nézet-belépő animáció: csak route- vagy fülváltáskor fut, szűrés/gépelés közben nem.
@@ -403,7 +452,7 @@ let lastViewKey = null;
 function afterRender(viewKey) {
   if (viewKey !== lastViewKey) {
     lastViewKey = viewKey;
-    const target = $('.scroll-area') || $('.login-card');
+    const target = $('.scroll-area');
     if (target) target.classList.add('view-enter');
   }
   upgradeTitles();
@@ -414,43 +463,178 @@ function navItem(hash, ico, label, active) {
   return `<a class="nav-item ${active ? 'active' : ''}" href="#/${hash}"><span class="ico">${ico}</span>${label}</a>`;
 }
 
-// ================= Login (mock OIDC + allowlist, D5) =================
+// ================= Kezdőoldal — „Élő Atlasz" =================
+
+let atlasHandle = null;
+
+function atlasData() {
+  const favSet = state.favorites[state.currentUser.id] || new Set();
+  return {
+    docs: activeDocs().map(d => {
+      const h = head(d);
+      const authorIds = [];
+      d.versions.forEach(v => { if (authorIds.indexOf(v.authorId) < 0) authorIds.push(v.authorId); });
+      return {
+        id: d.id, title: d.title, status: d.status, isTemplate: !!d.isTemplate,
+        categories: d.categories.slice(), ownerId: d.ownerId, authorIds,
+        iteration: d.iteration, updatedAt: h.ts,
+        text: h.content                     // a keresés címben ÉS tartalomban is találjon
+      };
+    }),
+    categories: state.categories.map(c => ({ id: c.id, name: c.name, description: c.description })),
+    users: state.users.map(u => ({ id: u.id, name: u.name })),
+    currentUserId: state.currentUser.id,
+    favoriteIds: Array.from(favSet),
+    statuses: STATUSES
+  };
+}
+
+function atlasHelpers() {
+  return {
+    esc,
+    fmtDate,
+    userName: (id) => user(id).name,
+    isFav: (docId) => isFav(docId),
+    lockedByName: (docId) => { const l = lockOf(docId); return l ? esc(user(l.userId).name) : ''; },
+    snippetHtml: (docId, q) => { const d = doc(docId); return d ? snippet(d, q) : ''; }
+  };
+}
+
+function mountOrRefreshAtlas(handoff) {
+  const main = $('.main');
+  main.classList.add('main--atlas');
+  if (atlasHandle) { atlasHandle.refresh(atlasData()); return; }
+  setRouteBody('');
+  atlasHandle = mountAtlas(main, {
+    data: atlasData(),
+    helpers: atlasHelpers(),
+    handoff: handoff || null,
+    reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+    callbacks: {
+      onOpenDoc: (id) => navigate('doc/' + id),
+      onToggleFav: (id) => toggleFav(id),
+      onNew: () => navigate('new')
+    }
+  });
+}
+
+function teardownAtlas() {
+  if (atlasHandle) { atlasHandle.destroy(); atlasHandle = null; }
+  const main = $('.main');
+  if (main) main.classList.remove('main--atlas');
+}
+
+// ================= Login (Táltos reaktív bejelentkező) =================
+// A régi mock-identitásválasztót a login/ modulok (constellation + FSM + view)
+// váltják fel. A „pure to handoff" döntés miatt itt két provider-gomb van
+// (Google + Microsoft); mindkettő a config mockUserId identitására lép be. A
+// több-userességet és a userváltást az app fejléce fedi (switchUser). A valódi
+// OAuth-redirect helye a loginView.js `enterRedirecting()`-jében meg van jelölve.
+
+let loginHandle = null;
+let pendingHandoff = null;      // a bejelentkezőtől kapott folytonosság-csomag
+let handoffActive = false;      // igaz, amíg a login átúszik az appba
+
+// Időzítés/görbe a TOKENEKBŐL — a design-értékeket JS-be sem égetjük be.
+function tokenMs(name, fallback) {
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  if (!v) return fallback;
+  return v.indexOf('ms') > -1 ? parseFloat(v) : parseFloat(v) * 1000;
+}
+function tokenEase(name, fallback) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
 
 function renderLogin() {
-  const candidates = [...state.users, NOT_ALLOWED_USER];
-  $('#app').innerHTML = `
-    <div class="login-wrap">
-      <div class="login-card">
-        <span class="theme-corner">${themeToggleHtml()}</span>
-        <h1>Tudásbázis</h1>
-        <div class="sub">Bejelentkezés OIDC-vel (mock) — válassz identitást:</div>
-        ${state.loginError ? `<div class="login-error">${esc(state.loginError)}</div>` : ''}
-        ${candidates.map(u => `
-          <button class="login-user" onclick="login('${u.id}')">
-            ${avatarHtml(u, 34)}
-            <span><strong>${esc(u.name)}</strong><br><span class="mail">${esc(u.email)}</span></span>
-          </button>`).join('')}
-        <div class="login-hint">A prototípusban a Google/Entra ID loginablakot ez a lista helyettesíti.
-        Az allowlist-ellenőrzés (D5) élő: a nem engedélyezett e-mail 403-at kap.</div>
-      </div>
-    </div>`;
-  afterRender('login');
+  if (loginHandle) return;                 // már mountolva — ne indítsuk újra a koreográfiát
+  stopHeartbeat();
+  teardownAtlas();
+  const app = $('#app');
+  app.innerHTML = '';
+  loginHandle = mountLogin(app, {
+    reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+    defaultUserId: state.users[0] ? state.users[0].id : null,
+    onComplete: finishLogin
+  });
 }
 
-function login(userId) {
-  const u = [...state.users, NOT_ALLOWED_USER].find(x => x.id === userId);
-  if (!state.allowlist.includes(u.email)) {
-    state.loginError = `403 not_on_allowlist — a(z) ${u.email} cím nincs az allowlisten.`;
-    renderLogin();
-    return;
-  }
-  state.loginError = null;
+// A belépés befejezése: az app a bejelentkező ALATT épül fel, majd a kettő
+// átúszik egymásba (crossfade), és a világfa-jel átrepül a fejléc márkajelébe.
+// Így a login és a kezdőoldal között nincs vágás — egy folyamatos mozdulat.
+function finishLogin(userId, handoff) {
+  const u = state.users.find(x => x.id === userId) || state.users[0];
   state.currentUser = u;
-  navigate('docs');
+  state.loginError = null;
+
+  const loginEl = document.querySelector('.login');
+  if (loginEl) {
+    document.body.appendChild(loginEl);      // ki az #app-ból, hogy a render ne törölje
+    loginEl.classList.add('login--handoff');
+  }
+
+  handoffActive = true;
+  pendingHandoff = handoff || null;
+  if (location.hash.replace(/^#\/?/, '').split('/')[0] !== 'docs') location.hash = '#/docs';
+  render();                                  // az app felépül a bejelentkező alatt
+  runHandoff(handoff, loginEl);
+}
+
+function runHandoff(handoff, loginEl) {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const slow = tokenMs('--duration-slow', 400);
+  const slower = tokenMs('--duration-slower', 600);
+  const grow = tokenEase('--ease-grow', 'cubic-bezier(.22,1,.36,1)');
+  const exit = tokenEase('--ease-exit', 'cubic-bezier(.4,0,1,1)');
+
+  const layout = $('.layout');
+  if (layout && !reduced) {
+    layout.animate([{ opacity: 0 }, { opacity: 1 }], { duration: slow, easing: grow, fill: 'both' });
+  }
+
+  const finish = () => { handoffActive = false; teardownLogin(); };
+  if (loginEl && !reduced) {
+    loginEl.animate([{ opacity: 1 }, { opacity: 0 }], { duration: slow, easing: exit, fill: 'both' });
+    // setTimeout, nem a WAAPI `finished`: a document-idővonal rejtett fülön befagy
+    setTimeout(finish, slow + 40);
+  } else {
+    finish();
+  }
+
+  // SHARED ELEMENT: a jel klónja átrepül a fejléc márkajelébe
+  const flying = handoff && handoff.markEl;
+  const target = $('.brand .logo');
+  if (flying && target && !reduced) {
+    const from = flying.getBoundingClientRect();
+    const to = target.getBoundingClientRect();
+    const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+    const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+    const scale = from.width ? to.width / from.width : 1;
+    target.style.opacity = '0';
+    const land = () => {
+      target.style.opacity = '';
+      if (flying.parentNode) flying.parentNode.removeChild(flying);
+    };
+    flying.animate([
+      { transform: 'translate(0,0) scale(1)' },
+      { transform: `translate(${dx}px, ${dy}px) scale(${scale})` }
+    ], { duration: slower, easing: grow, fill: 'both' });
+    setTimeout(land, slower + 40);
+  } else if (flying && flying.parentNode) {
+    flying.parentNode.removeChild(flying);
+  }
+}
+
+function teardownLogin() {
+  if (loginHandle) { loginHandle.destroy(); loginHandle = null; }
+  const stray = document.querySelector('.login--handoff');
+  if (stray && stray.parentNode) stray.parentNode.removeChild(stray);
+}
+
+function logout() {
+  teardownAtlas();
+  state.currentUser = null;
   render();
 }
-
-function logout() { state.currentUser = null; render(); }
 
 function switchUser(userId) {
   state.currentUser = state.users.find(u => u.id === userId);
@@ -461,19 +645,6 @@ function switchUser(userId) {
 // ================= Dokumentumlista + keresés (WP5) =================
 
 function activeDocs() { return state.docs.filter(d => !d.deletedAt); }
-
-function filteredDocs() {
-  const f = state.filters;
-  const q = norm(f.q.trim());
-  return activeDocs().filter(d => {
-    if (f.status && d.status !== f.status) return false;
-    if (f.category && !d.categories.includes(f.category)) return false;
-    if (f.onlyFav && !isFav(d.id)) return false;
-    if (f.onlyTpl && !d.isTemplate) return false;
-    if (q && !norm(d.title).includes(q) && !norm(head(d).content).includes(q)) return false;
-    return true;
-  }).sort((a, b) => head(b).ts - head(a).ts);
-}
 
 function snippet(d, q) {
   if (!q) return '';
@@ -486,54 +657,9 @@ function snippet(d, q) {
   return `${start > 0 ? '…' : ''}${esc(raw.slice(0, rel))}<mark>${esc(raw.slice(rel, rel + q.length))}</mark>${esc(raw.slice(rel + q.length))}…`;
 }
 
-function viewDocs() {
-  const f = state.filters;
-  const docs = filteredDocs();
-  return `
-    <div class="filterbar">
-      <input id="doc-search" type="search" placeholder="Keresés címben és tartalomban… (a valóságban: magyar FTS + trgm)"
-             value="${esc(f.q)}" oninput="setFilter('q', this.value)">
-      <select onchange="setFilter('status', this.value)">
-        <option value="">Minden státusz</option>
-        ${STATUSES.map(s => `<option ${f.status === s ? 'selected' : ''}>${s}</option>`).join('')}
-      </select>
-      <select onchange="setFilter('category', this.value)">
-        <option value="">Minden kategória</option>
-        ${state.categories.map(c => `<option ${f.category === c.name ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}
-      </select>
-      <label class="chk"><input type="checkbox" ${f.onlyFav ? 'checked' : ''} onchange="setFilter('onlyFav', this.checked)"> ⭐ kedvencek</label>
-      <label class="chk"><input type="checkbox" ${f.onlyTpl ? 'checked' : ''} onchange="setFilter('onlyTpl', this.checked)"> sablonok</label>
-      <a class="btn primary" href="#/new">＋ Új dokumentum</a>
-    </div>
-    <div class="scroll-area">
-    <div class="doc-list">
-      ${docs.length === 0 ? '<div class="empty-state">Nincs a szűrőknek megfelelő dokumentum.</div>' : ''}
-      ${docs.map(d => {
-        const h = head(d);
-        return `
-        <div class="doc-row" onclick="navigate('doc/${d.id}')">
-          <div class="title">
-            <button class="fav-star ${isFav(d.id) ? 'on' : ''}" title="Kedvenc (privát — csak te látod)"
-                    onclick="event.stopPropagation();toggleFav('${d.id}')">★</button>
-            ${esc(d.title)}
-            ${d.isTemplate ? '<span class="badge tpl">sablon</span>' : ''}
-          </div>
-          <span class="badge st-${d.status}">${d.status}</span>
-          ${f.q.trim() ? `<div class="snippet">${snippet(d, f.q.trim())}</div>` : ''}
-          <div class="meta">
-            ${d.categories.map(c => `<span class="badge cat">${esc(c)}</span>`).join('')}
-            <span>tulajdonos: ${esc(user(d.ownerId).name)}</span>
-            <span>módosítva: ${fmtDate(h.ts)} (${esc(user(h.authorId).name)})</span>
-            <span>iteráció: ${d.iteration}</span>
-            ${lockOf(d.id) ? `<span style="color:var(--warn)">🔒 szerkeszti: ${esc(user(lockOf(d.id).userId).name)}</span>` : ''}
-          </div>
-        </div>`;
-      }).join('')}
-    </div>
-    </div>`;
-}
-
-function setFilter(key, value) { state.filters[key] = value; render(); }
+// A korábbi szűrős dokumentumlista helyét az „Élő Atlasz" kezdőoldal vette át
+// (home/ modulok). A `snippet()` segéd megmaradt: a keresés snippetjét az
+// atlasz is ezzel állítja elő.
 
 function toggleFav(docId) {
   const set = state.favorites[state.currentUser.id] || (state.favorites[state.currentUser.id] = new Set());
@@ -558,7 +684,8 @@ function viewDoc(d) {
   return `
     <div class="doc-header">
       <div class="titleline">
-        <button class="fav-star ${isFav(d.id) ? 'on' : ''}" style="font-size:22px" title="Kedvenc (privát)" onclick="toggleFav('${d.id}')">★</button>
+        <button class="fav-star fav-star--lg ${isFav(d.id) ? 'on' : ''}" title="Kedvenc (privát)"
+                aria-pressed="${isFav(d.id) ? 'true' : 'false'}" onclick="toggleFav('${d.id}')">${isFav(d.id) ? '★' : '☆'}</button>
         <h1>${esc(d.title)}</h1>
         <span class="badge st-${d.status}">${d.status}</span>
         ${d.isTemplate ? '<span class="badge tpl">sablon</span>' : ''}
@@ -616,7 +743,7 @@ function viewDocContent(d) {
               <tr><td>Iteráció</td><td>${d.iteration}</td></tr>
               <tr><td>Kategóriák</td><td>${d.categories.map(c => `<span class="badge cat">${esc(c)}</span>`).join(' ') || '—'}</td></tr>
               <tr><td>Verziók</td><td>${d.versions.length} commit</td></tr>
-              <tr><td>UUID</td><td style="font-family:Consolas,monospace;font-size:11.5px">${d.id}</td></tr>
+              <tr><td>UUID</td><td class="mono">${d.id}</td></tr>
             </table>
             <div class="frontmatter">${esc(frontmatter(d))}</div>
           </div>
@@ -761,8 +888,8 @@ function viewVersions(d) {
     const [older, newer] = va.ts <= vb.ts ? [va, vb] : [vb, va];
     const rows = diffLines(older.content, newer.content);
     diffHtml = `
-      <div style="margin-top:16px">
-        <h3 style="font-size:15px">Diff: ${older.hash} → ${newer.hash}</h3>
+      <div class="diff-block">
+        <h3>Diff: ${older.hash} → ${newer.hash}</h3>
         <div class="diff-view">
           ${rows.map(r => `<div class="diff-line ${r.t}">${r.t === 'add' ? '+' : r.t === 'del' ? '−' : ' '} ${esc(r.s) || '&nbsp;'}</div>`).join('')}
         </div>
@@ -771,7 +898,7 @@ function viewVersions(d) {
 
   return `
     <div class="panel">
-      <div class="panel-body" style="padding:0">
+      <div class="panel-body panel-body--flush">
         ${versions.map(v => `
           <div class="version-row ${v.hash === headHash ? 'head-row' : ''}">
             <input type="checkbox" title="Kijelölés diffhez (pontosan kettőt)"
@@ -865,7 +992,7 @@ function viewEdit(d) {
       A piszkozat-őrzés (D7) itt memóriában van — a böngésző újratöltése a prototípusban törli.</div>
     </div>
 
-    <div class="doc-actions" style="margin: 10px 0 16px; flex: none">
+    <div class="doc-actions">
       <button class="btn primary" onclick="saveDoc('${d.id}')">💾 Mentés (= commit)</button>
       <button class="btn" onclick="cancelEdit('${d.id}')">Mégse</button>
     </div>`;
@@ -922,9 +1049,9 @@ function changeStatusModal(docId) {
   const d = doc(docId);
   openModal(`
     <h2>Státuszváltás — ${esc(d.title)}</h2>
-    <p style="font-size:13.5px;color:var(--text-2)">A workflow nem kikényszerített (D6) — bármely státuszba léphetsz, de minden váltás eseményként naplózódik.</p>
+    <p class="note">A workflow nem kikényszerített (D6) — bármely státuszba léphetsz, de minden váltás eseményként naplózódik.</p>
     ${STATUSES.map(s => `
-      <button class="btn" style="width:100%;justify-content:flex-start;margin-bottom:6px" ${s === d.status ? 'disabled' : ''}
+      <button class="btn status-option" ${s === d.status ? 'disabled' : ''}
               onclick="changeStatus('${docId}','${s}')">
         <span class="badge st-${s}">${s}</span>${s === d.status ? ' (jelenlegi)' : ''}
       </button>`).join('')}
@@ -944,7 +1071,7 @@ function changeStatus(docId, to) {
 
 function viewNew() {
   return `
-    <p style="color:var(--text-2);margin-top:0">A létrehozás egységes „forrásból" művelet (D17): üres canvas, sablon vagy duplikálás.
+    <p class="note">A létrehozás egységes „forrásból" művelet (D17): üres canvas, sablon vagy duplikálás.
     Az új dokumentum minden esetben új UUID-t kap, státusza draft, tulajdonosa te leszel, az iteráció újraindul.</p>
     <div class="scroll-area">
     <div class="create-cards">
@@ -1021,7 +1148,7 @@ function archiveDoc(docId) {
   const d = doc(docId);
   openModal(`
     <h2>Archiválás — ${esc(d.title)}</h2>
-    <p style="font-size:13.5px;color:var(--text-2)">Minden törlés soft delete (D20): a dokumentum az archívumba kerül,
+    <p class="note">Minden törlés soft delete (D20): a dokumentum az archívumba kerül,
     a Git-történet és minden esemény megmarad, és bármikor visszaállítható.</p>
     <input type="text" id="archive-reason" placeholder="Indoklás (opcionális)">
     <div class="modal-actions">
@@ -1043,12 +1170,12 @@ function confirmArchive(docId) {
 function viewArchive() {
   const archived = state.docs.filter(d => d.deletedAt);
   return `
-    <p style="color:var(--text-2);margin-top:0">Soft delete-elt dokumentumok (D8). Fizikai törlés csak retention policy szerint történne (NY4) — a prototípusban soha.</p>
+    <p class="note">Soft delete-elt dokumentumok (D8). Fizikai törlés csak retention policy szerint történne (NY4) — a prototípusban soha.</p>
     <div class="scroll-area">
     <div class="doc-list">
       ${archived.length === 0 ? '<div class="empty-state">Az archívum üres.</div>' : ''}
       ${archived.map(d => `
-        <div class="doc-row" style="cursor:default">
+        <div class="doc-row doc-row--static">
           <div class="title">${esc(d.title)} <span class="badge arch">archivált</span></div>
           <button class="btn sm" onclick="restoreDoc('${d.id}')">♻️ Visszaállítás</button>
           <div class="meta">
@@ -1075,9 +1202,9 @@ function catUsage(name) { return activeDocs().filter(d => d.categories.includes(
 
 function viewCategories() {
   return `
-    <p style="color:var(--text-2);margin-top:0">Lapos címke-rendszer (D19): bárki hozhat létre kategóriát,
+    <p class="note">Lapos címke-rendszer (D19): bárki hozhat létre kategóriát,
     de a használatban lévő nem nevezhető át és nem törölhető.</p>
-    <div style="margin-bottom:14px"><button class="btn primary" onclick="newCategoryModal()">＋ Új kategória</button></div>
+    <div class="toolbar-row"><button class="btn primary" onclick="newCategoryModal()">＋ Új kategória</button></div>
     <div class="scroll-area">
     <table class="cat-table">
       <tr><th>Név</th><th>Leírás</th><th>Használat</th><th></th></tr>
@@ -1088,7 +1215,7 @@ function viewCategories() {
           <td><span class="badge cat">${esc(c.name)}</span></td>
           <td>${esc(c.description || '')}</td>
           <td class="count">${n} dokumentum</td>
-          <td style="white-space:nowrap">
+          <td class="nowrap">
             <button class="btn sm" ${locked ? 'disabled title="Használatban lévő kategória nem nevezhető át (D19)"' : ''} onclick="renameCategoryModal('${c.id}')">Átnevezés</button>
             <button class="btn sm danger" ${locked ? 'disabled title="Használatban lévő kategória nem törölhető (D19)"' : ''} onclick="deleteCategory('${c.id}')">Törlés</button>
           </td>
@@ -1157,10 +1284,10 @@ function deleteCategory(catId) {
 function viewAudit() {
   const events = [...state.events].sort((a, b) => b.ts - a.ts);
   return `
-    <p style="color:var(--text-2);margin-top:0">Minden mutáló művelet eseménye (append-only <code>events</code> tábla — D6 kompenzáció).
+    <p class="note">Minden mutáló művelet eseménye (append-only <code>events</code> tábla — D6 kompenzáció).
     Az olvasás és a kedvenc-jelölés tudatosan nem naplózott.</p>
     <div class="scroll-area">
-    <div class="panel"><div class="panel-body" style="padding:8px 0">
+    <div class="panel"><div class="panel-body panel-body--rows">
       ${events.map(e => {
         const d = e.docId ? doc(e.docId) : null;
         const textFn = EVENT_TEXT[e.type] || (() => e.type);

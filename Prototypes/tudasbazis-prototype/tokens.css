@@ -1,158 +1,161 @@
-/* Hallmark · genre: modern-minimal · macrostructure: Workbench (app shell, preserved) · theme: Cobalt (light + dark)
- * design-system: design.md · designed-as-app · nav/footer: app-scope, skipped
- * Hallmark · pre-emit critique: P4 H5 E4 S4 R5 V4
+/* Táltos Design System — tokenek (a teljes prototípus alapja).
  *
- * Megjegyzés az elevációhoz: --color-paper a KÁRTYA-felület, --color-paper-2 az OLDAL-háttér.
- * Sötét módban az eleváció fordított logikájú: a magasabb felület világosabb.
+ * A korábbi Cobalt/Hallmark token-készlet ELDOBVA; minden felület a Táltos
+ * rendszert követi. Kétréteg: primitív (nyers érték) → szemantikus (jelentés).
+ * Komponens CSS-ben SOHA nincs nyers hex/px — csak var(--…) a szemantikus rétegből.
+ *
+ * Forrás: taltos-design-system.md (2. és 3. pont: paste-ready :root + sötét remap).
+ * A fájl végén egy APP-SZEMANTIKUS réteg: olyan alkalmazás-specifikus jelentések
+ * (státusz-címkék, diff, keresés-kiemelés, avatár), amiket a rendszer nem nevez meg —
+ * ezek KIZÁRÓLAG a rendszer szemantikus tokenjeire épülnek, nyers érték nélkül.
  */
 
 :root,
 [data-theme="light"] {
-  /* — Cobalt · light — */
-  --color-paper:        oklch(98% 0.005 250);   /* kártya / felület */
-  --color-paper-2:      oklch(95.2% 0.008 250); /* oldal-háttér */
-  --color-paper-3:      oklch(91.5% 0.012 250); /* hover / süllyesztett */
-  --color-rule:         oklch(88% 0.012 250);
-  --color-rule-strong:  oklch(79% 0.015 252);
-  --color-ink:          oklch(20% 0.028 262);
-  --color-ink-2:        oklch(44% 0.022 258);
-  --color-muted:        oklch(57% 0.02 256);
+  /* ---- PRIMITÍV: Világfa zöld (elsődleges) ---- */
+  --green-50:#ECF5F1; --green-100:#D2E8DF; --green-200:#A6D0C1; --green-300:#71B29C; --green-400:#479079;
+  --green-500:#2C7460; --green-600:#1F5C4C; --green-700:#194A3E; --green-800:#163C33; --green-900:#10281F;
+  /* ---- PRIMITÍV: Sólyomkék (másodlagos) ---- */
+  --blue-50:#ECF2F9; --blue-100:#D3E1F2; --blue-200:#A9C5E6; --blue-300:#79A3D6; --blue-400:#4E82C4;
+  --blue-500:#3467AD; --blue-600:#29528C; --blue-700:#234471; --blue-800:#1E385C; --blue-900:#16273F;
+  /* ---- PRIMITÍV: Csillagarany (akcentus) ---- */
+  --gold-50:#FBF3E4; --gold-100:#F6E3BF; --gold-200:#EFCB86; --gold-300:#E7B356; --gold-400:#DD9C2E;
+  --gold-500:#C9861A; --gold-600:#A66B14; --gold-700:#825313; --gold-800:#674214; --gold-900:#4A2F0F;
+  /* ---- PRIMITÍV: Kéreg (meleg semleges) ---- */
+  --bark-0:#FFFFFF; --bark-50:#F7F5F1; --bark-100:#EDE9E1; --bark-200:#DBD5C9; --bark-300:#BFB7A6;
+  --bark-400:#9C9384; --bark-500:#7A7264; --bark-600:#5E574C; --bark-700:#46413A; --bark-800:#302C27;
+  --bark-900:#1C1A16; --bark-950:#12100D;
+  /* ---- PRIMITÍV: státusz ---- */
+  --success-500:#2F855A; --success-600:#276749; --success-50:#E7F3EC;
+  --warning-500:#C9861A; --warning-600:#A66B14; --warning-50:#FBF3E4;
+  --danger-500:#C0492E;  --danger-600:#9E3A24;  --danger-50:#F9EAE6;
+  --info-500:#3467AD;    --info-600:#29528C;    --info-50:#ECF2F9;
 
-  --color-accent:        oklch(49% 0.21 262);   /* elektromos kobalt */
-  --color-accent-strong: oklch(42% 0.20 262);
-  --color-accent-soft:   oklch(93.5% 0.035 262);
-  --color-accent-ink:    oklch(98% 0.005 250);  /* szöveg akcent-kitöltésen */
-  --color-focus:         oklch(56% 0.19 262);
+  /* ---- TÍPUS ---- */
+  --font-display:"Fraunces",Georgia,serif;
+  --font-body:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --font-mono:"JetBrains Mono","SF Mono",Menlo,monospace;
+  --text-xs:.75rem; --text-sm:.875rem; --text-base:1rem; --text-lg:1.125rem; --text-xl:1.25rem;
+  --text-2xl:1.5rem; --text-3xl:1.875rem; --text-4xl:2.25rem; --text-5xl:3rem; --text-6xl:3.75rem;
+  --leading-tight:1.15; --leading-snug:1.3; --leading-normal:1.6; --leading-relaxed:1.75;
+  --tracking-tight:-.02em; --tracking-normal:0; --tracking-wide:.04em; --tracking-wider:.14em;
+  --weight-regular:400; --weight-medium:500; --weight-semibold:600; --weight-bold:700;
 
-  --color-danger:       oklch(50% 0.19 25);
-  --color-danger-soft:  oklch(94% 0.03 25);
-  --color-ok:           oklch(50% 0.13 155);
-  --color-warn:         oklch(57% 0.13 75);
-  --color-warn-ink:     oklch(40% 0.10 70);
-  --color-warn-soft:    oklch(95% 0.045 90);
+  /* ---- TÉRKÖZ (4px bázis) ---- */
+  --space-0:0; --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-5:1.25rem;
+  --space-6:1.5rem; --space-8:2rem; --space-10:2.5rem; --space-12:3rem; --space-16:4rem; --space-20:5rem; --space-24:6rem;
 
-  --color-inverse:      oklch(23% 0.03 262);    /* toast */
-  --color-inverse-ink:  oklch(96% 0.006 250);
-  --color-code-bg:      oklch(22% 0.03 262);    /* kódblokk */
-  --color-code-ink:     oklch(90% 0.012 255);
+  /* ---- FORMA ---- */
+  --radius-none:0; --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-xl:16px; --radius-2xl:24px; --radius-full:9999px;
 
-  /* státusz-címkék */
-  --st-draft-bg:  oklch(91.5% 0.012 250); --st-draft-fg:  oklch(44% 0.022 258);
-  --st-review-bg: oklch(94% 0.06 90);     --st-review-fg: oklch(45% 0.11 78);
-  --st-tested-bg: oklch(93.5% 0.035 262); --st-tested-fg: oklch(42% 0.20 262);
-  --st-pub-bg:    oklch(93% 0.05 155);    --st-pub-fg:    oklch(38% 0.12 155);
-  --tpl-bg:       oklch(93% 0.04 300);    --tpl-fg:       oklch(45% 0.16 300);
+  /* ---- RÉTEG ---- */
+  --z-base:0; --z-raised:10; --z-sticky:100; --z-overlay:1000; --z-modal:1100; --z-toast:1200;
 
-  /* diff, kiemelés, csillag */
-  --diff-add-bg: oklch(93.5% 0.06 150);
-  --diff-del-bg: oklch(94% 0.05 25);
-  --hl-bg:       oklch(90% 0.10 95);
-  --star-off:    oklch(79% 0.015 252);
-  --star-on:     oklch(70% 0.15 80);
+  /* ---- MOZGÁS ---- */
+  --ease-grow:cubic-bezier(.22,1,.36,1); --ease-standard:cubic-bezier(.4,0,.2,1);
+  --ease-enter:cubic-bezier(0,0,.2,1); --ease-exit:cubic-bezier(.4,0,1,1);
+  --duration-fast:150ms; --duration-base:250ms; --duration-slow:400ms; --duration-slower:600ms;
 
-  --shadow-1: 0 1px 2px oklch(20% 0.03 262 / .06), 0 1px 3px oklch(20% 0.03 262 / .05);
-  --shadow-2: 0 8px 30px oklch(20% 0.03 262 / .14);
-  --shadow-lift: 0 4px 14px oklch(20% 0.03 262 / .10);
-  --backdrop: oklch(18% 0.03 262 / .5);
+  /* ---- ELRENDEZÉS ---- */
+  --content-max:1120px; --sidebar-w:264px; --read-width:70ch;
+
+  /* ---- SZEMANTIKUS: világos ---- */
+  --bg:var(--bark-50); --bg-contour:rgba(31,92,76,.05);
+  --surface:var(--bark-0); --surface-raised:var(--bark-0); --surface-sunken:var(--bark-100); --surface-inverse:var(--green-900);
+  --border:var(--bark-200); --border-strong:var(--bark-300); --border-focus:var(--blue-500);
+  --text:var(--bark-900); --text-muted:var(--bark-600); --text-subtle:var(--bark-500); --text-inverse:var(--bark-0); --text-on-accent:var(--bark-950);
+  --primary:var(--green-600); --primary-hover:var(--green-700); --primary-active:var(--green-800); --primary-soft:var(--green-50); --primary-soft-text:var(--green-700); --on-primary:#FFFFFF;
+  --secondary:var(--blue-600); --secondary-hover:var(--blue-700); --secondary-soft:var(--blue-50); --on-secondary:#FFFFFF;
+  --accent:var(--gold-500); --accent-hover:var(--gold-600); --accent-soft:var(--gold-50);
+  --success:var(--success-600); --success-bg:var(--success-50);
+  --warning:var(--warning-600); --warning-bg:var(--warning-50);
+  --danger:var(--danger-600);   --danger-bg:var(--danger-50);
+  --info:var(--info-600);       --info-bg:var(--info-50);
+  --focus-ring:0 0 0 3px rgba(52,103,173,.35);
+  --shadow-xs:0 1px 2px rgba(28,26,22,.06);
+  --shadow-sm:0 1px 3px rgba(28,26,22,.08),0 1px 2px rgba(28,26,22,.05);
+  --shadow-md:0 4px 10px rgba(28,26,22,.08),0 2px 4px rgba(28,26,22,.05);
+  --shadow-lg:0 12px 28px rgba(28,26,22,.12),0 4px 8px rgba(28,26,22,.06);
+  --shadow-xl:0 24px 48px rgba(28,26,22,.16);
 }
 
+/* ---- SÖTÉT TÉMA — csak a szemantikus réteget cseréli ---- */
 [data-theme="dark"] {
-  /* — Cobalt · dark: azonos horgony-hue, csak L és C mozdul — */
-  --color-paper:        oklch(21% 0.016 256);
-  --color-paper-2:      oklch(15.5% 0.013 256);
-  --color-paper-3:      oklch(26.5% 0.018 256);
-  --color-rule:         oklch(31% 0.016 256);
-  --color-rule-strong:  oklch(41% 0.018 256);
-  --color-ink:          oklch(93% 0.008 255);
-  --color-ink-2:        oklch(73% 0.014 255);
-  --color-muted:        oklch(59% 0.016 255);
-
-  --color-accent:        oklch(67% 0.17 262);
-  --color-accent-strong: oklch(74% 0.15 262);
-  --color-accent-soft:   oklch(28% 0.07 262);
-  --color-accent-ink:    oklch(15% 0.03 262);
-  --color-focus:         oklch(72% 0.16 262);
-
-  --color-danger:       oklch(68% 0.17 25);
-  --color-danger-soft:  oklch(26% 0.06 25);
-  --color-ok:           oklch(72% 0.13 155);
-  --color-warn:         oklch(76% 0.13 85);
-  --color-warn-ink:     oklch(86% 0.09 88);
-  --color-warn-soft:    oklch(27% 0.05 85);
-
-  --color-inverse:      oklch(32% 0.02 260);
-  --color-inverse-ink:  oklch(94% 0.008 255);
-  --color-code-bg:      oklch(13% 0.016 258);
-  --color-code-ink:     oklch(88% 0.012 255);
-
-  --st-draft-bg:  oklch(28% 0.014 256);  --st-draft-fg:  oklch(76% 0.014 255);
-  --st-review-bg: oklch(30% 0.06 85);    --st-review-fg: oklch(84% 0.10 90);
-  --st-tested-bg: oklch(28% 0.08 262);   --st-tested-fg: oklch(80% 0.11 262);
-  --st-pub-bg:    oklch(28% 0.06 155);   --st-pub-fg:    oklch(81% 0.11 155);
-  --tpl-bg:       oklch(29% 0.06 300);   --tpl-fg:       oklch(80% 0.11 300);
-
-  --diff-add-bg: oklch(27% 0.055 150);
-  --diff-del-bg: oklch(27% 0.05 25);
-  --hl-bg:       oklch(36% 0.09 95);
-  --star-off:    oklch(41% 0.018 256);
-  --star-on:     oklch(78% 0.14 82);
-
-  --shadow-1: 0 1px 2px oklch(5% 0.01 260 / .4), 0 1px 3px oklch(5% 0.01 260 / .3);
-  --shadow-2: 0 8px 30px oklch(5% 0.01 260 / .55);
-  --shadow-lift: 0 4px 14px oklch(5% 0.01 260 / .45);
-  --backdrop: oklch(8% 0.015 260 / .62);
+  --bg:var(--bark-950); --bg-contour:rgba(113,178,156,.06);
+  --surface:#1C1A16; --surface-raised:#24211C; --surface-sunken:#16140F; --surface-inverse:var(--green-50);
+  --border:#34302A; --border-strong:#47423A; --border-focus:var(--blue-300);
+  --text:#F2EEE6; --text-muted:#B4AC9C; --text-subtle:#8A8272; --text-inverse:var(--bark-900); --text-on-accent:var(--bark-950);
+  --primary:var(--green-300); --primary-hover:var(--green-200); --primary-active:var(--green-100); --primary-soft:rgba(44,116,96,.18); --primary-soft-text:var(--green-200); --on-primary:var(--green-900);
+  --secondary:var(--blue-300); --secondary-hover:var(--blue-200); --secondary-soft:rgba(52,103,173,.18); --on-secondary:var(--blue-900);
+  --accent:var(--gold-300); --accent-hover:var(--gold-200); --accent-soft:rgba(201,134,26,.16);
+  --success:#6EC28E; --success-bg:rgba(47,133,90,.16);
+  --warning:var(--gold-300); --warning-bg:rgba(201,134,26,.16);
+  --danger:#E28468; --danger-bg:rgba(192,73,46,.18);
+  --info:var(--blue-300); --info-bg:rgba(52,103,173,.16);
+  --focus-ring:0 0 0 3px rgba(121,163,214,.45);
+  --shadow-xs:0 1px 2px rgba(0,0,0,.4);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.45),0 1px 2px rgba(0,0,0,.35);
+  --shadow-md:0 4px 12px rgba(0,0,0,.5);
+  --shadow-lg:0 14px 32px rgba(0,0,0,.55);
+  --shadow-xl:0 24px 50px rgba(0,0,0,.6);
 }
 
-:root {
-  /* tipográfia — 2+1 párosítás */
-  --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
-  --font-body:    "Inter", "Segoe UI", system-ui, sans-serif;
-  --font-mono:    "JetBrains Mono", Consolas, monospace;
-
-  /* 4 pontos térköz-skála */
-  --space-3xs: 0.25rem;
-  --space-2xs: 0.5rem;
-  --space-xs:  0.75rem;
-  --space-sm:  1rem;
-  --space-md:  1.5rem;
-  --space-lg:  2rem;
-  --space-xl:  3rem;
-
-  --text-xs: 0.75rem;
-  --text-sm: 0.85rem;
-  --text-md: 0.95rem;
-  --text-lg: 1.15rem;
-  --text-xl: 1.45rem;
-
-  --radius-input: 6px;
-  --radius-card:  10px;
-  --radius-pill:  999px;
-
-  /* motion — belépő: ease-out · kilépő: ease-in · állapotváltás: ease-in-out */
-  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in:     cubic-bezier(0.7, 0, 0.84, 0);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --dur-short: 160ms;  /* hover, fókusz, kis fade-ek */
-  --dur-med:   260ms;  /* modal, nézet-belépés, tab-tartalom */
-  --dur-toast: 400ms;  /* toast beúszás (kilépés: ~60%-a) */
-}
-
-/* ——— Örökölt alias-réteg ———
-   Az app.js inline stílusai és a korábbi osztályok ezekre a nevekre hivatkoznak.
-   Minden alias nevesített tokenre mutat — nyers színérték itt sincs. */
+/* ============================================================
+   APP-SZEMANTIKUS RÉTEG
+   Alkalmazás-specifikus jelentések, amiket a rendszer nem nevez meg.
+   Kizárólag a fenti szemantikus/primitív tokenekre épülnek → a téma
+   automatikusan működik, és a komponensek csak ezeket hivatkozzák.
+   ============================================================ */
 :root, [data-theme] {
-  --bg:          var(--color-paper-2);
-  --surface:     var(--color-paper);
-  --border:      var(--color-rule);
-  --text:        var(--color-ink);
-  --text-2:      var(--color-ink-2);
-  --text-3:      var(--color-muted);
-  --accent:      var(--color-accent);
-  --accent-soft: var(--color-accent-soft);
-  --danger:      var(--color-danger);
-  --danger-soft: var(--color-danger-soft);
-  --ok:          var(--color-ok);
-  --warn:        var(--color-warn);
-  --radius:      var(--radius-input);
-  --shadow:      var(--shadow-1);
+  /* Dokumentum-státusz címkék (badge: {status}-bg háttér + {status} szöveg) */
+  --st-draft-bg:var(--surface-sunken);  --st-draft-fg:var(--text-muted);
+  --st-review-bg:var(--warning-bg);     --st-review-fg:var(--warning);
+  --st-tested-bg:var(--info-bg);        --st-tested-fg:var(--info);
+  --st-pub-bg:var(--success-bg);        --st-pub-fg:var(--success);
+  /* Sablon-jelölés + kategória-chip */
+  --tpl-bg:var(--primary-soft);         --tpl-fg:var(--primary-soft-text);
+  --cat-bg:var(--surface-sunken);       --cat-fg:var(--text-muted);
+  /* Verzió-diff (soronkénti hozzáadás/törlés) */
+  --diff-add-bg:color-mix(in srgb, var(--success) 14%, var(--surface));
+  --diff-del-bg:color-mix(in srgb, var(--danger) 14%, var(--surface));
+  /* Keresés-kiemelés */
+  --hl-bg:color-mix(in srgb, var(--accent) 34%, var(--surface));
+  /* Kedvenc-csillag */
+  --star-off:var(--border-strong);      --star-on:var(--accent);
+  /* Avatár: a rendszer szerint primitív 600-as háttér + fehér szöveg */
+  --avatar-1:var(--green-600); --avatar-2:var(--blue-600); --avatar-3:var(--gold-600);
+  --avatar-4:var(--bark-600);  --avatar-fg:var(--bark-0);
+  /* Kódfelület (kódblokk, frontmatter) */
+  --code-bg:var(--surface-inverse); --code-fg:var(--text-inverse);
+  /* Modális háttérfátyol */
+  --backdrop:color-mix(in srgb, var(--bark-950) 55%, transparent);
+}
+
+/* ------------------------------------------------------------
+   KATEGÓRIA-PALETTA
+   A térkép csomópontjait kategória szerint különíti el (a kategória a modellben
+   már csak facet — ez a vizuális fogódzó, ha nincs szűrés kiadva). A rendszer
+   palettája szándékosan szűk: 4 hue-t (világfa zöld · sólyomkék · csillagarany ·
+   veszély-vörös) variálunk világossággal, hogy 8 slot is elkülönüljön.
+   A jelentés SOSEM csak szín: a kategória neve ott van a legördülőben, a
+   listasor címkéin és a csomópont feliratában is.
+   Külön kell definiálni témánként: a primitívek nem váltanak, a kontraszt viszont
+   ellentétes irányú (világoson sötét, sötéten világos telítés kell).
+   ------------------------------------------------------------ */
+/* A slot-sorrend SZÁNDÉKOS: 4 hue-ból 8 slot úgy, hogy se a SZOMSZÉDOS, se a
+   4 távolságra lévő slotok ne osztozzanak hue-n. Ez azért kell, mert egy
+   többkategóriás dokumentum színátmenete láthatatlanul finom lenne, ha a két
+   kategóriája ugyanannak a hue-nak két árnyalatát kapná. Azonos hue csak
+   (1,8), (2,5), (3,6) párokon fordul elő. */
+:root, [data-theme="light"] {
+  --catcolor-1:var(--green-600); --catcolor-2:var(--blue-600);
+  --catcolor-3:var(--gold-600);  --catcolor-4:var(--danger);
+  --catcolor-5:var(--blue-400);  --catcolor-6:var(--gold-800);
+  --catcolor-7:var(--bark-600);  --catcolor-8:var(--green-400);
+}
+[data-theme="dark"] {
+  --catcolor-1:var(--green-300); --catcolor-2:var(--blue-300);
+  --catcolor-3:var(--gold-300);  --catcolor-4:var(--danger);
+  --catcolor-5:var(--blue-200);  --catcolor-6:var(--gold-100);
+  --catcolor-7:var(--bark-300);  --catcolor-8:var(--green-200);
 }

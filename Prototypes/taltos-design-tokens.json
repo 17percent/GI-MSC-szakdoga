@@ -1,0 +1,177 @@
+{
+  "$name": "Táltos Design Tokens",
+  "$version": "1.0.0",
+  "$description": "Kétrétegű tokenrendszer. A komponensek KIZÁRÓLAG a color.semantic rétegre hivatkoznak; a primitive réteg csak a semantic rétegen keresztül használható.",
+  "color": {
+    "primitive": {
+      "green": {
+        "50": "#ECF5F1", "100": "#D2E8DF", "200": "#A6D0C1", "300": "#71B29C", "400": "#479079",
+        "500": "#2C7460", "600": "#1F5C4C", "700": "#194A3E", "800": "#163C33", "900": "#10281F"
+      },
+      "blue": {
+        "50": "#ECF2F9", "100": "#D3E1F2", "200": "#A9C5E6", "300": "#79A3D6", "400": "#4E82C4",
+        "500": "#3467AD", "600": "#29528C", "700": "#234471", "800": "#1E385C", "900": "#16273F"
+      },
+      "gold": {
+        "50": "#FBF3E4", "100": "#F6E3BF", "200": "#EFCB86", "300": "#E7B356", "400": "#DD9C2E",
+        "500": "#C9861A", "600": "#A66B14", "700": "#825313", "800": "#674214", "900": "#4A2F0F"
+      },
+      "bark": {
+        "0": "#FFFFFF", "50": "#F7F5F1", "100": "#EDE9E1", "200": "#DBD5C9", "300": "#BFB7A6",
+        "400": "#9C9384", "500": "#7A7264", "600": "#5E574C", "700": "#46413A", "800": "#302C27",
+        "900": "#1C1A16", "950": "#12100D"
+      },
+      "success": { "50": "#E7F3EC", "500": "#2F855A", "600": "#276749" },
+      "warning": { "50": "#FBF3E4", "500": "#C9861A", "600": "#A66B14" },
+      "danger":  { "50": "#F9EAE6", "500": "#C0492E", "600": "#9E3A24" },
+      "info":    { "50": "#ECF2F9", "500": "#3467AD", "600": "#29528C" }
+    },
+    "semantic": {
+      "light": {
+        "bg": "{primitive.bark.50}",
+        "bg-contour": "rgba(31,92,76,0.05)",
+        "surface": "{primitive.bark.0}",
+        "surface-raised": "{primitive.bark.0}",
+        "surface-sunken": "{primitive.bark.100}",
+        "surface-inverse": "{primitive.green.900}",
+        "border": "{primitive.bark.200}",
+        "border-strong": "{primitive.bark.300}",
+        "border-focus": "{primitive.blue.500}",
+        "text": "{primitive.bark.900}",
+        "text-muted": "{primitive.bark.600}",
+        "text-subtle": "{primitive.bark.500}",
+        "text-inverse": "{primitive.bark.0}",
+        "text-on-accent": "{primitive.bark.950}",
+        "primary": "{primitive.green.600}",
+        "primary-hover": "{primitive.green.700}",
+        "primary-active": "{primitive.green.800}",
+        "primary-soft": "{primitive.green.50}",
+        "primary-soft-text": "{primitive.green.700}",
+        "on-primary": "#FFFFFF",
+        "secondary": "{primitive.blue.600}",
+        "secondary-hover": "{primitive.blue.700}",
+        "secondary-soft": "{primitive.blue.50}",
+        "on-secondary": "#FFFFFF",
+        "accent": "{primitive.gold.500}",
+        "accent-hover": "{primitive.gold.600}",
+        "accent-soft": "{primitive.gold.50}",
+        "success": "{primitive.success.600}",
+        "success-bg": "{primitive.success.50}",
+        "warning": "{primitive.warning.600}",
+        "warning-bg": "{primitive.warning.50}",
+        "danger": "{primitive.danger.600}",
+        "danger-bg": "{primitive.danger.50}",
+        "info": "{primitive.info.600}",
+        "info-bg": "{primitive.info.50}",
+        "focus-ring": "0 0 0 3px rgba(52,103,173,0.35)"
+      },
+      "dark": {
+        "bg": "{primitive.bark.950}",
+        "bg-contour": "rgba(113,178,156,0.06)",
+        "surface": "#1C1A16",
+        "surface-raised": "#24211C",
+        "surface-sunken": "#16140F",
+        "surface-inverse": "{primitive.green.50}",
+        "border": "#34302A",
+        "border-strong": "#47423A",
+        "border-focus": "{primitive.blue.300}",
+        "text": "#F2EEE6",
+        "text-muted": "#B4AC9C",
+        "text-subtle": "#8A8272",
+        "text-inverse": "{primitive.bark.900}",
+        "text-on-accent": "{primitive.bark.950}",
+        "primary": "{primitive.green.300}",
+        "primary-hover": "{primitive.green.200}",
+        "primary-active": "{primitive.green.100}",
+        "primary-soft": "rgba(44,116,96,0.18)",
+        "primary-soft-text": "{primitive.green.200}",
+        "on-primary": "{primitive.green.900}",
+        "secondary": "{primitive.blue.300}",
+        "secondary-hover": "{primitive.blue.200}",
+        "secondary-soft": "rgba(52,103,173,0.18)",
+        "on-secondary": "{primitive.blue.900}",
+        "accent": "{primitive.gold.300}",
+        "accent-hover": "{primitive.gold.200}",
+        "accent-soft": "rgba(201,134,26,0.16)",
+        "success": "#6EC28E",
+        "success-bg": "rgba(47,133,90,0.16)",
+        "warning": "{primitive.gold.300}",
+        "warning-bg": "rgba(201,134,26,0.16)",
+        "danger": "#E28468",
+        "danger-bg": "rgba(192,73,46,0.18)",
+        "info": "{primitive.blue.300}",
+        "info-bg": "rgba(52,103,173,0.16)",
+        "focus-ring": "0 0 0 3px rgba(121,163,214,0.45)"
+      }
+    }
+  },
+  "font": {
+    "family": {
+      "display": "\"Fraunces\", Georgia, serif",
+      "body": "\"Inter\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "mono": "\"JetBrains Mono\", \"SF Mono\", Menlo, monospace"
+    },
+    "size": {
+      "xs": "0.75rem", "sm": "0.875rem", "base": "1rem", "lg": "1.125rem", "xl": "1.25rem",
+      "2xl": "1.5rem", "3xl": "1.875rem", "4xl": "2.25rem", "5xl": "3rem", "6xl": "3.75rem"
+    },
+    "leading": { "tight": "1.15", "snug": "1.3", "normal": "1.6", "relaxed": "1.75" },
+    "tracking": { "tight": "-0.02em", "normal": "0", "wide": "0.04em", "wider": "0.14em" },
+    "weight": { "regular": "400", "medium": "500", "semibold": "600", "bold": "700" }
+  },
+  "role": {
+    "display": { "family": "display", "size": "5xl", "weight": "semibold", "leading": "tight", "tracking": "tight", "use": "hero, kiemelt címek" },
+    "h1": { "family": "display", "size": "4xl", "weight": "semibold", "leading": "tight", "tracking": "tight" },
+    "h2": { "family": "display", "size": "2xl", "weight": "semibold", "leading": "snug" },
+    "h3": { "family": "body", "size": "xl", "weight": "semibold" },
+    "body": { "family": "body", "size": "base", "weight": "regular", "leading": "normal", "maxWidth": "70ch" },
+    "small": { "family": "body", "size": "sm", "weight": "regular", "color": "text-muted" },
+    "label": { "family": "body", "size": "xs", "weight": "semibold", "transform": "uppercase", "tracking": "wide", "color": "text-subtle" },
+    "data": { "family": "mono", "size": "sm", "weight": "regular" }
+  },
+  "space": {
+    "0": "0", "1": "0.25rem", "2": "0.5rem", "3": "0.75rem", "4": "1rem", "5": "1.25rem",
+    "6": "1.5rem", "8": "2rem", "10": "2.5rem", "12": "3rem", "16": "4rem", "20": "5rem", "24": "6rem",
+    "$base": "4px"
+  },
+  "radius": { "none": "0", "sm": "4px", "md": "8px", "lg": "12px", "xl": "16px", "2xl": "24px", "full": "9999px" },
+  "shadow": {
+    "light": {
+      "xs": "0 1px 2px rgba(28,26,22,.06)",
+      "sm": "0 1px 3px rgba(28,26,22,.08), 0 1px 2px rgba(28,26,22,.05)",
+      "md": "0 4px 10px rgba(28,26,22,.08), 0 2px 4px rgba(28,26,22,.05)",
+      "lg": "0 12px 28px rgba(28,26,22,.12), 0 4px 8px rgba(28,26,22,.06)",
+      "xl": "0 24px 48px rgba(28,26,22,.16)"
+    },
+    "dark": {
+      "xs": "0 1px 2px rgba(0,0,0,.4)",
+      "sm": "0 1px 3px rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.35)",
+      "md": "0 4px 12px rgba(0,0,0,.5)",
+      "lg": "0 14px 32px rgba(0,0,0,.55)",
+      "xl": "0 24px 50px rgba(0,0,0,.6)"
+    }
+  },
+  "motion": {
+    "ease": {
+      "grow": "cubic-bezier(0.22, 1, 0.36, 1)",
+      "standard": "cubic-bezier(0.4, 0, 0.2, 1)",
+      "enter": "cubic-bezier(0, 0, 0.2, 1)",
+      "exit": "cubic-bezier(0.4, 0, 1, 1)"
+    },
+    "duration": { "fast": "150ms", "base": "250ms", "slow": "400ms", "slower": "600ms" }
+  },
+  "zIndex": { "base": "0", "raised": "10", "sticky": "100", "overlay": "1000", "modal": "1100", "toast": "1200" },
+  "layout": {
+    "contentMax": "1120px",
+    "sidebarWidth": "264px",
+    "readWidth": "70ch",
+    "gridGap": "var(space.6)",
+    "breakpoints": { "sm": "640px", "md": "768px", "lg": "1024px", "xl": "1280px", "2xl": "1536px" }
+  },
+  "$rules": [
+    "Komponens SOHA nem hivatkozhat primitív értékre vagy nyers hex/px értékre; csak color.semantic + skála-tokenek.",
+    "A téma a color.semantic + shadow réteg cseréjével vált; komponens-szintű dark override tilos.",
+    "A11y floor: focus-ring minden interaktív elemen, kontraszt >=4.5:1, jelentés sosem csak szín, prefers-reduced-motion tisztelve.",
+    "display font kizárólag címben; body=Inter; data=mono."
+  ]
+}

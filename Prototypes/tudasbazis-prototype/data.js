@@ -4,15 +4,17 @@
 const NOW = Date.now();
 const MIN = 60 * 1000, HOUR = 60 * MIN, DAY = 24 * HOUR;
 
+// `avatar`: a design system avatár-palettájának indexe (tokens.css --avatar-1..4).
+// Szándékosan NEM nyers hex — a színt a rendszer adja, nem az adat.
 const SEED_USERS = [
-  { id: 'u1', name: 'Tóth Máté',   email: 'mate.toth@vallalat.hu',   initials: 'TM', color: '#2563eb' },
-  { id: 'u2', name: 'Kiss Anna',   email: 'anna.kiss@vallalat.hu',   initials: 'KA', color: '#059669' },
-  { id: 'u3', name: 'Nagy Béla',   email: 'bela.nagy@vallalat.hu',   initials: 'NB', color: '#d97706' },
+  { id: 'u1', name: 'Tóth Máté',   email: 'mate.toth@vallalat.hu',   initials: 'TM', avatar: 1 },
+  { id: 'u2', name: 'Kiss Anna',   email: 'anna.kiss@vallalat.hu',   initials: 'KA', avatar: 2 },
+  { id: 'u3', name: 'Nagy Béla',   email: 'bela.nagy@vallalat.hu',   initials: 'NB', avatar: 3 },
 ];
 
 // Allowlist — a "Szabó Kata" szándékosan NINCS rajta (403-demó a loginon)
 const SEED_ALLOWLIST = SEED_USERS.map(u => u.email);
-const NOT_ALLOWED_USER = { id: 'u9', name: 'Szabó Kata (nincs allowlisten)', email: 'kata.szabo@kulsos.hu', initials: 'SK', color: '#6b7280' };
+const NOT_ALLOWED_USER = { id: 'u9', name: 'Szabó Kata (nincs allowlisten)', email: 'kata.szabo@kulsos.hu', initials: 'SK', avatar: 4 };
 
 const SEED_CATEGORIES = [
   { id: 'c1', name: 'Onboarding',  description: 'Új belépők anyagai' },

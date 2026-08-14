@@ -1,0 +1,1544 @@
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Táltos · Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+/* =====================================================================
+   TÁLTOS DESIGN SYSTEM
+   Tokenekre épülő, bővíthető rendszer. Minden vizuális döntés a
+   :root alatti design tokenekből származik — egy token módosítása
+   az egész felületen érvényesül. A [data-theme="dark"] blokk kizárólag
+   a szemantikus tokeneket cseréli le, a primitív ramp változatlan.
+   ===================================================================== */
+
+/* ---------- 1. PRIMITÍV TOKENEK (nyers érték-rampák) ---------- */
+:root {
+  /* Világfa zöld — az elsődleges szín: növekedés, élő tudás */
+  --green-50:  #ECF5F1;
+  --green-100: #D2E8DF;
+  --green-200: #A6D0C1;
+  --green-300: #71B29C;
+  --green-400: #479079;
+  --green-500: #2C7460;
+  --green-600: #1F5C4C;
+  --green-700: #194A3E;
+  --green-800: #163C33;
+  --green-900: #10281F;
+
+  /* Sólyomkék — a másodlagos szín: magasabb nézőpont, technológia */
+  --blue-50:  #ECF2F9;
+  --blue-100: #D3E1F2;
+  --blue-200: #A9C5E6;
+  --blue-300: #79A3D6;
+  --blue-400: #4E82C4;
+  --blue-500: #3467AD;
+  --blue-600: #29528C;
+  --blue-700: #234471;
+  --blue-800: #1E385C;
+  --blue-900: #16273F;
+
+  /* Csillagarany — az akcentus: bölcsesség, útmutatás, meleg fény */
+  --gold-50:  #FBF3E4;
+  --gold-100: #F6E3BF;
+  --gold-200: #EFCB86;
+  --gold-300: #E7B356;
+  --gold-400: #DD9C2E;
+  --gold-500: #C9861A;
+  --gold-600: #A66B14;
+  --gold-700: #825313;
+  --gold-800: #674214;
+  --gold-900: #4A2F0F;
+
+  /* Kéreg — meleg tónusú semleges skála (fa, kő, pergamen) */
+  --bark-0:   #FFFFFF;
+  --bark-50:  #F7F5F1;
+  --bark-100: #EDE9E1;
+  --bark-200: #DBD5C9;
+  --bark-300: #BFB7A6;
+  --bark-400: #9C9384;
+  --bark-500: #7A7264;
+  --bark-600: #5E574C;
+  --bark-700: #46413A;
+  --bark-800: #302C27;
+  --bark-900: #1C1A16;
+  --bark-950: #12100D;
+
+  /* Szemantikus státusz-primitívek */
+  --success-500: #2F855A;  --success-600: #276749;  --success-50: #E7F3EC;
+  --warning-500: #C9861A;  --warning-600: #A66B14;  --warning-50: #FBF3E4;
+  --danger-500:  #C0492E;  --danger-600:  #9E3A24;  --danger-50:  #F9EAE6;
+  --info-500:    #3467AD;  --info-600:    #29528C;  --info-50:    #ECF2F9;
+
+  /* ---------- 2. SKÁLA-TOKENEK (tématól függetlenek) ---------- */
+
+  /* Tipográfia */
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Menlo, monospace;
+
+  --text-xs:   0.75rem;   /* 12 */
+  --text-sm:   0.875rem;  /* 14 */
+  --text-base: 1rem;      /* 16 */
+  --text-lg:   1.125rem;  /* 18 */
+  --text-xl:   1.25rem;   /* 20 */
+  --text-2xl:  1.5rem;    /* 24 */
+  --text-3xl:  1.875rem;  /* 30 */
+  --text-4xl:  2.25rem;   /* 36 */
+  --text-5xl:  3rem;      /* 48 */
+  --text-6xl:  3.75rem;   /* 60 */
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-normal: 1.6;
+  --leading-relaxed: 1.75;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.14em;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Térköz — 4px alapráccsal */
+  --space-0: 0;
+  --space-1: 0.25rem;   /* 4  */
+  --space-2: 0.5rem;    /* 8  */
+  --space-3: 0.75rem;   /* 12 */
+  --space-4: 1rem;      /* 16 */
+  --space-5: 1.25rem;   /* 20 */
+  --space-6: 1.5rem;    /* 24 */
+  --space-8: 2rem;      /* 32 */
+  --space-10: 2.5rem;   /* 40 */
+  --space-12: 3rem;     /* 48 */
+  --space-16: 4rem;     /* 64 */
+  --space-20: 5rem;     /* 80 */
+  --space-24: 6rem;     /* 96 */
+
+  /* Sugarak */
+  --radius-none: 0;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* Rétegek (z-index) */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 100;
+  --z-overlay: 1000;
+  --z-modal: 1100;
+  --z-toast: 1200;
+
+  /* Mozgás */
+  --ease-grow: cubic-bezier(0.22, 1, 0.36, 1);   /* organikus lassuló */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-enter: cubic-bezier(0, 0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+  --duration-slower: 600ms;
+
+  /* Elrendezés */
+  --content-max: 1120px;
+  --sidebar-w: 264px;
+
+  /* ---------- 3. SZEMANTIKUS TOKENEK — VILÁGOS TÉMA ---------- */
+  --bg: var(--bark-50);
+  --bg-contour: rgba(31, 92, 76, 0.05);
+  --surface: var(--bark-0);
+  --surface-raised: var(--bark-0);
+  --surface-sunken: var(--bark-100);
+  --surface-inverse: var(--green-900);
+
+  --border: var(--bark-200);
+  --border-strong: var(--bark-300);
+  --border-focus: var(--blue-500);
+
+  --text: var(--bark-900);
+  --text-muted: var(--bark-600);
+  --text-subtle: var(--bark-500);
+  --text-inverse: var(--bark-0);
+  --text-on-accent: var(--bark-950);
+
+  --primary: var(--green-600);
+  --primary-hover: var(--green-700);
+  --primary-active: var(--green-800);
+  --primary-soft: var(--green-50);
+  --primary-soft-text: var(--green-700);
+  --on-primary: #FFFFFF;
+
+  --secondary: var(--blue-600);
+  --secondary-hover: var(--blue-700);
+  --secondary-soft: var(--blue-50);
+  --on-secondary: #FFFFFF;
+
+  --accent: var(--gold-500);
+  --accent-hover: var(--gold-600);
+  --accent-soft: var(--gold-50);
+
+  --success: var(--success-600); --success-bg: var(--success-50);
+  --warning: var(--warning-600); --warning-bg: var(--warning-50);
+  --danger: var(--danger-600);   --danger-bg: var(--danger-50);
+  --info: var(--info-600);       --info-bg: var(--info-50);
+
+  --focus-ring: 0 0 0 3px rgba(52, 103, 173, 0.35);
+
+  /* Árnyékok — meleg, zöldes-barna tónusú (nem szürke) */
+  --shadow-xs: 0 1px 2px rgba(28, 26, 22, 0.06);
+  --shadow-sm: 0 1px 3px rgba(28, 26, 22, 0.08), 0 1px 2px rgba(28, 26, 22, 0.05);
+  --shadow-md: 0 4px 10px rgba(28, 26, 22, 0.08), 0 2px 4px rgba(28, 26, 22, 0.05);
+  --shadow-lg: 0 12px 28px rgba(28, 26, 22, 0.12), 0 4px 8px rgba(28, 26, 22, 0.06);
+  --shadow-xl: 0 24px 48px rgba(28, 26, 22, 0.16);
+}
+
+/* ---------- SZEMANTIKUS TOKENEK — SÖTÉT TÉMA ---------- */
+[data-theme="dark"] {
+  --bg: var(--bark-950);
+  --bg-contour: rgba(113, 178, 156, 0.06);
+  --surface: #1C1A16;
+  --surface-raised: #24211C;
+  --surface-sunken: #16140F;
+  --surface-inverse: var(--green-50);
+
+  --border: #34302A;
+  --border-strong: #47423A;
+  --border-focus: var(--blue-300);
+
+  --text: #F2EEE6;
+  --text-muted: #B4AC9C;
+  --text-subtle: #8A8272;
+  --text-inverse: var(--bark-900);
+  --text-on-accent: var(--bark-950);
+
+  --primary: var(--green-300);
+  --primary-hover: var(--green-200);
+  --primary-active: var(--green-100);
+  --primary-soft: rgba(44, 116, 96, 0.18);
+  --primary-soft-text: var(--green-200);
+  --on-primary: var(--green-900);
+
+  --secondary: var(--blue-300);
+  --secondary-hover: var(--blue-200);
+  --secondary-soft: rgba(52, 103, 173, 0.18);
+  --on-secondary: var(--blue-900);
+
+  --accent: var(--gold-300);
+  --accent-hover: var(--gold-200);
+  --accent-soft: rgba(201, 134, 26, 0.16);
+
+  --success: #6EC28E; --success-bg: rgba(47, 133, 90, 0.16);
+  --warning: var(--gold-300); --warning-bg: rgba(201, 134, 26, 0.16);
+  --danger: #E28468;  --danger-bg: rgba(192, 73, 46, 0.18);
+  --info: var(--blue-300); --info-bg: rgba(52, 103, 173, 0.16);
+
+  --focus-ring: 0 0 0 3px rgba(121, 163, 214, 0.45);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 14px 32px rgba(0, 0, 0, 0.55);
+  --shadow-xl: 0 24px 50px rgba(0, 0, 0, 0.6);
+}
+
+/* =====================================================================
+   ALAP / RESET
+   ===================================================================== */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; -webkit-text-size-adjust: 100%; }
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background var(--duration-base) var(--ease-standard),
+              color var(--duration-base) var(--ease-standard);
+}
+img, svg { display: block; max-width: 100%; }
+a { color: var(--secondary); text-underline-offset: 2px; }
+::selection { background: var(--accent-soft); color: var(--text); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+/* =====================================================================
+   ELRENDEZÉS — VÁZ
+   ===================================================================== */
+.app { display: grid; grid-template-columns: var(--sidebar-w) 1fr; min-height: 100vh; }
+
+/* --- Oldalsáv: a "világfa" navigációs gerinc --- */
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  padding: var(--space-6) var(--space-5);
+  overflow-y: auto;
+  z-index: var(--z-sticky);
+}
+.brand { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-8); }
+.brand-mark { width: 40px; height: 40px; flex: none; }
+.brand-name { font-family: var(--font-display); font-weight: 600; font-size: var(--text-xl); letter-spacing: var(--tracking-tight); line-height: 1; }
+.brand-sub { font-size: var(--text-xs); color: var(--text-subtle); letter-spacing: var(--tracking-wide); text-transform: uppercase; }
+
+.nav-tree { list-style: none; padding: 0; position: relative; }
+.nav-tree::before {
+  content: ""; position: absolute; left: 7px; top: 10px; bottom: 10px;
+  width: 2px; background: linear-gradient(var(--border), transparent);
+}
+.nav-item { position: relative; }
+.nav-link {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-6);
+  font-size: var(--text-sm); color: var(--text-muted); text-decoration: none;
+  border-radius: var(--radius-md); position: relative;
+  transition: color var(--duration-fast), background var(--duration-fast);
+}
+.nav-link::before {
+  content: ""; position: absolute; left: 3px; top: 50%; transform: translateY(-50%);
+  width: 9px; height: 9px; border-radius: var(--radius-full);
+  border: 2px solid var(--border-strong); background: var(--surface);
+  transition: all var(--duration-fast);
+}
+.nav-link:hover { color: var(--text); background: var(--surface-sunken); }
+.nav-link.active { color: var(--primary); font-weight: var(--weight-semibold); }
+.nav-link.active::before { border-color: var(--primary); background: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+
+/* --- Fő tartalom --- */
+.main { min-width: 0; }
+.topbar {
+  position: sticky; top: 0; z-index: var(--z-sticky);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-4); padding: var(--space-3) var(--space-8);
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-title { font-size: var(--text-sm); color: var(--text-subtle); letter-spacing: var(--tracking-wide); text-transform: uppercase; }
+.topbar-actions { display: flex; align-items: center; gap: var(--space-2); }
+
+.content { max-width: var(--content-max); margin: 0 auto; padding: var(--space-16) var(--space-8) var(--space-24); }
+
+/* =====================================================================
+   HERO
+   ===================================================================== */
+.hero { position: relative; padding: var(--space-16) 0 var(--space-12); overflow: hidden; }
+.hero-contours { position: absolute; inset: -10% -10% auto; height: 420px; opacity: 0.9; pointer-events: none; z-index: 0; }
+.hero > *:not(.hero-contours) { position: relative; z-index: 1; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  font-size: var(--text-xs); font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+  color: var(--primary); background: var(--primary-soft);
+  padding: var(--space-1) var(--space-3); border-radius: var(--radius-full);
+  margin-bottom: var(--space-5);
+}
+.hero h1 {
+  font-family: var(--font-display); font-weight: 600;
+  font-size: clamp(2.4rem, 6vw, var(--text-6xl)); line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight); max-width: 16ch; margin-bottom: var(--space-5);
+}
+.hero h1 em { font-style: italic; color: var(--primary); }
+.hero-lead { font-size: var(--text-xl); color: var(--text-muted); max-width: 60ch; line-height: var(--leading-normal); }
+.hero-meta { display: flex; flex-wrap: wrap; gap: var(--space-6); margin-top: var(--space-10); }
+.hero-meta div { border-left: 2px solid var(--accent); padding-left: var(--space-4); }
+.hero-meta dt { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: var(--tracking-wide); color: var(--text-subtle); }
+.hero-meta dd { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 500; }
+
+/* =====================================================================
+   SZEKCIÓK & TIPOGRÁFIA
+   ===================================================================== */
+.section { padding-top: var(--space-20); scroll-margin-top: 80px; }
+.section-head { margin-bottom: var(--space-8); }
+.section-index {
+  font-family: var(--font-mono); font-size: var(--text-sm); color: var(--accent);
+  font-weight: 500; letter-spacing: var(--tracking-wide);
+}
+.section-head h2 {
+  font-family: var(--font-display); font-weight: 600; font-size: var(--text-4xl);
+  line-height: var(--leading-tight); letter-spacing: var(--tracking-tight);
+  margin: var(--space-2) 0 var(--space-3);
+}
+.section-head p { color: var(--text-muted); max-width: 68ch; font-size: var(--text-lg); }
+
+h3.block-title {
+  font-family: var(--font-display); font-weight: 600; font-size: var(--text-2xl);
+  margin: var(--space-12) 0 var(--space-5); letter-spacing: var(--tracking-tight);
+}
+h4.sub-title {
+  font-size: var(--text-sm); font-weight: var(--weight-semibold); text-transform: uppercase;
+  letter-spacing: var(--tracking-wide); color: var(--text-subtle);
+  margin: var(--space-8) 0 var(--space-4);
+}
+.prose p { max-width: 70ch; color: var(--text-muted); margin-bottom: var(--space-4); }
+.prose strong { color: var(--text); font-weight: var(--weight-semibold); }
+
+.divider { height: 1px; background: var(--border); border: 0; margin: var(--space-20) 0 0; }
+
+/* =====================================================================
+   ÚJRAFELHASZNÁLHATÓ DEMO-ELEMEK
+   ===================================================================== */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+}
+.demo {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: var(--space-8);
+  display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: center;
+}
+.demo.stack { flex-direction: column; align-items: stretch; }
+.demo-label {
+  width: 100%; font-size: var(--text-xs); font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: var(--tracking-wide);
+  color: var(--text-subtle); margin-bottom: var(--space-1);
+}
+.grid { display: grid; gap: var(--space-4); }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 900px) { .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+
+/* =====================================================================
+   SZÍNPALETTA
+   ===================================================================== */
+.ramp { border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); }
+.ramp-head { padding: var(--space-4); display: flex; justify-content: space-between; align-items: baseline; }
+.ramp-head .name { font-family: var(--font-display); font-weight: 600; font-size: var(--text-lg); }
+.ramp-head .role { font-size: var(--text-xs); color: var(--text-subtle); }
+.swatches { display: grid; grid-template-columns: repeat(10, 1fr); }
+.swatch { height: 64px; display: flex; align-items: flex-end; padding: var(--space-2); cursor: copy; position: relative; transition: transform var(--duration-fast); }
+.swatch:hover { transform: scaleY(1.12); z-index: 2; box-shadow: var(--shadow-md); }
+.swatch span { font-family: var(--font-mono); font-size: 10px; font-weight: 500; }
+.swatch small { position: absolute; top: 4px; left: 6px; font-family: var(--font-mono); font-size: 9px; opacity: 0.7; }
+@media (max-width: 720px) { .swatches { grid-template-columns: repeat(5, 1fr); } }
+
+.token-chip { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+.token-dot { width: 34px; height: 34px; border-radius: var(--radius-md); flex: none; border: 1px solid rgba(0,0,0,0.08); }
+.token-chip .meta { min-width: 0; }
+.token-chip .meta code { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text); }
+.token-chip .meta span { display: block; font-size: var(--text-xs); color: var(--text-subtle); }
+
+/* =====================================================================
+   TIPOGRÁFIA MINTA
+   ===================================================================== */
+.type-row { display: grid; grid-template-columns: 120px 1fr; gap: var(--space-6); align-items: baseline; padding: var(--space-4) 0; border-bottom: 1px solid var(--border); }
+.type-row:last-child { border-bottom: 0; }
+.type-spec { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-subtle); line-height: var(--leading-snug); }
+.type-spec b { display: block; color: var(--text); font-weight: 600; margin-bottom: 2px; }
+.type-sample { color: var(--text); min-width: 0; }
+
+/* =====================================================================
+   PRODUKT KOMPONENSEK — a Táltos felület UI-készlete
+   ===================================================================== */
+
+/* --- Gomb --- */
+.btn {
+  --_bg: var(--primary); --_fg: var(--on-primary); --_bd: transparent;
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold);
+  line-height: 1; padding: 0 var(--space-4); height: 40px; border-radius: var(--radius-md);
+  background: var(--_bg); color: var(--_fg); border: 1px solid var(--_bd);
+  cursor: pointer; text-decoration: none; white-space: nowrap;
+  transition: filter var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast), transform var(--duration-fast), background var(--duration-fast);
+}
+.btn:hover { background: var(--primary-hover); }
+.btn:active { transform: translateY(1px); }
+.btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.btn svg { width: 16px; height: 16px; }
+
+.btn--secondary { --_bg: var(--secondary); --_fg: var(--on-secondary); }
+.btn--secondary:hover { background: var(--secondary-hover); }
+.btn--accent { --_bg: var(--accent); --_fg: var(--text-on-accent); }
+.btn--accent:hover { background: var(--accent-hover); }
+.btn--outline { --_bg: transparent; --_fg: var(--text); --_bd: var(--border-strong); }
+.btn--outline:hover { background: var(--surface-sunken); }
+.btn--ghost { --_bg: transparent; --_fg: var(--text-muted); --_bd: transparent; }
+.btn--ghost:hover { background: var(--surface-sunken); color: var(--text); }
+.btn--danger { --_bg: var(--danger); --_fg: #fff; }
+.btn--danger:hover { filter: brightness(0.94); background: var(--danger); }
+
+.btn--sm { height: 32px; font-size: var(--text-xs); padding: 0 var(--space-3); }
+.btn--lg { height: 48px; font-size: var(--text-base); padding: 0 var(--space-6); }
+.btn--icon { padding: 0; width: 40px; }
+.btn[disabled], .btn.is-disabled { opacity: 0.45; pointer-events: none; }
+.btn--loading { pointer-events: none; }
+.spinner { width: 15px; height: 15px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- Űrlapelemek --- */
+.field { display: flex; flex-direction: column; gap: var(--space-2); }
+.label { font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--text); }
+.label .opt { color: var(--text-subtle); font-weight: 400; }
+.input, .select, .textarea {
+  font-family: var(--font-body); font-size: var(--text-sm); color: var(--text);
+  background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md); padding: 0 var(--space-3); height: 40px; width: 100%;
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+}
+.textarea { height: auto; padding: var(--space-3); min-height: 96px; resize: vertical; line-height: var(--leading-normal); }
+.input:hover, .select:hover, .textarea:hover { border-color: var(--bark-400); }
+.input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--border-focus); box-shadow: var(--focus-ring); }
+.input::placeholder, .textarea::placeholder { color: var(--text-subtle); }
+.field .hint { font-size: var(--text-xs); color: var(--text-subtle); }
+.field.is-error .input { border-color: var(--danger); }
+.field.is-error .hint { color: var(--danger); }
+.input-group { position: relative; }
+.input-group svg { position: absolute; left: var(--space-3); top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-subtle); pointer-events: none; }
+.input-group .input { padding-left: 38px; }
+.select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237A7264' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right var(--space-3) center; padding-right: 38px; }
+
+/* Checkbox / Radio */
+.check { display: inline-flex; align-items: center; gap: var(--space-2); cursor: pointer; font-size: var(--text-sm); }
+.check input { appearance: none; width: 20px; height: 20px; border: 1px solid var(--border-strong); background: var(--surface); border-radius: var(--radius-sm); display: grid; place-content: center; cursor: pointer; transition: all var(--duration-fast); }
+.check input[type="radio"] { border-radius: var(--radius-full); }
+.check input::before { content: ""; width: 10px; height: 10px; transform: scale(0); transition: transform var(--duration-fast) var(--ease-grow); box-shadow: inset 1em 1em var(--on-primary); }
+.check input[type="checkbox"]::before { clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
+.check input[type="radio"]::before { border-radius: 50%; box-shadow: inset 1em 1em #fff; }
+.check input:checked { background: var(--primary); border-color: var(--primary); }
+.check input:checked::before { transform: scale(1); }
+.check input:focus-visible { box-shadow: var(--focus-ring); }
+
+/* Switch */
+.switch { position: relative; display: inline-flex; align-items: center; gap: var(--space-3); cursor: pointer; font-size: var(--text-sm); }
+.switch input { position: absolute; opacity: 0; }
+.switch .track { width: 44px; height: 24px; border-radius: var(--radius-full); background: var(--bark-300); transition: background var(--duration-base) var(--ease-grow); flex: none; }
+[data-theme="dark"] .switch .track { background: var(--border-strong); }
+.switch .thumb { position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: var(--shadow-sm); transition: transform var(--duration-base) var(--ease-grow); }
+.switch input:checked ~ .track { background: var(--primary); }
+.switch input:checked ~ .thumb { transform: translateX(20px); }
+.switch input:focus-visible ~ .track { box-shadow: var(--focus-ring); }
+
+/* --- Badge / címke / státusz --- */
+.badge { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); font-weight: var(--weight-semibold); padding: 2px var(--space-2); border-radius: var(--radius-full); line-height: 1.5; }
+.badge--neutral { background: var(--surface-sunken); color: var(--text-muted); }
+.badge--primary { background: var(--primary-soft); color: var(--primary-soft-text); }
+.badge--accent { background: var(--accent-soft); color: var(--accent-hover); }
+.badge--success { background: var(--success-bg); color: var(--success); }
+.badge--warning { background: var(--warning-bg); color: var(--warning); }
+.badge--danger { background: var(--danger-bg); color: var(--danger); }
+.badge--info { background: var(--info-bg); color: var(--info); }
+.badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+.tag { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); padding: 3px var(--space-2); border-radius: var(--radius-sm); background: var(--surface-sunken); color: var(--text-muted); border: 1px solid var(--border); }
+
+/* --- Alert / hasáb --- */
+.alert { display: flex; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid; }
+.alert-icon { flex: none; width: 20px; height: 20px; margin-top: 1px; }
+.alert-body h5 { font-size: var(--text-sm); font-weight: var(--weight-semibold); margin-bottom: 2px; }
+.alert-body p { font-size: var(--text-sm); color: var(--text-muted); }
+.alert--info { background: var(--info-bg); border-color: color-mix(in srgb, var(--info) 30%, transparent); }
+.alert--info .alert-icon { color: var(--info); }
+.alert--success { background: var(--success-bg); border-color: color-mix(in srgb, var(--success) 30%, transparent); }
+.alert--success .alert-icon { color: var(--success); }
+.alert--warning { background: var(--warning-bg); border-color: color-mix(in srgb, var(--warning) 30%, transparent); }
+.alert--warning .alert-icon { color: var(--warning); }
+.alert--danger { background: var(--danger-bg); border-color: color-mix(in srgb, var(--danger) 30%, transparent); }
+.alert--danger .alert-icon { color: var(--danger); }
+
+/* --- Avatar --- */
+.avatar { position: relative; width: 40px; height: 40px; border-radius: 50%; display: grid; place-content: center; font-weight: var(--weight-semibold); font-size: var(--text-sm); color: #fff; flex: none; }
+.avatar--rank::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid var(--accent); }
+.rank-crest { position: absolute; bottom: -4px; right: -4px; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: var(--text-on-accent); display: grid; place-content: center; border: 2px solid var(--surface); font-size: 9px; }
+
+/* --- Knowledge card --- */
+.k-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-5); box-shadow: var(--shadow-sm); transition: transform var(--duration-base) var(--ease-grow), box-shadow var(--duration-base), border-color var(--duration-base); }
+.k-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--border-strong); }
+.k-card-top { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.k-card-icon { width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--primary-soft); color: var(--primary-soft-text); display: grid; place-content: center; flex: none; }
+.k-card h5 { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 600; line-height: var(--leading-snug); }
+.k-card p { font-size: var(--text-sm); color: var(--text-muted); margin: var(--space-2) 0 var(--space-4); }
+.k-card-foot { display: flex; align-items: center; justify-content: space-between; padding-top: var(--space-3); border-top: 1px solid var(--border); font-size: var(--text-xs); color: var(--text-subtle); }
+
+/* --- AI assistant buborék --- */
+.ai-msg { display: flex; gap: var(--space-3); }
+.ai-avatar { width: 32px; height: 32px; flex: none; border-radius: var(--radius-md); background: linear-gradient(135deg, var(--green-500), var(--blue-600)); display: grid; place-content: center; color: #fff; }
+.ai-bubble { background: var(--surface-sunken); border: 1px solid var(--border); border-radius: var(--radius-lg); border-top-left-radius: var(--radius-sm); padding: var(--space-4); font-size: var(--text-sm); color: var(--text); }
+.ai-bubble .src { margin-top: var(--space-3); display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+/* --- Tabs --- */
+.tabs { border-bottom: 1px solid var(--border); display: flex; gap: var(--space-1); }
+.tab { appearance: none; background: none; border: 0; border-bottom: 2px solid transparent; padding: var(--space-3) var(--space-4); font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--text-muted); cursor: pointer; transition: color var(--duration-fast), border-color var(--duration-fast); margin-bottom: -1px; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.tab-panel { padding-top: var(--space-5); }
+.tab-panel[hidden] { display: none; }
+
+/* --- Breadcrumb --- */
+.crumbs { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-subtle); flex-wrap: wrap; }
+.crumbs a { color: var(--text-muted); text-decoration: none; }
+.crumbs a:hover { color: var(--primary); }
+.crumbs .sep { color: var(--border-strong); }
+.crumbs .current { color: var(--text); font-weight: var(--weight-medium); }
+
+/* --- Table --- */
+.table-wrap { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+table.data { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+table.data th { text-align: left; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: var(--tracking-wide); color: var(--text-subtle); font-weight: var(--weight-semibold); padding: var(--space-3) var(--space-4); background: var(--surface-sunken); border-bottom: 1px solid var(--border); }
+table.data td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); color: var(--text); }
+table.data tr:last-child td { border-bottom: 0; }
+table.data tbody tr { transition: background var(--duration-fast); }
+table.data tbody tr:hover { background: var(--surface-sunken); }
+.cell-user { display: flex; align-items: center; gap: var(--space-3); }
+
+/* --- Progress / gamification --- */
+.progress { height: 8px; border-radius: var(--radius-full); background: var(--surface-sunken); overflow: hidden; }
+.progress > span { display: block; height: 100%; border-radius: var(--radius-full); background: linear-gradient(90deg, var(--green-500), var(--gold-500)); }
+.rank-track { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); position: relative; }
+.rank-node { text-align: center; }
+.rank-node .orb { width: 44px; height: 44px; margin: 0 auto var(--space-2); border-radius: 50%; display: grid; place-content: center; border: 2px solid var(--border-strong); background: var(--surface); color: var(--text-subtle); position: relative; z-index: 1; }
+.rank-node.done .orb { border-color: var(--primary); background: var(--primary-soft); color: var(--primary-soft-text); }
+.rank-node.current .orb { border-color: var(--accent); background: var(--accent); color: var(--text-on-accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.rank-node .name { font-size: var(--text-xs); font-weight: var(--weight-semibold); }
+.rank-node .lvl { font-size: 10px; color: var(--text-subtle); }
+.rank-track::before { content: ""; position: absolute; top: 22px; left: 12%; right: 12%; height: 2px; background: var(--border); z-index: 0; }
+
+/* --- Tooltip (statikus bemutató) --- */
+.tooltip { position: relative; display: inline-block; }
+.tooltip .tip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--surface-inverse); color: var(--text-inverse); font-size: var(--text-xs); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); white-space: nowrap; box-shadow: var(--shadow-md); opacity: 0; pointer-events: none; transition: opacity var(--duration-fast); }
+.tooltip .tip::after { content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--surface-inverse); }
+.tooltip:hover .tip { opacity: 1; }
+
+/* --- Toast --- */
+.toast { display: flex; align-items: center; gap: var(--space-3); background: var(--surface-inverse); color: var(--text-inverse); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); font-size: var(--text-sm); max-width: 380px; }
+.toast .toast-icon { color: var(--green-300); flex: none; }
+[data-theme="dark"] .toast .toast-icon { color: var(--green-600); }
+
+/* --- Modal (statikus bemutató) --- */
+.modal-demo { background: var(--surface-sunken); border: 1px dashed var(--border-strong); border-radius: var(--radius-lg); padding: var(--space-8); display: grid; place-items: center; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); max-width: 420px; width: 100%; overflow: hidden; }
+.modal-body { padding: var(--space-6); }
+.modal-body h4 { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 600; margin-bottom: var(--space-2); }
+.modal-body p { font-size: var(--text-sm); color: var(--text-muted); }
+.modal-foot { display: flex; justify-content: flex-end; gap: var(--space-2); padding: var(--space-4) var(--space-6); background: var(--surface-sunken); border-top: 1px solid var(--border); }
+
+/* --- Empty state --- */
+.empty { text-align: center; padding: var(--space-12) var(--space-6); border: 1px dashed var(--border-strong); border-radius: var(--radius-lg); }
+.empty svg { margin: 0 auto var(--space-4); color: var(--text-subtle); width: 48px; height: 48px; }
+.empty h5 { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 600; margin-bottom: var(--space-1); }
+.empty p { font-size: var(--text-sm); color: var(--text-muted); max-width: 40ch; margin: 0 auto var(--space-4); }
+
+/* --- Ikon-galéria --- */
+.icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--space-3); }
+.icon-cell { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: var(--space-5) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); text-align: center; }
+.icon-cell svg { width: 28px; height: 28px; color: var(--primary); stroke-width: 1.6; }
+.icon-cell span { font-size: var(--text-xs); color: var(--text-muted); }
+
+/* --- Token tábla --- */
+.token-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.token-table th { text-align: left; padding: var(--space-2) var(--space-3); color: var(--text-subtle); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: var(--tracking-wide); border-bottom: 1px solid var(--border); }
+.token-table td { padding: var(--space-3); border-bottom: 1px solid var(--border); vertical-align: middle; }
+.token-table code { font-family: var(--font-mono); font-size: var(--text-xs); background: var(--surface-sunken); padding: 2px 6px; border-radius: var(--radius-sm); color: var(--text); }
+.mono { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); }
+
+/* Kód-blokk */
+pre.code { background: var(--surface-inverse); color: #E8EDEA; border-radius: var(--radius-lg); padding: var(--space-5); overflow-x: auto; font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.7; }
+[data-theme="dark"] pre.code { border: 1px solid var(--border); }
+pre.code .c { color: #7FA99B; }
+pre.code .k { color: var(--gold-300); }
+pre.code .v { color: #9CC3E6; }
+
+/* Elrendezés-részletek */
+.space-scale { display: flex; flex-direction: column; gap: var(--space-2); }
+.space-row { display: flex; align-items: center; gap: var(--space-4); }
+.space-bar { height: 16px; background: var(--primary); border-radius: var(--radius-sm); }
+.space-row code { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); min-width: 130px; }
+
+.radius-demo { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+.radius-box { width: 88px; height: 72px; background: var(--primary-soft); border: 1px solid var(--primary); display: grid; place-items: end center; padding: var(--space-2); }
+.radius-box span { font-family: var(--font-mono); font-size: 10px; color: var(--primary-soft-text); }
+
+.elev-demo { display: flex; flex-wrap: wrap; gap: var(--space-6); }
+.elev-box { width: 130px; height: 88px; background: var(--surface); border-radius: var(--radius-md); display: grid; place-items: center; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); border: 1px solid var(--border); }
+
+.principle { display: flex; gap: var(--space-4); padding: var(--space-5); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); }
+.principle .p-icon { width: 44px; height: 44px; flex: none; border-radius: var(--radius-md); background: var(--primary-soft); color: var(--primary-soft-text); display: grid; place-content: center; }
+.principle h5 { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 600; margin-bottom: var(--space-1); }
+.principle p { font-size: var(--text-sm); color: var(--text-muted); }
+
+.do-dont { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+@media (max-width: 720px) { .do-dont { grid-template-columns: 1fr; } }
+.dd { border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; }
+.dd-head { padding: var(--space-3) var(--space-4); font-size: var(--text-sm); font-weight: var(--weight-semibold); display: flex; align-items: center; gap: var(--space-2); }
+.dd--do .dd-head { background: var(--success-bg); color: var(--success); }
+.dd--dont .dd-head { background: var(--danger-bg); color: var(--danger); }
+.dd-body { padding: var(--space-4); }
+.dd-body li { font-size: var(--text-sm); color: var(--text-muted); margin-bottom: var(--space-2); list-style: none; padding-left: var(--space-5); position: relative; }
+.dd-body li::before { position: absolute; left: 0; top: -1px; }
+.dd--do li::before { content: "✓"; color: var(--success); }
+.dd--dont li::before { content: "✕"; color: var(--danger); }
+
+.toolbtn { display: inline-flex; align-items: center; gap: var(--space-2); height: 34px; padding: 0 var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); font-size: var(--text-sm); font-weight: var(--weight-medium); cursor: pointer; font-family: var(--font-body); transition: all var(--duration-fast); }
+.toolbtn:hover { color: var(--text); border-color: var(--border-strong); }
+.toolbtn svg { width: 16px; height: 16px; }
+
+.copy-toast { position: fixed; bottom: var(--space-6); left: 50%; transform: translateX(-50%) translateY(20px); z-index: var(--z-toast); opacity: 0; pointer-events: none; transition: all var(--duration-base) var(--ease-grow); }
+.copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.footer { margin-top: var(--space-24); padding-top: var(--space-8); border-top: 1px solid var(--border); font-size: var(--text-sm); color: var(--text-subtle); display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4); }
+
+/* Reszponzív oldalsáv */
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .content { padding: var(--space-10) var(--space-5) var(--space-20); }
+  .topbar { padding: var(--space-3) var(--space-5); }
+  .type-row { grid-template-columns: 1fr; gap: var(--space-2); }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .rank-track { grid-template-columns: repeat(4, 1fr); }
+}
+</style>
+
+<div class="app">
+  <!-- ============ OLDALSÁV: VILÁGFA-GERINC ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <circle cx="20" cy="20" r="19" fill="var(--primary-soft)"/>
+        <path d="M20 33V19M20 19c0-4 3-6 3-9M20 19c0-4-3-6-3-8.5" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="20" cy="8" r="2.4" fill="var(--accent)"/>
+        <circle cx="26" cy="12" r="1.8" fill="var(--secondary)"/>
+        <circle cx="14" cy="12.5" r="1.8" fill="var(--secondary)"/>
+        <path d="M14 24h12" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <div class="brand-name">Táltos</div>
+        <div class="brand-sub">Design System</div>
+      </div>
+    </div>
+    <nav aria-label="Tartalom">
+      <ul class="nav-tree" id="nav">
+        <li class="nav-item"><a class="nav-link" href="#alapok">Alapelvek</a></li>
+        <li class="nav-item"><a class="nav-link" href="#hang">Márka &amp; hang</a></li>
+        <li class="nav-item"><a class="nav-link" href="#szin">Színek</a></li>
+        <li class="nav-item"><a class="nav-link" href="#tipografia">Tipográfia</a></li>
+        <li class="nav-item"><a class="nav-link" href="#terkoz">Térköz &amp; rács</a></li>
+        <li class="nav-item"><a class="nav-link" href="#forma">Forma &amp; réteg</a></li>
+        <li class="nav-item"><a class="nav-link" href="#mozgas">Mozgás</a></li>
+        <li class="nav-item"><a class="nav-link" href="#ikon">Ikonográfia</a></li>
+        <li class="nav-item"><a class="nav-link" href="#token">Design tokenek</a></li>
+        <li class="nav-item"><a class="nav-link" href="#komponensek">Komponensek</a></li>
+        <li class="nav-item"><a class="nav-link" href="#mintak">Minták</a></li>
+        <li class="nav-item"><a class="nav-link" href="#gamification">Beavatás</a></li>
+        <li class="nav-item"><a class="nav-link" href="#a11y">Akadálymentesség</a></li>
+        <li class="nav-item"><a class="nav-link" href="#bovites">Bővíthetőség</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- ============ FŐ TARTALOM ============ -->
+  <div class="main">
+    <header class="topbar">
+      <span class="topbar-title">Táltos · Tudásplatform UI/UX rendszer · v1.0</span>
+      <div class="topbar-actions">
+        <button class="toolbtn" id="themeToggle" aria-label="Téma váltása">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <span id="themeLabel">Sötét</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- ===== HERO ===== -->
+      <section class="hero">
+        <svg class="hero-contours" viewBox="0 0 1120 420" fill="none" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <g stroke="var(--bg-contour)" stroke-width="1.5" fill="none">
+            <path d="M-50 120C200 60 400 180 620 120s360-90 600-40"/>
+            <path d="M-50 170C200 110 400 230 620 170s360-90 600-40"/>
+            <path d="M-50 220C200 160 400 280 620 220s360-90 600-40"/>
+            <path d="M-50 270C200 210 400 330 620 270s360-90 600-40"/>
+            <path d="M-50 320C200 260 400 380 620 320s360-90 600-40"/>
+            <path d="M-50 370C200 310 400 430 620 370s360-90 600-40"/>
+          </g>
+        </svg>
+        <span class="hero-eyebrow">Kollektív emlékezet · bölcs útmutató</span>
+        <h1>A <em>Táltos</em> vizuális nyelve</h1>
+        <p class="hero-lead">Ez a Design System a Táltos tudásplatform egyetlen forrása az igazságra. A koncepció — a tudás őrzője, értelmezője és útmutatója — minden token, tipográfiai döntés, szín és komponens mögött ott áll. A rendszer tokenekre épül, ezért következetes és bővíthető: egyetlen érték módosítása az egész felületen érvényesül.</p>
+        <dl class="hero-meta">
+          <div><dt>Alapmetafora</dt><dd>Világfa</dd></div>
+          <div><dt>Alaptónus</dt><dd>Természetes &amp; technológiai</dd></div>
+          <div><dt>Tokenrendszer</dt><dd>Kétrétegű, tématudatos</dd></div>
+          <div><dt>Témák</dt><dd>Világos &amp; sötét</dd></div>
+        </dl>
+      </section>
+
+      <!-- ===== 1. ALAPELVEK ===== -->
+      <section class="section" id="alapok">
+        <div class="section-head">
+          <span class="section-index">01 — Fundamentum</span>
+          <h2>Alapelvek</h2>
+          <p>A táltos nem varázsló, hanem a tudás embere: őriz, összekapcsol, értelmez és útba igazít. Ebből a szerepből hat tervezési alapelv vezethető le, amely minden felületi döntés mércéje.</p>
+        </div>
+        <div class="grid grid-2">
+          <div class="principle">
+            <div class="p-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12M12 12c0-3 2-4 2-7M12 12c0-3-2-4-2-6.5"/><circle cx="12" cy="3.5" r="1.6"/><circle cx="16" cy="6" r="1.3"/><circle cx="8" cy="6.5" r="1.3"/></svg></div>
+            <div><h5>A tudás őrzése</h5><p>A felület soha nem veszít el információt. A megőrzés, a visszakereshetőség és a folytonosság elsőbbséget élvez a látványos, de romlékony megoldásokkal szemben.</p></div>
+          </div>
+          <div class="principle">
+            <div class="p-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2.2"/><circle cx="19" cy="7" r="2.2"/><circle cx="12" cy="18" r="2.2"/><path d="M7 7l3 9M17 8.5l-3.5 7.5"/></svg></div>
+            <div><h5>Összefüggések feltárása</h5><p>Az elemek nem szigetek. A navigáció, a kapcsolatok és a kontextus láthatóvá teszik, hogyan függ össze a tudás — ez a knowledge graph szellemisége.</p></div>
+          </div>
+          <div class="principle">
+            <div class="p-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></div>
+            <div><h5>Tisztánlátás</h5><p>„Lát” — nem díszít. A hierarchia, a kontraszt és a térköz a lényeget emeli ki. Minden pixel a megértést szolgálja, a zaj kerülendő.</p></div>
+          </div>
+          <div class="principle">
+            <div class="p-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 21l-4.9-2.8.9-5.5-4-3.9L9.5 8Z"/></svg></div>
+            <div><h5>Útmutatás, nem parancs</h5><p>A rendszer ajánl, javasol, terel — de a döntést a felhasználónál hagyja. Az AI és az ajánlórendszer hangja segítő, sosem tekintélyelvű.</p></div>
+          </div>
+          <div class="principle">
+            <div class="p-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg></div>
+            <div><h5>A közösség szolgálata</h5><p>A tudás akkor értékes, ha másokat is szolgál. A megosztás, az átörökítés és a közös hozzáférés a felület alapértelmezett működése.</p></div>
+          </div>
+          <div class="principle">
+            <div class="p-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20c4-8 12-8 16-16M4 20c0-5 3-8 6-9"/><circle cx="4" cy="20" r="1.4"/></svg></div>
+            <div><h5>Fejlődés &amp; beavatás</h5><p>A felhasználó tanonctól a táltosig fejlődik. A rendszer méri a haladást, elismeri a szakértelmet, és tanulásra ösztönöz — a beavatás útját tükrözve.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 2. MÁRKA & HANG ===== -->
+      <section class="section" id="hang">
+        <div class="section-head">
+          <span class="section-index">02 — Márka</span>
+          <h2>Márka &amp; hang</h2>
+          <p>A Táltos hangja bölcs, de nem fellengzős; meleg, de precíz. Egy tapasztalt kolléga hangja, aki ismeri a szervezet történetét, és szívesen megosztja.</p>
+        </div>
+        <div class="card" style="padding: var(--space-8); margin-bottom: var(--space-8);">
+          <p style="font-family: var(--font-display); font-size: var(--text-2xl); line-height: var(--leading-snug); max-width: 52ch;">„A Táltos a szervezet kollektív emlékezete és bölcs útmutatója. Megőrzi a tudást, összekapcsolja az ismereteket, és segít megtalálni a legjobb válaszokat.”</p>
+        </div>
+        <div class="do-dont">
+          <div class="dd dd--do">
+            <div class="dd-head">Így írunk</div>
+            <div class="dd-body">
+              <ul>
+                <li>Világos, cselekvő megfogalmazás: „Mentsd a módosításokat”.</li>
+                <li>Felhasználói szemszög: „értesítések”, nem „webhook-konfiguráció”.</li>
+                <li>Segítő, tegező, nyugodt hang; a rendszer terel, nem sürget.</li>
+                <li>Konkrétum a hatásvadászat helyett; az üres állapot cselekvésre hív.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="dd dd--dont">
+            <div class="dd-head">Ezt kerüljük</div>
+            <div class="dd-body">
+              <ul>
+                <li>Misztikus, „varázsló”-narratíva vagy folklorisztikus giccs.</li>
+                <li>Technológiai zsargon és belső rendszernevek a felületen.</li>
+                <li>Tekintélyelvű parancsok; a Táltos ajánl, nem utasít.</li>
+                <li>Bocsánatkérő vagy ködös hibaüzenet.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 3. SZÍNEK ===== -->
+      <section class="section" id="szin">
+        <div class="section-head">
+          <span class="section-index">03 — Szín</span>
+          <h2>Színpaletta</h2>
+          <p>A paletta a „természetes és technológiai” kettősséget testesíti meg: mély, élő zöldek (világfa), tiszta sólyomkék (magasabb nézőpont, technológia), meleg csillagarany akcentus (bölcsesség, útmutatás), és kéreg-tónusú semlegesek. Kattints bármely árnyalatra a hex-érték másolásához.</p>
+        </div>
+
+        <h3 class="block-title">Márkarampák</h3>
+        <div class="grid" style="gap: var(--space-6);">
+          <div class="ramp">
+            <div class="ramp-head"><span class="name">Világfa zöld</span><span class="role">Elsődleges · növekedés, élő tudás</span></div>
+            <div class="swatches" data-ramp="green"></div>
+          </div>
+          <div class="ramp">
+            <div class="ramp-head"><span class="name">Sólyomkék</span><span class="role">Másodlagos · nézőpont, technológia</span></div>
+            <div class="swatches" data-ramp="blue"></div>
+          </div>
+          <div class="ramp">
+            <div class="ramp-head"><span class="name">Csillagarany</span><span class="role">Akcentus · bölcsesség, útmutatás</span></div>
+            <div class="swatches" data-ramp="gold"></div>
+          </div>
+          <div class="ramp">
+            <div class="ramp-head"><span class="name">Kéreg</span><span class="role">Semleges · felületek, szöveg, keretek</span></div>
+            <div class="swatches" data-ramp="bark"></div>
+          </div>
+        </div>
+
+        <h3 class="block-title">Szemantikus státuszszínek</h3>
+        <div class="grid grid-4">
+          <div class="token-chip"><span class="token-dot" style="background: var(--success)"></span><div class="meta"><code>--success</code><span>Sikeres művelet</span></div></div>
+          <div class="token-chip"><span class="token-dot" style="background: var(--warning)"></span><div class="meta"><code>--warning</code><span>Figyelmeztetés</span></div></div>
+          <div class="token-chip"><span class="token-dot" style="background: var(--danger)"></span><div class="meta"><code>--danger</code><span>Hiba, veszély</span></div></div>
+          <div class="token-chip"><span class="token-dot" style="background: var(--info)"></span><div class="meta"><code>--info</code><span>Tájékoztatás</span></div></div>
+        </div>
+
+        <h3 class="block-title">Szemantikus felület-tokenek</h3>
+        <p class="prose" style="margin-bottom: var(--space-5);">A komponensek soha nem hivatkoznak primitív színekre, csak szemantikus tokenekre. Így a világos és sötét téma ugyanazzal a jelöléssel, automatikusan működik.</p>
+        <div class="grid grid-3">
+          <div class="token-chip"><span class="token-dot" style="background: var(--bg)"></span><div class="meta"><code>--bg</code><span>Oldal háttere</span></div></div>
+          <div class="token-chip"><span class="token-dot" style="background: var(--surface)"></span><div class="meta"><code>--surface</code><span>Kártyák, panelek</span></div></div>
+          <div class="token-chip"><span class="token-dot" style="background: var(--surface-sunken)"></span><div class="meta"><code>--surface-sunken</code><span>Mélyített háttér</span></div></div>
+          <div class="token-chip"><span class="token-dot" style="background: var(--text)"></span><div class="meta"><code>--text</code><span>Fő szöveg</span></div></div>
+          <div class="token-chip"><span class="token-dot" style="background: var(--text-muted)"></span><div class="meta"><code>--text-muted</code><span>Másodlagos szöveg</span></div></div>
+          <div class="token-chip"><span class="token-dot" style="background: var(--border)"></span><div class="meta"><code>--border</code><span>Keretek, elválasztók</span></div></div>
+        </div>
+      </section>
+
+      <!-- ===== 4. TIPOGRÁFIA ===== -->
+      <section class="section" id="tipografia">
+        <div class="section-head">
+          <span class="section-index">04 — Típus</span>
+          <h2>Tipográfia</h2>
+          <p>Két hang, egy párbeszéd. A <strong>Fraunces</strong> organikus, fába metszett betűformái az örökséget és a bölcsességet viszik — kizárólag címekben, mértékkel. Az <strong>Inter</strong> a technológiai, kristálytiszta munkatárs a szövegtörzsben és a felületen. A <strong>JetBrains Mono</strong> az adatoké, tokeneké, azonosítóké. Mindhárom teljes magyar ékezetkészletet támogat.</p>
+        </div>
+
+        <div class="card" style="padding: var(--space-8);">
+          <div class="type-row">
+            <div class="type-spec"><b>Display / 6xl</b>Fraunces · 600 · 60px<br>tight · -0.02em</div>
+            <div class="type-sample" style="font-family: var(--font-display); font-weight: 600; font-size: var(--text-5xl); line-height: var(--leading-tight); letter-spacing: var(--tracking-tight);">Őrizzük a tudást</div>
+          </div>
+          <div class="type-row">
+            <div class="type-spec"><b>H1 / 4xl</b>Fraunces · 600 · 36px</div>
+            <div class="type-sample" style="font-family: var(--font-display); font-weight: 600; font-size: var(--text-4xl); line-height: var(--leading-tight); letter-spacing: var(--tracking-tight);">A világfa szintjei között</div>
+          </div>
+          <div class="type-row">
+            <div class="type-spec"><b>H2 / 2xl</b>Fraunces · 600 · 24px</div>
+            <div class="type-sample" style="font-family: var(--font-display); font-weight: 600; font-size: var(--text-2xl); line-height: var(--leading-snug);">Összefüggések feltárása</div>
+          </div>
+          <div class="type-row">
+            <div class="type-spec"><b>H3 / xl</b>Inter · 600 · 20px</div>
+            <div class="type-sample" style="font-weight: 600; font-size: var(--text-xl);">Dokumentumtár és emlékezet</div>
+          </div>
+          <div class="type-row">
+            <div class="type-spec"><b>Törzs / base</b>Inter · 400 · 16px<br>normal · 1.6</div>
+            <div class="type-sample" style="font-size: var(--text-base); color: var(--text-muted); max-width: 60ch;">A közösség tudása a Táltoson keresztül marad fenn. A rendszer nem egyszerűen tárol: összeköti, értelmezi és elérhetővé teszi az ismereteket, hogy mindenki a legjobb választ találhassa meg — gyorsan, kontextussal együtt.</div>
+          </div>
+          <div class="type-row">
+            <div class="type-spec"><b>Kis szöveg / sm</b>Inter · 400 · 14px</div>
+            <div class="type-sample" style="font-size: var(--text-sm); color: var(--text-muted);">Segédszöveg, metaadat, másodlagos információ.</div>
+          </div>
+          <div class="type-row">
+            <div class="type-spec"><b>Címke / xs</b>Inter · 600 · 12px<br>wide · uppercase</div>
+            <div class="type-sample" style="font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: var(--tracking-wide); color: var(--text-subtle);">Kategória · Frissítve ma</div>
+          </div>
+          <div class="type-row">
+            <div class="type-spec"><b>Mono / adat</b>JetBrains · 400 · 13px</div>
+            <div class="type-sample" style="font-family: var(--font-mono); font-size: 13px; color: var(--secondary);">--space-4: 1rem; /* 16px */</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 5. TÉRKÖZ & RÁCS ===== -->
+      <section class="section" id="terkoz">
+        <div class="section-head">
+          <span class="section-index">05 — Ritmus</span>
+          <h2>Térköz &amp; rács</h2>
+          <p>A ritmus egységes 4px-es alaprácsból épül. Minden margó, belső térköz és rés ebből a skálából származik — így a felület vizuálisan összefésült marad az összes nézeten.</p>
+        </div>
+        <div class="grid grid-2" style="align-items: start;">
+          <div class="card" style="padding: var(--space-6);">
+            <h4 class="sub-title" style="margin-top:0;">Térköz-skála (4px bázis)</h4>
+            <div class="space-scale" id="spaceScale"></div>
+          </div>
+          <div class="card" style="padding: var(--space-6);">
+            <h4 class="sub-title" style="margin-top:0;">Töréspontok</h4>
+            <table class="token-table">
+              <tr><th>Név</th><th>Szélesség</th><th>Cél</th></tr>
+              <tr><td><code>sm</code></td><td class="mono">≥ 640px</td><td>Nagy telefon</td></tr>
+              <tr><td><code>md</code></td><td class="mono">≥ 768px</td><td>Tablet</td></tr>
+              <tr><td><code>lg</code></td><td class="mono">≥ 1024px</td><td>Kis desktop</td></tr>
+              <tr><td><code>xl</code></td><td class="mono">≥ 1280px</td><td>Desktop</td></tr>
+              <tr><td><code>2xl</code></td><td class="mono">≥ 1536px</td><td>Széles kijelző</td></tr>
+            </table>
+            <h4 class="sub-title">Tartalomszélesség</h4>
+            <p class="prose" style="font-size: var(--text-sm);">Az olvasható törzsszöveg maximuma <code class="mono">70ch</code>, a fő tartalomkeret <code class="mono">1120px</code>. A 12 oszlopos rács rése <code class="mono">--space-6</code> (24px).</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 6. FORMA & RÉTEG ===== -->
+      <section class="section" id="forma">
+        <div class="section-head">
+          <span class="section-index">06 — Forma</span>
+          <h2>Forma &amp; réteg</h2>
+          <p>Lekerekített, de professzionális formanyelv. A sarkok lágyak, akár a fa évgyűrűi; az árnyékok melegek, zöldes-barna tónusúak, sosem semleges szürkék — így a mélység is a természetes világhoz kötődik.</p>
+        </div>
+        <h4 class="sub-title" style="margin-top:0;">Saroksugarak</h4>
+        <div class="radius-demo">
+          <div class="radius-box" style="border-radius: var(--radius-sm)"><span>sm · 4</span></div>
+          <div class="radius-box" style="border-radius: var(--radius-md)"><span>md · 8</span></div>
+          <div class="radius-box" style="border-radius: var(--radius-lg)"><span>lg · 12</span></div>
+          <div class="radius-box" style="border-radius: var(--radius-xl)"><span>xl · 16</span></div>
+          <div class="radius-box" style="border-radius: var(--radius-2xl)"><span>2xl · 24</span></div>
+          <div class="radius-box" style="border-radius: var(--radius-full); width:72px;"><span>full</span></div>
+        </div>
+        <h4 class="sub-title">Rétegződés (árnyékok)</h4>
+        <div class="elev-demo">
+          <div class="elev-box" style="box-shadow: var(--shadow-xs)">xs</div>
+          <div class="elev-box" style="box-shadow: var(--shadow-sm)">sm</div>
+          <div class="elev-box" style="box-shadow: var(--shadow-md)">md</div>
+          <div class="elev-box" style="box-shadow: var(--shadow-lg)">lg</div>
+          <div class="elev-box" style="box-shadow: var(--shadow-xl)">xl</div>
+        </div>
+      </section>
+
+      <!-- ===== 7. MOZGÁS ===== -->
+      <section class="section" id="mozgas">
+        <div class="section-head">
+          <span class="section-index">07 — Mozgás</span>
+          <h2>Mozgás</h2>
+          <p>A mozgás organikus: úgy lassul, mint egy növekvő ág. A jelzőgörbe a <code class="mono">--ease-grow</code>. A mozgás mindig jelentést hordoz — irányít, visszajelez, összeköt —, sosem dekoráció. A <code class="mono">prefers-reduced-motion</code> beállítást a rendszer tiszteletben tartja.</p>
+        </div>
+        <div class="grid grid-2" style="align-items:start;">
+          <div class="card" style="padding: var(--space-6);">
+            <h4 class="sub-title" style="margin-top:0;">Időzítés</h4>
+            <table class="token-table">
+              <tr><th>Token</th><th>Érték</th><th>Használat</th></tr>
+              <tr><td><code>--duration-fast</code></td><td class="mono">150ms</td><td>Hover, fókusz</td></tr>
+              <tr><td><code>--duration-base</code></td><td class="mono">250ms</td><td>Legtöbb átmenet</td></tr>
+              <tr><td><code>--duration-slow</code></td><td class="mono">400ms</td><td>Panel, modal</td></tr>
+              <tr><td><code>--duration-slower</code></td><td class="mono">600ms</td><td>Oldalbetöltés</td></tr>
+            </table>
+          </div>
+          <div class="card" style="padding: var(--space-6);">
+            <h4 class="sub-title" style="margin-top:0;">Görbék</h4>
+            <table class="token-table">
+              <tr><th>Token</th><th>Szerep</th></tr>
+              <tr><td><code>--ease-grow</code></td><td>Organikus lassulás — a jellegzetes mozgás</td></tr>
+              <tr><td><code>--ease-standard</code></td><td>Semleges, kétirányú átmenet</td></tr>
+              <tr><td><code>--ease-enter</code></td><td>Megjelenés (belépő elem)</td></tr>
+              <tr><td><code>--ease-exit</code></td><td>Eltűnés (kilépő elem)</td></tr>
+            </table>
+            <p class="prose" style="font-size: var(--text-sm); margin-top: var(--space-4);">Vidd a kurzort a <span class="badge badge--primary">kártyák</span> fölé a Komponensek szekcióban — a <code class="mono">--ease-grow</code> emelkedést látod működés közben.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 8. IKONOGRÁFIA ===== -->
+      <section class="section" id="ikon">
+        <div class="section-head">
+          <span class="section-index">08 — Jel</span>
+          <h2>Ikonográfia</h2>
+          <p>Vonalas, 24×24 rácson, 1.6–2px vastagsággal, lekerekített végekkel. Geometrikus, de organikus — a világfa, a csillagképek, a sólyom nézőpontja és a csomóminták nyelvén. Kerüljük az agancsot, sámándobot és a rovásírásos giccset.</p>
+        </div>
+        <h4 class="sub-title" style="margin-top:0;">Jellegzetes Táltos-ikonok</h4>
+        <div class="icon-grid" style="margin-bottom: var(--space-8);">
+          <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12M12 12c0-3.5 3-5 3-8M12 12c0-3.5-3-5-3-7.5"/><circle cx="12" cy="3.5" r="1.8"/><circle cx="16" cy="5.5" r="1.4"/><circle cx="8" cy="6" r="1.4"/></svg><span>Világfa</span></div>
+          <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="7" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="17" r="1.4"/><path d="M7 7l4 9M17 9l-4 7M14 18h2.5"/></svg><span>Tudásgráf</span></div>
+          <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9-4 9 4-9 4-9-4Z"/><path d="M3 8v6M12 12v6M21 8v6"/></svg><span>Áttekintés</span></div>
+          <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6c4 0 4 6 8 6M8 18c4 0 4-6 8-6M8 6C6 6 5 8 5 12s1 6 3 6M16 6c2 0 3 2 3 6s-1 6-3 6"/></svg><span>Csomó (kapcsolat)</span></div>
+          <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 21l-5.2 2.1 1-5.8L3.5 9.2l5.9-.9Z"/></svg><span>Csillag (minta)</span></div>
+          <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg><span>Lát (felismerés)</span></div>
+          <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h11l5 5v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"/><path d="M14 5v5h5"/></svg><span>Dokumentum</span></div>
+          <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><span>Keresés</span></div>
+        </div>
+        <div class="alert alert--info">
+          <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+          <div class="alert-body"><h5>Használati szabály</h5><p>A funkcionális ikonokhoz (keresés, dokumentum, mentés) érdemes egy bevett, teljes vonalas készletet használni (pl. Lucide), és csak a márkajelentésű ikonokat — világfa, gráf, csomó — rajzolni egyedileg, azonos rácson és vonalvastagsággal.</p></div>
+        </div>
+      </section>
+
+      <!-- ===== 9. DESIGN TOKENEK ===== -->
+      <section class="section" id="token">
+        <div class="section-head">
+          <span class="section-index">09 — Token</span>
+          <h2>Design tokenek</h2>
+          <p>A rendszer kétrétegű. A <strong>primitív</strong> réteg nyers értékeket tárol (rampák, méretek). A <strong>szemantikus</strong> réteg a primitívekre hivatkozó, jelentéssel bíró tokeneket ad (pl. <code class="mono">--primary</code>, <code class="mono">--surface</code>). A komponensek kizárólag a szemantikus rétegre építenek — ez teszi a témaváltást és a bővítést triviálissá.</p>
+        </div>
+        <h4 class="sub-title" style="margin-top:0;">A kétrétegű modell</h4>
+        <pre class="code"><span class="c">/* Primitív: nyers érték */</span>
+<span class="k">--green-600</span>: <span class="v">#1F5C4C</span>;
+
+<span class="c">/* Szemantikus: jelentés, világos téma */</span>
+<span class="k">--primary</span>: <span class="v">var(--green-600)</span>;
+
+<span class="c">/* Szemantikus újratérképezés sötét témában */</span>
+[data-theme="dark"] {
+  <span class="k">--primary</span>: <span class="v">var(--green-300)</span>;
+}
+
+<span class="c">/* Komponens: csak szemantikus tokent használ */</span>
+.btn { background: <span class="v">var(--primary)</span>; }</pre>
+
+        <h4 class="sub-title">Token-referencia (kivonat)</h4>
+        <div class="table-wrap">
+          <table class="token-table" style="margin:0;">
+            <thead>
+              <tr><th>Csoport</th><th>Token</th><th>Világos</th><th>Sötét</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Szín</td><td><code>--primary</code></td><td class="mono">green-600</td><td class="mono">green-300</td></tr>
+              <tr><td>Szín</td><td><code>--bg</code></td><td class="mono">bark-50</td><td class="mono">bark-950</td></tr>
+              <tr><td>Szín</td><td><code>--surface</code></td><td class="mono">#FFFFFF</td><td class="mono">#1C1A16</td></tr>
+              <tr><td>Szín</td><td><code>--text</code></td><td class="mono">bark-900</td><td class="mono">#F2EEE6</td></tr>
+              <tr><td>Típus</td><td><code>--font-display</code></td><td class="mono" colspan="2">Fraunces, serif</td></tr>
+              <tr><td>Típus</td><td><code>--text-base</code></td><td class="mono" colspan="2">1rem / 16px</td></tr>
+              <tr><td>Térköz</td><td><code>--space-4</code></td><td class="mono" colspan="2">1rem / 16px</td></tr>
+              <tr><td>Forma</td><td><code>--radius-md</code></td><td class="mono" colspan="2">8px</td></tr>
+              <tr><td>Mozgás</td><td><code>--ease-grow</code></td><td class="mono" colspan="2">cubic-bezier(.22,1,.36,1)</td></tr>
+              <tr><td>Réteg</td><td><code>--z-modal</code></td><td class="mono" colspan="2">1100</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="prose" style="margin-top: var(--space-4); font-size: var(--text-sm);">Ugyanez a modell exportálható JSON / Style Dictionary formátumba, így platformfüggetlenül (web, iOS, Android) is használható. Lásd a <a href="#bovites">Bővíthetőség</a> szekciót.</p>
+      </section>
+
+      <!-- ===== 10. KOMPONENSEK ===== -->
+      <section class="section" id="komponensek">
+        <div class="section-head">
+          <span class="section-index">10 — Építőelemek</span>
+          <h2>Komponensek</h2>
+          <p>A Táltos UI-készlete — élő, működő példák, amelyek mind a fenti tokenekre épülnek. Váltsd át a témát fent a jobb felső sarokban: minden komponens automatikusan alkalmazkodik.</p>
+        </div>
+
+        <h3 class="block-title">Gombok</h3>
+        <div class="demo">
+          <span class="demo-label">Variánsok</span>
+          <button class="btn">Elsődleges</button>
+          <button class="btn btn--secondary">Másodlagos</button>
+          <button class="btn btn--accent">Akcentus</button>
+          <button class="btn btn--outline">Körvonalas</button>
+          <button class="btn btn--ghost">Szellem</button>
+          <button class="btn btn--danger">Veszély</button>
+        </div>
+        <div class="demo" style="margin-top: var(--space-4);">
+          <span class="demo-label">Méretek &amp; állapotok</span>
+          <button class="btn btn--sm">Kicsi</button>
+          <button class="btn">Alap</button>
+          <button class="btn btn--lg">Nagy</button>
+          <button class="btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            Ikonnal
+          </button>
+          <button class="btn btn--loading"><span class="spinner"></span> Betöltés</button>
+          <button class="btn" disabled>Letiltva</button>
+        </div>
+
+        <h3 class="block-title">Űrlapelemek</h3>
+        <div class="demo stack">
+          <div class="grid grid-2" style="width:100%;">
+            <div class="field">
+              <label class="label" for="d1">Cím</label>
+              <input class="input" id="d1" placeholder="Pl. Onboarding kézikönyv" />
+            </div>
+            <div class="field">
+              <label class="label" for="d2">Kategória <span class="opt">(kötelező)</span></label>
+              <select class="select" id="d2"><option>Folyamatok</option><option>Termék</option><option>HR</option></select>
+            </div>
+          </div>
+          <div class="input-group" style="width:100%; margin-top: var(--space-4);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input class="input" placeholder="Keresés a tudásbázisban…" />
+          </div>
+          <div class="field is-error" style="width:100%; margin-top: var(--space-4);">
+            <label class="label" for="d3">E-mail</label>
+            <input class="input" id="d3" value="nem-valid" />
+            <span class="hint">Adj meg egy érvényes e-mail-címet.</span>
+          </div>
+          <div class="field" style="width:100%; margin-top: var(--space-4);">
+            <label class="label" for="d4">Leírás</label>
+            <textarea class="textarea" id="d4" placeholder="Rövid összefoglaló a tudáselemről…"></textarea>
+          </div>
+          <div style="display:flex; gap: var(--space-6); flex-wrap:wrap; margin-top: var(--space-4);">
+            <label class="check"><input type="checkbox" checked /> Nyilvános a szervezetben</label>
+            <label class="check"><input type="radio" name="r" checked /> Cikk</label>
+            <label class="check"><input type="radio" name="r" /> Útmutató</label>
+            <label class="switch"><input type="checkbox" checked /><span class="track"></span><span class="thumb"></span> AI-ajánlások</label>
+          </div>
+        </div>
+
+        <h3 class="block-title">Címkék &amp; státuszok</h3>
+        <div class="demo">
+          <span class="badge badge--primary"><span class="dot"></span>Aktív</span>
+          <span class="badge badge--success">Jóváhagyva</span>
+          <span class="badge badge--warning">Felülvizsgálat</span>
+          <span class="badge badge--danger">Elavult</span>
+          <span class="badge badge--info">Vázlat</span>
+          <span class="badge badge--accent">Kiemelt</span>
+          <span class="badge badge--neutral">Archív</span>
+          <span class="tag">#folyamat</span>
+          <span class="tag">#onboarding</span>
+          <span class="tag">#2026</span>
+        </div>
+
+        <h3 class="block-title">Értesítések</h3>
+        <div class="grid grid-2">
+          <div class="alert alert--info"><svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg><div class="alert-body"><h5>Új kapcsolat</h5><p>A Táltos 3 kapcsolódó dokumentumot talált ehhez a témához.</p></div></div>
+          <div class="alert alert--success"><svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg><div class="alert-body"><h5>Mentve</h5><p>A módosításokat elmentettük a dokumentumtárba.</p></div></div>
+          <div class="alert alert--warning"><svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg><div class="alert-body"><h5>Régi tartalom</h5><p>Ezt a cikket több mint egy éve nem frissítették.</p></div></div>
+          <div class="alert alert--danger"><svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div class="alert-body"><h5>Nem sikerült szinkronizálni</h5><p>Ellenőrizd a kapcsolatot, majd próbáld újra.</p></div></div>
+        </div>
+
+        <h3 class="block-title">Fülek</h3>
+        <div class="card" style="padding: var(--space-6);">
+          <div class="tabs" role="tablist">
+            <button class="tab active" role="tab" data-tab="t1">Áttekintés</button>
+            <button class="tab" role="tab" data-tab="t2">Kapcsolatok</button>
+            <button class="tab" role="tab" data-tab="t3">Előzmények</button>
+          </div>
+          <div class="tab-panel" id="t1"><p class="prose" style="margin:0;">A dokumentum összefoglalója és metaadatai. A Táltos itt jeleníti meg a legfontosabb kontextust.</p></div>
+          <div class="tab-panel" id="t2" hidden><p class="prose" style="margin:0;">A tudásgráf szerint kapcsolódó elemek, hivatkozások és szakértők.</p></div>
+          <div class="tab-panel" id="t3" hidden><p class="prose" style="margin:0;">A szerkesztések és verziók idővonala — az emlékezet rétegei.</p></div>
+        </div>
+
+        <h3 class="block-title">Kenyérmorzsa &amp; navigáció</h3>
+        <div class="demo stack">
+          <nav class="crumbs" aria-label="Útvonal">
+            <a href="#">Tudásbázis</a><span class="sep">/</span>
+            <a href="#">Folyamatok</a><span class="sep">/</span>
+            <a href="#">Onboarding</a><span class="sep">/</span>
+            <span class="current">Új kolléga első hete</span>
+          </nav>
+        </div>
+
+        <h3 class="block-title">Táblázat</h3>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>Dokumentum</th><th>Gazda</th><th>Státusz</th><th>Frissítve</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Onboarding kézikönyv</strong></td>
+                <td><div class="cell-user"><span class="avatar" style="background: var(--green-600); width:28px; height:28px; font-size:11px;">KA</span>Kovács Anna</div></td>
+                <td><span class="badge badge--success">Jóváhagyva</span></td>
+                <td class="mono">2 napja</td>
+              </tr>
+              <tr>
+                <td><strong>Termékvíziós összefoglaló</strong></td>
+                <td><div class="cell-user"><span class="avatar" style="background: var(--blue-600); width:28px; height:28px; font-size:11px;">NP</span>Nagy Péter</div></td>
+                <td><span class="badge badge--warning">Felülvizsgálat</span></td>
+                <td class="mono">1 hete</td>
+              </tr>
+              <tr>
+                <td><strong>Adatkezelési irányelvek</strong></td>
+                <td><div class="cell-user"><span class="avatar" style="background: var(--gold-600); width:28px; height:28px; font-size:11px;">SZ</span>Szabó Zsófia</div></td>
+                <td><span class="badge badge--danger">Elavult</span></td>
+                <td class="mono">1 éve</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="block-title">Avatar, tooltip &amp; toast</h3>
+        <div class="demo">
+          <span class="demo-label">Avatarok (a rang koszorúja + jelvény)</span>
+          <span class="avatar" style="background: var(--green-600);">KA</span>
+          <span class="avatar avatar--rank" style="background: var(--blue-600);">NP<span class="rank-crest">★</span></span>
+          <span class="avatar" style="background: var(--gold-600);">SZ</span>
+          <span class="tooltip" style="margin-left: var(--space-4);">
+            <button class="btn btn--outline btn--sm">Vidd fölé</button>
+            <span class="tip">A Táltos elmagyarázza</span>
+          </span>
+          <div class="toast" style="margin-left:auto;">
+            <svg class="toast-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 12 3 3 5-6"/></svg>
+            Az új tudáselem közzétéve.
+          </div>
+        </div>
+
+        <h3 class="block-title">Modal &amp; üres állapot</h3>
+        <div class="grid grid-2" style="align-items:stretch;">
+          <div class="modal-demo">
+            <div class="modal">
+              <div class="modal-body">
+                <h4>Dokumentum archiválása</h4>
+                <p>Az archivált tudáselem kikerül a keresésből, de az emlékezetben megmarad, és bármikor visszaállítható.</p>
+              </div>
+              <div class="modal-foot">
+                <button class="btn btn--ghost btn--sm">Mégsem</button>
+                <button class="btn btn--sm">Archiválás</button>
+              </div>
+            </div>
+          </div>
+          <div class="empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V11M12 11c0-3.5 3-5 3-8M12 11c0-3.5-3-5-3-7.5"/><circle cx="12" cy="3" r="1.6"/></svg>
+            <h5>Még nincs itt tudás</h5>
+            <p>Kezdd az első dokumentum hozzáadásával — a Táltos innentől összekapcsolja a többivel.</p>
+            <button class="btn btn--sm">Dokumentum hozzáadása</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 11. MINTÁK ===== -->
+      <section class="section" id="mintak">
+        <div class="section-head">
+          <span class="section-index">11 — Minta</span>
+          <h2>Minták</h2>
+          <p>A komponensekből felépülő, ismétlődő elrendezések. Ezek mutatják meg, hogyan él együtt a rendszer egy valódi tudásplatform képernyőin.</p>
+        </div>
+
+        <h3 class="block-title">Tudáskártya-rács</h3>
+        <div class="grid grid-3">
+          <article class="k-card">
+            <div class="k-card-top">
+              <div class="k-card-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h11l5 5v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"/><path d="M14 5v5h5"/></svg></div>
+              <span class="badge badge--success">Jóváhagyva</span>
+            </div>
+            <h5>Onboarding kézikönyv</h5>
+            <p>Az új kollégák első hetének teljes útmutatója, lépésről lépésre.</p>
+            <div class="k-card-foot"><span>Kovács Anna</span><span>2 napja</span></div>
+          </article>
+          <article class="k-card">
+            <div class="k-card-top">
+              <div class="k-card-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="7" r="2"/><circle cx="12" cy="18" r="2"/><path d="M7 7l4 9M17 9l-4 7"/></svg></div>
+              <span class="badge badge--info">Vázlat</span>
+            </div>
+            <h5>Termékvízió 2026</h5>
+            <p>Stratégiai irányok és a kapcsolódó csapatok felelősségei.</p>
+            <div class="k-card-foot"><span>Nagy Péter</span><span>1 hete</span></div>
+          </article>
+          <article class="k-card">
+            <div class="k-card-top">
+              <div class="k-card-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 21l-5.2 2.1 1-5.8L3.5 9.2l5.9-.9Z"/></svg></div>
+              <span class="badge badge--accent">Kiemelt</span>
+            </div>
+            <h5>Adatkezelési alapok</h5>
+            <p>A legfontosabb szabályok, minden csapat számára kötelező olvasmány.</p>
+            <div class="k-card-foot"><span>Szabó Zsófia</span><span>ma</span></div>
+          </article>
+        </div>
+
+        <h3 class="block-title">Táltos AI-asszisztens</h3>
+        <div class="card" style="padding: var(--space-6);">
+          <div class="ai-msg">
+            <div class="ai-avatar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V12M12 12c0-3 2-4 2-7M12 12c0-3-2-4-2-6"/><circle cx="12" cy="4" r="1.4"/></svg></div>
+            <div class="ai-bubble">
+              Az onboarding-folyamathoz három kapcsolódó dokumentumot találtam. A leggyakrabban hivatkozott a „HR belépési checklista”. Szeretnéd, hogy összefoglaljam a legfontosabb lépéseket?
+              <div class="src">
+                <span class="tag">HR belépési checklista</span>
+                <span class="tag">IT-hozzáférés igénylése</span>
+                <span class="tag">Mentorprogram</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; gap: var(--space-2); margin-top: var(--space-4); padding-left: 44px;">
+            <button class="btn btn--sm">Foglald össze</button>
+            <button class="btn btn--outline btn--sm">Mutasd a forrásokat</button>
+          </div>
+        </div>
+
+        <h3 class="block-title">Áttekintő gráf (a sólyom nézőpontja)</h3>
+        <div class="card" style="padding: var(--space-8); display:grid; place-items:center;">
+          <svg viewBox="0 0 480 240" width="100%" style="max-width:480px;" fill="none" aria-label="Tudásgráf illusztráció">
+            <g stroke="var(--border-strong)" stroke-width="1.5">
+              <path d="M240 120 L120 60 M240 120 L360 70 M240 120 L110 175 M240 120 L370 170 M240 120 L240 30 M120 60 L110 175 M360 70 L370 170"/>
+            </g>
+            <g>
+              <circle cx="240" cy="120" r="26" fill="var(--primary)"/>
+              <circle cx="120" cy="60" r="16" fill="var(--secondary)"/>
+              <circle cx="360" cy="70" r="16" fill="var(--secondary)"/>
+              <circle cx="110" cy="175" r="14" fill="var(--accent)"/>
+              <circle cx="370" cy="170" r="14" fill="var(--accent)"/>
+              <circle cx="240" cy="30" r="12" fill="var(--gold-400)"/>
+            </g>
+            <text x="240" y="125" text-anchor="middle" fill="#fff" font-family="var(--font-body)" font-size="12" font-weight="600">Téma</text>
+          </svg>
+        </div>
+      </section>
+
+      <!-- ===== 12. BEAVATÁS / GAMIFICATION ===== -->
+      <section class="section" id="gamification">
+        <div class="section-head">
+          <span class="section-index">12 — Beavatás</span>
+          <h2>Beavatás &amp; fejlődés</h2>
+          <p>A táltossá válás útja — tanulás, próbatételek, tapasztalat — a gamification alapja. A felhasználó négy rangon halad át, ahogy tudást oszt meg és kapcsolatokat épít a közösségben.</p>
+        </div>
+        <div class="card" style="padding: var(--space-8);">
+          <div class="rank-track">
+            <div class="rank-node done"><div class="orb"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 12 3 3 5-6"/></svg></div><div class="name">Tanonc</div><div class="lvl">1. szint</div></div>
+            <div class="rank-node done"><div class="orb"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 12 3 3 5-6"/></svg></div><div class="name">Ismerő</div><div class="lvl">2. szint</div></div>
+            <div class="rank-node current"><div class="orb"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 21l-5.2 2.1 1-5.8L3.5 9.2l5.9-.9Z"/></svg></div><div class="name">Mester</div><div class="lvl">3. szint</div></div>
+            <div class="rank-node"><div class="orb"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V12M12 12c0-3 2-4 2-7M12 12c0-3-2-4-2-6"/></svg></div><div class="name">Táltos</div><div class="lvl">4. szint</div></div>
+          </div>
+          <div style="margin-top: var(--space-8);">
+            <div style="display:flex; justify-content:space-between; font-size: var(--text-sm); margin-bottom: var(--space-2);">
+              <span style="font-weight: var(--weight-medium);">Út a Táltos rangig</span>
+              <span class="mono" style="color: var(--text-muted);">720 / 1000 XP</span>
+            </div>
+            <div class="progress"><span style="width:72%"></span></div>
+            <p class="prose" style="font-size: var(--text-sm); margin-top: var(--space-3);">A rendszer így ismeri fel a szakértőket: nem „különleges jegy” alapján, hanem a megosztott tudás és a közösségi hasznosság mentén.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 13. AKADÁLYMENTESSÉG ===== -->
+      <section class="section" id="a11y">
+        <div class="section-head">
+          <span class="section-index">13 — Hozzáférés</span>
+          <h2>Akadálymentesség</h2>
+          <p>A tudás mindenkié. A rendszer a WCAG 2.2 AA szintjét célozza — ez nem opció, hanem alapkövetelmény, amelyet minden komponensnek teljesítenie kell.</p>
+        </div>
+        <div class="grid grid-2">
+          <div class="principle"><div class="p-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18" opacity=".3"/><circle cx="12" cy="12" r="9"/></svg></div><div><h5>Kontraszt</h5><p>A szövegkontraszt legalább 4.5:1 (nagy szövegnél 3:1). A szemantikus tokenek mindkét témában ehhez igazodnak.</p></div></div>
+          <div class="principle"><div class="p-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12h8"/></svg></div><div><h5>Fókusz</h5><p>Minden interaktív elem látható fókuszgyűrűt kap (<code class="mono">--focus-ring</code>), és teljesen billentyűzettel kezelhető.</p></div></div>
+          <div class="principle"><div class="p-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><div><h5>Nem csak szín</h5><p>A jelentést sosem közvetíti kizárólag a szín: ikon, felirat vagy alakzat is kíséri (pl. a státuszjelvények).</p></div></div>
+          <div class="principle"><div class="p-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8" opacity=".4"/><path d="M12 8v8" opacity=".4"/></svg></div><div><h5>Mozgás</h5><p>A <code class="mono">prefers-reduced-motion</code> beállítást tiszteletben tartjuk; az animáció sosem hordoz kizárólagos információt.</p></div></div>
+        </div>
+      </section>
+
+      <!-- ===== 14. BŐVÍTHETŐSÉG ===== -->
+      <section class="section" id="bovites">
+        <div class="section-head">
+          <span class="section-index">14 — Növekedés</span>
+          <h2>Bővíthetőség</h2>
+          <p>A rendszer úgy nő, mint a világfa: új ágak csatlakoznak a törzshöz anélkül, hogy a gyökeret át kellene alakítani. Az alábbi minták mutatják, hogyan bővíthető biztonságosan.</p>
+        </div>
+
+        <h4 class="sub-title" style="margin-top:0;">Új komponens hozzáadása</h4>
+        <p class="prose">Egy új komponens kizárólag szemantikus tokenekre épít — soha nem tesz be nyers hex-értéket vagy px-számot. Így örökli a témát, a ritmust és a bővíthetőséget.</p>
+        <pre class="code"><span class="c">/* Új: figyelmeztető szalag — csak tokenek */</span>
+.callout {
+  background: <span class="v">var(--accent-soft)</span>;
+  border: 1px solid <span class="v">var(--accent)</span>;
+  border-radius: <span class="v">var(--radius-md)</span>;
+  padding: <span class="v">var(--space-4)</span>;
+  color: <span class="v">var(--text)</span>;
+  font: 500 <span class="v">var(--text-sm)</span>/1.5 <span class="v">var(--font-body)</span>;
+}</pre>
+
+        <h4 class="sub-title">Új téma bevezetése</h4>
+        <p class="prose">Egy új téma (pl. „magas kontraszt” vagy egy leány-márka) mindössze a szemantikus réteg újratérképezése. A primitívek és a komponensek érintetlenek maradnak.</p>
+        <pre class="code"><span class="c">/* Új téma = csak szemantikus újratérképezés */</span>
+[data-theme="kontraszt"] {
+  <span class="k">--bg</span>: <span class="v">#000</span>;
+  <span class="k">--text</span>: <span class="v">#fff</span>;
+  <span class="k">--primary</span>: <span class="v">var(--green-200)</span>;
+  <span class="k">--border</span>: <span class="v">#fff</span>;
+}</pre>
+
+        <h4 class="sub-title">Platformfüggetlen export</h4>
+        <p class="prose">A tokenek platformsemleges JSON-ként is tarthatók (Style Dictionary), amelyből web-CSS, iOS és Android kimenet is generálható — egyetlen forrásból.</p>
+        <pre class="code">{
+  <span class="k">"color"</span>: {
+    <span class="k">"primary"</span>:   { <span class="k">"value"</span>: <span class="v">"{green.600}"</span> },
+    <span class="k">"surface"</span>:   { <span class="k">"value"</span>: <span class="v">"{bark.0}"</span> }
+  },
+  <span class="k">"space"</span>: { <span class="k">"4"</span>: { <span class="k">"value"</span>: <span class="v">"16px"</span> } },
+  <span class="k">"radius"</span>: { <span class="k">"md"</span>: { <span class="k">"value"</span>: <span class="v">"8px"</span> } }
+}</pre>
+
+        <div class="alert alert--success" style="margin-top: var(--space-6);">
+          <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>
+          <div class="alert-body"><h5>Egyetlen forrás az igazságra</h5><p>Amíg minden réteg a tokenekre épül, a rendszer következetes marad — a legkisebb gombtól a teljes dashboardig. Ez a Táltos ígérete: megőrizni, összekapcsolni, továbbadni.</p></div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <span>Táltos Design System · v1.0 · A szervezet kollektív emlékezete és útmutatója.</span>
+        <span class="mono">Tokenekre épül · Világos &amp; sötét téma · WCAG 2.2 AA</span>
+      </footer>
+    </div>
+  </div>
+</div>
+
+<div class="copy-toast" id="copyToast"><div class="toast"><svg class="toast-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span id="copyText">Másolva</span></div></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---- Rampák felépítése a primitív tokenekből ---- */
+  var ramps = {
+    green: ["50","100","200","300","400","500","600","700","800","900"],
+    blue:  ["50","100","200","300","400","500","600","700","800","900"],
+    gold:  ["50","100","200","300","400","500","600","700","800","900"],
+    bark:  ["50","100","200","300","400","500","600","700","800","900"]
+  };
+  var rootStyle = getComputedStyle(document.documentElement);
+  function hexOf(varName) { return rootStyle.getPropertyValue(varName).trim(); }
+  function luminance(hex) {
+    var c = hex.replace('#',''); if (c.length===3) c=c.split('').map(function(x){return x+x;}).join('');
+    var r=parseInt(c.substr(0,2),16), g=parseInt(c.substr(2,2),16), b=parseInt(c.substr(4,2),16);
+    return (0.299*r+0.587*g+0.114*b);
+  }
+  document.querySelectorAll('.swatches').forEach(function (row) {
+    var name = row.getAttribute('data-ramp');
+    ramps[name].forEach(function (step) {
+      var v = '--' + name + '-' + step;
+      var hex = hexOf(v);
+      var el = document.createElement('div');
+      el.className = 'swatch';
+      el.style.background = hex;
+      var dark = luminance(hex) < 140;
+      el.style.color = dark ? 'rgba(255,255,255,.92)' : 'rgba(0,0,0,.7)';
+      el.innerHTML = '<small>' + step + '</small><span>' + hex.toUpperCase() + '</span>';
+      el.setAttribute('title', v + ' — kattints a másoláshoz');
+      el.addEventListener('click', function () { copy(hex.toUpperCase(), hex.toUpperCase()); });
+      row.appendChild(el);
+    });
+  });
+
+  /* ---- Térköz-skála ---- */
+  var spaces = [["space-1","4px"],["space-2","8px"],["space-3","12px"],["space-4","16px"],["space-5","20px"],["space-6","24px"],["space-8","32px"],["space-10","40px"],["space-12","48px"],["space-16","64px"]];
+  var scaleEl = document.getElementById('spaceScale');
+  if (scaleEl) spaces.forEach(function (s) {
+    var row = document.createElement('div'); row.className = 'space-row';
+    row.innerHTML = '<code>--' + s[0] + ' · ' + s[1] + '</code><div class="space-bar" style="width:' + s[1] + '"></div>';
+    scaleEl.appendChild(row);
+  });
+
+  /* ---- Másolás visszajelzéssel ---- */
+  var toast = document.getElementById('copyToast');
+  var toastText = document.getElementById('copyText');
+  var toastTimer;
+  function copy(value, label) {
+    var done = function () {
+      toastText.textContent = label + ' másolva';
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(value).then(done).catch(done);
+    } else { done(); }
+  }
+
+  /* ---- Fülek ---- */
+  document.querySelectorAll('.tabs').forEach(function (tabs) {
+    var buttons = tabs.querySelectorAll('.tab');
+    buttons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        buttons.forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var target = btn.getAttribute('data-tab');
+        tabs.parentElement.querySelectorAll('.tab-panel').forEach(function (p) {
+          p.hidden = (p.id !== target);
+        });
+      });
+    });
+  });
+
+  /* ---- Téma váltás (memóriában, perzisztencia nélkül) ---- */
+  var toggle = document.getElementById('themeToggle');
+  var label = document.getElementById('themeLabel');
+  toggle.addEventListener('click', function () {
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (dark) { document.documentElement.removeAttribute('data-theme'); label.textContent = 'Sötét'; }
+    else { document.documentElement.setAttribute('data-theme', 'dark'); label.textContent = 'Világos'; }
+  });
+
+  /* ---- Aktív navigáció görgetésre ---- */
+  var links = Array.prototype.slice.call(document.querySelectorAll('.nav-link'));
+  var map = {};
+  links.forEach(function (l) { map[l.getAttribute('href').slice(1)] = l; });
+  var sections = document.querySelectorAll('.section');
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        links.forEach(function (l) { l.classList.remove('active'); });
+        var active = map[e.target.id];
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(function (s) { obs.observe(s); });
+})();
+</script>

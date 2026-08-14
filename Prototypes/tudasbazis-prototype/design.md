@@ -1,5 +1,20 @@
 # Design — Tudásbázis prototípus
 
+> ## ⚠️ ELAVULT — NE EBBŐL DOLGOZZ (2026-07-26)
+>
+> Ez a fájl a **Cobalt/Hallmark** rendszert írja le, amit a projekt **eldobott**.
+> A prototípus teljes egészében a **Táltos Design Systemre** állt át.
+>
+> Az érvényes forrás (a `.claude/CLAUDE.md` munkafolyamata szerint):
+> `taltos-design-system.md` (elsődleges) · `taltos-design-tokens.json` ·
+> `taltos-design-system.html` (vizuális referencia). A tokenek a
+> [`tokens.css`](tokens.css)-ben élnek (`:root` + `[data-theme="dark"]`).
+>
+> Ez a fájl csak **történeti/szakdolgozati dokumentációként** marad meg: rögzíti,
+> honnan hová jutott a felület. Kódot ne emitálj belőle.
+
+---
+
 Zárolt design system ehhez az alkalmazáshoz (Hallmark · redesign, 2026-07-19).
 Minden későbbi felület-módosítás ezt a fájlt olvassa kód-emitálás előtt.
 Nem oldalanként újragenerálandó — ha a rendszernek nőnie kell, ezt a fájlt kell bővíteni.
