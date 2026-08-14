@@ -406,6 +406,16 @@ Csak `opacity`/`transform`/kamera animál; a hely fenntartva; a lista átrendez�
 5. **Van-e közös elem a részletnézettel** a shared-element átmenethez? Ha nincs, egyszerű
    crossfade a fallback (továbbra is snap-mentes).
 
+**Eldöntve — szűrés a térképen (2026-08-14).** A szűrőből kieső csomópont **nem tűnik el**,
+hanem halvány üres karikaként (kitöltés és kategória-szín nélkül, `--text-subtle` körvonal)
+a térképen marad, **inert** módon: nincs felirata, nem kattintható, nem hover-cél. Indok: az
+eltüntetés minden szűrő-kattintásra átrendezi a befoglalót és a kamera-illesztést, azaz
+elveszi a térbeli memóriát — pedig épp az az érték, hogy ugyanaz a dokumentum mindig ugyanott
+van. A szűrő **kiemel**, nem újrarajzol. A renderer ehhez `setExcluded(ids)`-t kapott, ami
+szándékosan ERŐSEBB háttérbe-tolás a `setDimmed`-nél (utóbbi — keresés nem-találatai, fókusz
+szomszédságán kívüliek — kattintható marad, hogy a gráfban tovább lehessen lépni).
+Részletek: `tudasbazis-prototype/NOTES.md`, 7. kör.
+
 ---
 
 ## 14. Elfogadási kritériumok (QA — kész előtt fusson végig)

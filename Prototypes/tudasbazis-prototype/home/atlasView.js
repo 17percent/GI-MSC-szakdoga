@@ -220,8 +220,7 @@
       for (i = 0; i < order.length; i++) if (inNext[order[i]]) canon.push(order[i]);
       store.setFilters({ categories: canon });
       paintCategoryFilter();
-      machine.send('FILTER', store.state.filters);
-      recompute();
+      afterFilterChange();
     }
 
     function toggleCategory(name) {
@@ -499,11 +498,19 @@
     }
 
     // ---------------- a nézet újraszámolása (a store állapotából) ----------------
-    // FONTOS: a térkép adatkészlete SOHA nem szűkül a fókuszra — mélyebbre
-    // navigálva (kiválasztás) a többi gombóc nem tűnik el, csak elhalványul
-    // (`map.setDimmed`). Ezt az `getOverview()` + a fókusz-szomszédság UNIÓJA
-    // adja (`mergeViews`), így a szomszédság minden tagja garantáltan jelen van
-    // a rajzolt adatban, még ha az áttekintés top-N kurálása kihagyta is.
+    // FONTOS: a térkép adatkészlete SOHA nem szűkül — sem a fókuszra, sem a
+    // SZŰRŐRE. Mélyebbre navigálva (kiválasztás) a többi gombóc nem tűnik el,
+    // csak elhalványul (`map.setDimmed`); szűréskor a kiesett dokumentumok
+    // halvány üres karikaként ott maradnak (`map.setExcluded`). Mindkettőt az
+    // `getOverview()` + a szűkebb nézet UNIÓJA adja (`mergeViews`), így a
+    // szűkebb halmaz minden tagja garantáltan jelen van a rajzolt adatban, még
+    // ha az áttekintés top-N kurálása kihagyta is.
+    //
+    // Miért halványítás és nem eltüntetés? Ha a kiszűrt csomópontok eltűnnek, a
+    // térkép befoglalója (és vele a kamera illesztése) minden szűrő-kattintásra
+    // átrendeződik: a megmaradt csomópontok „szétugranak", és elveszik a térbeli
+    // memória — pedig épp az az értéke, hogy ugyanaz a dokumentum mindig ugyanott
+    // van. Így a szűrő KIEMEL a tudástárban, nem pedig ÚJRARAJZOLJA azt.
     function recompute(opt) {
       opt = opt || {};
       if (!model) return;
@@ -539,6 +546,15 @@
       // lista a mérvadó, a kamera-korlátozás nem érvényesül.
       if (!q && viewportSet) docIds = docIds.filter(inViewport);
 
+      // Aktív szűrő: a teljes halmazt KONTEXTUS-RÉTEGKÉNT húzzuk a nézet alá, és
+      // a szűrőn kívüliek listáját átadjuk a rendererrel halványításra. A szűkebb
+      // nézet az UNIÓ ELEJÉN van, így a renderer 150-es sapkája sosem tőle vág le.
+      var excludedIds = null;
+      if (facetRes.active) {
+        view = mergeViews(view, model.getOverview({ includeInactive: true }));
+        excludedIds = idsOutside(view.nodes, facetRes.nodeIds);
+      }
+
       lastView = view;
       if (map) {
         map.setData({ nodes: view.nodes, edges: view.edges });
@@ -554,12 +570,42 @@
         if (matchIds && matchIds.length) dimIds = idsOutside(view.nodes, matchIds);
         else if (focusIds && focusIds.length) dimIds = idsOutside(view.nodes, focusIds);
         map.setDimmed(dimIds);
+        // a szűrőn kívüliek erősebb háttérbe-tolása (üres karika + inert)
+        map.setExcluded(excludedIds);
       }
 
       list.setItems(buildItems(docIds, q), { query: q });
 
-      if (!opt.silent) announceCount(docIds.length, q);
+      // Szűrő mellett üres találat: a lista nem tud mit mutatni, de a térkép igen —
+      // ezért itt is kell kiút. (Keresésnél ezt az FSM `empty` állapota végzi.)
+      // A feltétel a SZŰRŐ eredményére néz, nem a `docIds`-re: ha a lista csak a
+      // kamera-nézet miatt ürült ki (rázoomoltál egy üres részre), az nem
+      // „nincs találat", arra a kizoomolás a válasz. Hibaállapotban a panel a
+      // térkép-hibát mutatja — azt nem írjuk felül.
+      if (!q && machine.state !== 'error') {
+        if (facetRes.active && facetRes.docIds.length === 0) {
+          if (emptyEl.hidden) showEmpty('', excludedIds ? excludedIds.length : 0);
+        } else {
+          emptyEl.hidden = true;
+        }
+      }
+
+      if (!opt.silent) announceCount(docIds.length, q, excludedIds ? excludedIds.length : 0);
       return docIds.length;
+    }
+
+    // Minden szűrő-váltás EGY úton fut le. A kijelölés csak akkor maradhat meg, ha
+    // a dokumentum bent van a szűrt halmazban: a kiesett csomópont a térképen már
+    // nem választható (halvány, inert), a listában pedig nem lenne sora — így a
+    // fókusz „láthatatlan" állapotba csúszna. Ezért ilyenkor elengedjük.
+    function afterFilterChange() {
+      var sel = store.state.selectedId;
+      if (sel && model) {
+        var res = model.applyFacets(currentFacets());
+        if (res.active && res.docIds.indexOf(sel) < 0) store.select(null);
+      }
+      machine.send('FILTER', store.state.filters);
+      recompute();
     }
 
     // Két nézet (csomópont/él) uniója, id szerint deduplikálva. A fókusz-
@@ -579,11 +625,17 @@
       return { nodes: nodes, edges: edges };
     }
 
-    function announceCount(n, q) {
+    // A halványított csomópontok számát KIMONDJUK: a szűrés eredménye így nem
+    // csak a térkép halványságából olvasható ki (képernyőolvasóval sem).
+    function announceCount(n, q, ghostCount) {
       if (machine.state === 'error') return;
       var txt;
       if (q) txt = n + ' találat a(z) „' + q + '” keresésre.';
       else txt = n + ' dokumentum. Nyilakkal lépkedhetsz, Enterrel kiválasztod, még egy Enterrel megnyitod.';
+      if (!q && ghostCount > 0) {
+        txt += ' A szűrőből kimaradt ' + ghostCount +
+               ' dokumentum halványan a térképen marad, de most nem választható.';
+      }
       statusEl.textContent = txt;
     }
 
@@ -635,17 +687,26 @@
       }
     }
 
-    function showEmpty(q) {
+    // Két üres eset: keresésre nincs találat (q), vagy a szűrőknek egy dokumentum
+    // sem felel meg (q === ''). Utóbbinál elmondjuk, hogy a térkép nem ürült ki.
+    function showEmpty(q, ghostCount) {
       emptyEl.hidden = false;
+      var title = q ? 'Nincs találat' : 'Egy dokumentum sem felel meg a szűrőknek';
+      var lead = q
+        ? 'Próbálj tágabb kulcsszót, vagy törölj egy szűrőt.'
+        : 'A dokumentumok halványan a térképen maradtak — törölj egy szűrőt, hogy újra elérd őket.';
       emptyEl.innerHTML =
         '<div class="empty-state">' +
-          '<p class="empty-state__title">Nincs találat</p>' +
-          '<p class="empty-state__lead">Próbálj tágabb kulcsszót, vagy törölj egy szűrőt.</p>' +
+          '<p class="empty-state__title">' + title + '</p>' +
+          '<p class="empty-state__lead">' + lead + '</p>' +
           '<button class="btn btn--sm" type="button" data-act="clear">Szűrők törlése</button>' +
         '</div>';
       var b = emptyEl.querySelector('[data-act="clear"]');
       if (b) b.addEventListener('click', clearAll);
-      statusEl.textContent = 'Nincs találat a(z) „' + q + '” keresésre.';
+      statusEl.textContent = q
+        ? 'Nincs találat a(z) „' + q + '” keresésre.'
+        : 'Egy dokumentum sem felel meg a szűrőknek. ' + (ghostCount || 0) +
+          ' dokumentum halványan a térképen marad.';
       if (!reduced) {
         emptyEl.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'translateY(0)' }],
           { duration: DUR.base, easing: EASE_GROW, fill: 'both' });
@@ -747,15 +808,13 @@
       patch[k] = !store.state.filters[k];
       store.setFilters(patch);
       paintFacetButtons();
-      machine.send('FILTER', store.state.filters);
-      recompute();
+      afterFilterChange();
     }
     facetsWrap.addEventListener('click', onFacetClick);
 
     function onStatusChange() {
       store.setFilters({ status: statusSel.value });
-      machine.send('FILTER', store.state.filters);
-      recompute();
+      afterFilterChange();
     }
     statusSel.addEventListener('change', onStatusChange);
 

@@ -224,6 +224,62 @@ canvas-pixel mintavétellel igazolva: az egykategóriás csomópontok a saját
 kategória-színüket kapják (Δ 0–5), a négy többkategóriás csomópont pedig a két
 színe KÖZÖTT keveredik (91–142 RGB-távolság).
 
+## Visszajelzések alapján beépítve (7. kör — a szűrés kiemel, nem töröl)
+
+**A kérdés.** Kategória-szűréskor a nem illeszkedő csomópontok eltűntek a
+térképről. Halványításra váltottunk.
+
+**Miért halványítás.** Nem esztétikai döntés: az eltüntetés **elveszi a térbeli
+memóriát**. A csomópontok helye determinisztikus (hash-alapú kezdőpozíció + fix
+iterációszám), tehát ugyanaz a dokumentum mindig ugyanoda kerül — de ha a kiszűrt
+csomópontok eltűnnek, a befoglaló (és vele a kamera illesztése) minden szűrő-
+kattintásra átrendeződik, és a megmaradt csomópontok szétugranak. Így a szűrő
+**kiemel a tudástárban**, nem pedig újrarajzolja azt. Mellékhatásként a 6. körben
+leírt `!camTouched` újraillesztés szűréskor már no-op: a befoglaló nem változik.
+
+**Hogyan.** Három rétegben, a modulhatárok tiszteletben tartásával:
+- `graphModel.getOverview({ includeInactive: true })` — a szűrőt figyelmen kívül
+  hagyó teljes halmaz. A „mi felel meg a szűrőnek" kérdést továbbra is az
+  `applyFacets` válaszolja meg (`nodeIds`, + új `active` jelző).
+- `atlasRenderer.setExcluded(ids)` — **új, a `setDimmed`-től szándékosan
+  különböző** erősség. A `setDimmed` (keresés nem-találatai, fókusz szomszédságán
+  kívüliek) továbbra is **kattintható** marad: így lehet a gráfban továbblépni egy
+  szomszédra. A `setExcluded` viszont **inert** — lásd lentebb.
+- `atlasView.recompute()` a teljes halmazt kontextus-rétegként a nézet alá húzza
+  (`mergeViews`), a szűkebb nézet az unió elején van, így a renderer 150-es
+  sapkája sosem attól vág le.
+
+**A vizuál: halvány ÜRES karika.** A kiesett csomópont nem csak áttetszőbb lesz —
+**elveszti a kitöltését** (és vele a kategória-színét), `--text-subtle` 1 px-es
+körvonal marad belőle. Két okból: (1) a jelentést nem a szín hordozza, hanem a
+kitöltés eltűnése (design system szabály); (2) a paletta így **csak a szűrt
+halmazt** írja le, nem zavarja össze a színek olvasatát. A **méret marad** — az
+továbbra is a súlyt jelenti. Az érintett élek 0,3-szoros alfát kapnak: a kapcsolat
+látszik, de nem versenyez a szűrt halmaz éleivel.
+
+**Inert, nem kattintható — tudatos döntés.** A kiesett csomópont nem kap feliratot,
+a hit-test átlép rajta, és hover-célként sem jöhet szóba. Ha kattintható lenne, egy
+olyan dokumentumra állna a fókusz, aminek a **listában nem lenne sora** — a
+kijelölés láthatatlan állapotba csúszna. Ugyanezért: ha egy szűrő-váltás kilöki az
+épp kijelölt dokumentumot, a kijelölést elengedjük (`afterFilterChange()`, ami
+mostantól mindhárom szűrő-vezérlő egyetlen útja).
+*Alternatíva, ha másképp döntenél:* a kattintás megnyithatná a dokumentumot a
+szűrő átmeneti feloldásával („mutasd mégis") — ez viszont új állapot a store-ban.
+
+**Nem csak színnel.** A halványság önmagában néma, ezért az élő régió kimondja:
+„A szűrőből kimaradt N dokumentum halványan a térképen marad, de most nem
+választható."
+
+**Közben talált és javított hiba:** szűrővel 0 találatnál a lista csak kiürült —
+nem volt sem üres-minta, sem kiút (az FSM `empty` állapotát csak a keresés érte
+el). Most a szűrő-üres eset saját szövegét kapja („A dokumentumok halványan a
+térképen maradtak…") a „Szűrők törlése" gombbal. A feltétel szándékosan a szűrő
+eredményére néz, nem a listára: ha a lista csak a kamera-nézet miatt ürült ki
+(rázoomoltál egy üres részre), az nem „nincs találat" — arra a kizoomolás a válasz.
+
+**Ellenőrzés:** a három módosított modul parse-ol; a viselkedés böngészős
+átnézése a felhasználónál van.
+
 ## Verdikt (kitöltendő átnézés után)
 
 - Mi működik jól: …

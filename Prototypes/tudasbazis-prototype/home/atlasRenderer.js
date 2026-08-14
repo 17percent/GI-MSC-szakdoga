@@ -18,8 +18,17 @@
  *     .setHighlight({ selectedId, hoverId, matchIds })   // csak vizuális, kamerát nem mozgat
  *     .focusOn(id, { animate: true })                    // fit-to-bounds a csomópontra + szomszédaira
  *     .toOverview({ animate: true })                     // sólyom-nézet
- *     .setDimmed(idsOrNull) .getNodeScreenRect(id)
+ *     .setDimmed(idsOrNull) .setExcluded(idsOrNull) .getNodeScreenRect(id)
  *     .start() .stop() .resize() .refreshColors() .destroy()
+ *
+ * Két, KÜLÖNBÖZŐ erősségű háttérbe-tolás — ne keverd őket:
+ *   `setDimmed`   — lágy elhalkítás (keresés nem-találatai, fókusz szomszédságán
+ *                   kívüliek). A csomópont TOVÁBBRA IS kattintható: így lehet a
+ *                   gráfban továbblépni egy szomszédra.
+ *   `setExcluded` — a szűrőből kiesett dokumentum: halvány ÜRES karika, nincs
+ *                   felirata, és NEM kattintható (inert). Azért marad ott, hogy
+ *                   lásd, van még tudás a szűrőn túl — de amire nem szűrtél, azon
+ *                   nem is tudsz cselekedni (a listában sem lenne sora).
  *
  * Teljesítmény: egyetlen rAF, előre lefoglalt tömbök (nincs per-frame allokáció),
  * ≤150 látható csomópont, DPR sapka 2, `visibilitychange`-re megáll.
@@ -67,7 +76,7 @@
     // ---------- adat: párhuzamos tömbök (nincs frame-allokáció) ----------
     var cap = 0;                            // lefoglalt kapacitás
     var nCount = 0;
-    var nx, ny, nr, nw, ntype, nsx, nsy, nscr, nvis, nmatch, ndim, nlabelW;
+    var nx, ny, nr, nw, ntype, nsx, nsy, nscr, nvis, nmatch, ndim, nout, nlabelW;
     var nid = [], nlabel = [], ncat = [];    // ncat[i] = kategória paletta-slotok tömbje
     var idIndex = {};
     var order;                              // Int32Array — súly szerint csökkenő festési/címke-sorrend
@@ -98,13 +107,13 @@
 
     // kiemelés
     var selectedId = null, hoverId = null, selIdx = -1, hovIdx = -1;
-    var dimActive = false;
+    var dimActive = false, outActive = false;
     var phase = 0;
 
     // színek (tokenekből)
     var col = {
       primary: '#1F5C4C', secondary: '#29528C', accent: '#C9861A',
-      text: '#1A1712', textMuted: '#6B6355', surface: '#FFFFFF',
+      text: '#1A1712', textMuted: '#6B6355', textSubtle: '#7A7264', surface: '#FFFFFF',
       border: '#DDD6C8', borderStrong: '#BFB7A6',
       edgeStr: 'rgb(191,183,166)', edgeHiStr: 'rgb(201,134,26)',
       fontBody: 'Inter, sans-serif', docFontPx: 12, fontDocBase: '500 12px Inter',
@@ -184,6 +193,9 @@
       col.accent = readVar('--accent', '#C9861A');
       col.text = readVar('--text', '#1A1712');
       col.textMuted = readVar('--text-muted', '#6B6355');
+      // a szűrőből kiesett csomópontok karikája — mindkét témában halvány, de
+      // biztosan látható (a `--border` ehhez már kevés lenne sötét témán)
+      col.textSubtle = readVar('--text-subtle', '#7A7264');
       col.surface = readVar('--surface', '#FFFFFF');
       col.border = readVar('--border', '#DDD6C8');
       col.borderStrong = readVar('--border-strong', '#BFB7A6');
@@ -221,7 +233,8 @@
       nr = new Float32Array(cap); nw = new Float32Array(cap);
       ntype = new Uint8Array(cap);
       nsx = new Float32Array(cap); nsy = new Float32Array(cap); nscr = new Float32Array(cap);
-      nvis = new Uint8Array(cap); nmatch = new Uint8Array(cap); ndim = new Uint8Array(cap);
+      nvis = new Uint8Array(cap); nmatch = new Uint8Array(cap);
+      ndim = new Uint8Array(cap); nout = new Uint8Array(cap);
       nlabelW = new Float32Array(cap);
       order = new Int32Array(cap);
       nbStart = new Int32Array(cap + 1);
@@ -260,9 +273,10 @@
         nr[nCount] = nd.r > 0 ? +nd.r : 5;
         nw[nCount] = +nd.weight || 0;
         ntype[nCount] = typeCode(nd.type);
-        nmatch[nCount] = 0; ndim[nCount] = 0; nlabelW[nCount] = -1;
+        nmatch[nCount] = 0; ndim[nCount] = 0; nout[nCount] = 0; nlabelW[nCount] = -1;
         nCount++;
       }
+      outActive = false;      // az új adathalmazra a hívó újra kiadja a setExcluded-et
 
       // festési ÉS címke-sorrend: súly szerint csökkenő (a súlyosabb kerül felülre,
       // és előbb kap feliratot)
@@ -418,6 +432,27 @@
           var k = idIndex[ids[i]];
           if (k != null) { ndim[k] = 1; dimActive = true; }
         }
+      }
+      requestDraw();
+    }
+
+    // A szűrőből kiesett csomópontok: halvány üres karika, felirat nélkül, és
+    // INERT (a hit-test átlép rajtuk). Erősebb háttérbe-tolás, mint a `setDimmed`.
+    // null = nincs kiesett csomópont.
+    function setExcluded(ids) {
+      var i;
+      for (i = 0; i < nCount; i++) nout[i] = 0;
+      outActive = false;
+      if (ids && ids.length) {
+        for (i = 0; i < ids.length; i++) {
+          var k = idIndex[ids[i]];
+          if (k != null) { nout[k] = 1; outActive = true; }
+        }
+      }
+      // a kiesett csomópont nem lehet hover-cél: ha épp azon állt a kurzor, elengedjük
+      if (outActive && hovIdx >= 0 && nout[hovIdx]) {
+        hoverId = null; hovIdx = -1;
+        markSelectedEdges();
       }
       requestDraw();
     }
@@ -630,6 +665,9 @@
           var wA = Math.min(1, 0.35 + ew[i] * 0.18);
           var al = (0.10 + wA * 0.16) * P.edge * cfg.edge;
           if (dimActive && ndim[ea[i]] && ndim[eb[i]]) al *= 0.35;
+          // szűrőből kiesett végpont: az él is visszahúzódik — a kapcsolat látszik,
+          // de nem versenyez a szűrt halmaz éleivel
+          if (outActive && (nout[ea[i]] || nout[eb[i]])) al *= 0.3;
           ctx.globalAlpha = al;
           ctx.beginPath();
           ctx.moveTo(nsx[ea[i]], nsy[ea[i]]);
@@ -644,7 +682,10 @@
         if (!ehl[i]) continue;
         if (!nvis[ea[i]] && !nvis[eb[i]]) continue;
         var wB = Math.min(1, 0.35 + ew[i] * 0.18);
-        ctx.globalAlpha = Math.min(0.9, (0.10 + wB * 0.16) * Math.max(P.edge, 0.55) * 1.6 * cfg.edge);
+        var alB = Math.min(0.9, (0.10 + wB * 0.16) * Math.max(P.edge, 0.55) * 1.6 * cfg.edge);
+        // a kijelölt szomszédsága is visszafogott, ha a másik vége kiesett a szűrőből
+        if (outActive && (nout[ea[i]] || nout[eb[i]])) alB *= 0.3;
+        ctx.globalAlpha = alB;
         ctx.beginPath();
         ctx.moveTo(nsx[ea[i]], nsy[ea[i]]);
         ctx.lineTo(nsx[eb[i]], nsy[eb[i]]);
@@ -674,6 +715,7 @@
           docLabels++;
         }
         if (dimActive && ndim[idx]) continue;
+        if (outActive && nout[idx]) continue;      // kiesett csomópont nem kap feliratot
         labelFor(idx, budget, false);
       }
       ctx.globalAlpha = 1;
@@ -684,6 +726,18 @@
       var t = ntype[i];
       var isSel = i === selIdx, isHov = i === hovIdx;
       var a = P.docAlpha;
+
+      // A szűrőből kiesett dokumentum NEM tűnik el: halvány ÜRES karika marad
+      // belőle. A jelentést nem a szín hordozza, hanem a KITÖLTÉS eltűnése — a
+      // kategória-színt sem viszi tovább, így a paletta csak a szűrt halmazt
+      // írja le. A méret marad (az továbbra is a súlyt jelenti).
+      if (outActive && nout[i]) {
+        ctx.globalAlpha = Math.min(0.55, a * 0.5);
+        ctx.strokeStyle = col.textSubtle;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
+        return;
+      }
       if (dimActive && ndim[i] && !isSel && !isHov) a *= 0.22;
       if (a < 0.02) return;
 
@@ -821,6 +875,7 @@
           s = cellStart[gyi * G + gxi]; e = cellStart[gyi * G + gxi + 1];
           for (j = s; j < e; j++) {
             i = cellItems[j];
+            if (outActive && nout[i]) continue;    // a kiesett csomópont inert: átlépünk rajta
             // a pozíciót itt is számoljuk (nem a rajzolt puffert olvassuk) — így akkor is
             // helyes, ha még nem futott képkocka
             dx = ((nx[i] - camX) * scale + W / 2) - px;
@@ -1015,6 +1070,7 @@
       setData: setData,
       setHighlight: setHighlight,
       setDimmed: setDimmed,
+      setExcluded: setExcluded,
       focusOn: focusOn,
       toOverview: toOverview,
       getNodeScreenRect: getNodeScreenRect,

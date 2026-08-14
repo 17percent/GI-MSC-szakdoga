@@ -15,11 +15,16 @@
  *
  * Publikus API:
  *   createGraphModel(raw, { tier: 0 })
- *     .getOverview()                      -> { nodes, edges }
+ *     .getOverview({ includeInactive })   -> { nodes, edges }
  *     .getNeighborhood(id, { max: 32 })   -> { nodes, edges }
  *     .search(q, { max: 60 })             -> { nodes, edges, matchIds }
- *     .applyFacets(facets)                -> { docIds, nodeIds }   // facets.categories: [name,...] (VAGY-kapcsolat)
+ *     .applyFacets(facets)                -> { docIds, nodeIds, active }   // facets.categories: [name,...] (VAGY-kapcsolat)
  *     .nodeById(id) .nodeForDoc(docId) .categorySlots() .stats()
+ *
+ * `getOverview({ includeInactive: true })` a SZŰRŐTŐL FÜGGETLEN teljes halmazt
+ * adja. Erre azért van szükség, mert szűréskor a kiszűrt dokumentum nem tűnik el
+ * a térképről, csak halványan ott marad kontextusként — a „mi felel meg a
+ * szűrőnek" kérdést továbbra is az `applyFacets` válaszolja meg (`nodeIds`).
  *
  * Kurálás: szomszédság ≤ 32, keresés ≤ 60 találat; EGYETLEN getter sem ad
  * vissza 150-nél több csomópontot.
@@ -468,11 +473,11 @@
     function isActiveNode(node) { return !node ? false : isActiveDoc(node.docId); }
 
     // ---------- 8. eredmény-összeállítás ----------
-    function buildResult(idList, extraEdges) {
+    function buildResult(idList, extraEdges, includeInactive) {
       var seen = {}, out = [], i2, n2;
       for (i2 = 0; i2 < idList.length && out.length < MAX_NODES; i2++) {
         if (seen[idList[i2]]) continue;
-        n2 = resolveNode(idList[i2]);
+        n2 = resolveNode(idList[i2], includeInactive);
         if (!n2) continue;
         seen[idList[i2]] = 1;
         out.push(n2);
@@ -493,9 +498,10 @@
       return { nodes: out, edges: edges };
     }
 
-    function resolveNode(id) {
+    function resolveNode(id, includeInactive) {
       var nd = byId[id];
-      if (!nd || !isActiveNode(nd)) return null;
+      if (!nd) return null;
+      if (!includeInactive && !isActiveNode(nd)) return null;
       return nd;
     }
 
@@ -509,13 +515,19 @@
       return idxList;
     }
 
-    function getOverview() {
+    // `includeInactive: true` → a szűrőt figyelmen kívül hagyó teljes halmaz.
+    // A kezdőoldal ezt KONTEXTUS-RÉTEGKÉNT kéri: a szűrőből kiesett dokumentum
+    // halványan a térképen marad, nem tűnik el alóla a szerkezet.
+    function getOverview(opts) {
+      var includeInactive = !!(opts && opts.includeInactive);
       var pool = [], i2;
-      for (i2 = 0; i2 < n; i2++) if (isActiveDoc(items[i2].doc.id)) pool.push(i2);
+      for (i2 = 0; i2 < n; i2++) {
+        if (includeInactive || isActiveDoc(items[i2].doc.id)) pool.push(i2);
+      }
       sortByWeightDesc(pool);
       var ids = [], seen = {};
       for (i2 = 0; i2 < pool.length && ids.length < MAX_NODES; i2++) pushUnique(ids, seen, items[pool[i2]].node.id);
-      return buildResult(ids, null);
+      return buildResult(ids, null, includeInactive);
     }
 
     function getNeighborhood(id, opts) {
@@ -599,7 +611,7 @@
       var categories = facets.categories || [];
       var favIds = facets.favoriteIds || [];
 
-      var any = today || mine || team || onlyFav || onlyTpl || status || categories.length;
+      var any = !!(today || mine || team || onlyFav || onlyTpl || status || categories.length);
       var docIds = [], nodeIds = [], i2;
 
       if (!any) {
@@ -609,7 +621,8 @@
           docIds.push(items[i2].doc.id);
           nodeIds.push(items[i2].node.id);
         }
-        return { docIds: docIds, nodeIds: nodeIds };
+        // `active: false` → a hívónak nincs mit halványítania, minden benne van
+        return { docIds: docIds, nodeIds: nodeIds, active: false };
       }
 
       var favMap = {};
@@ -638,7 +651,7 @@
         nodeIds.push(it.node.id);
       }
       activeCount = docIds.length;
-      return { docIds: docIds, nodeIds: nodeIds };
+      return { docIds: docIds, nodeIds: nodeIds, active: true };
     }
 
     function nodeByIdFn(id) { return byId[id] || null; }
