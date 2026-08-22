@@ -6,6 +6,11 @@
  *
  * Átrendezés FLIP-pel: a sorok elcsúsznak az új helyükre, nem „bevágódnak".
  *
+ * Gördülés: a lista a kiválasztott sorhoz gördül, ÉS a térképen hoverelt
+ * dokumentumhoz is — hogy a kiemelt sor tényleg látható legyen. A LISTÁBÓL induló
+ * hover viszont sosem gördít (különben a sorok a kurzor alól csúsznának el, és a
+ * `pointerover` önmagát hajtó hurokba kerülne).
+ *
  * Billentyűzet:
  *   ↑/↓/Home/End — lépés a sorok között (aktív sor + a térképen pulzálás)
  *   Enter/Space  — kiválasztás (a térkép kamerája ráközelít)
@@ -154,11 +159,40 @@
       listEl.setAttribute('aria-activedescendant', activeId ? 'atlas-opt-' + activeId : '');
     }
 
-    function scrollToSelected(id) {
+    // `block: 'nearest'` — csak akkor gördül, ha a sor tényleg kilóg a nézetből,
+    // és akkor is a lehető legkevesebbet: a lista nem ugrik feleslegesen.
+    // Megjegyzés: ablakozott listában (`windowed`, 200 tétel felett) a sor lehet,
+    // hogy még nincs kirenderelve — ilyenkor ez no-op. A prototípus korpusza
+    // ennél kisebb; ha a korpusz nő, itt kell a becsült pozícióra ugrás.
+    function scrollRowIntoView(id) {
       var el = rowsById[id];
       if (!el) return;
       if (reduced) { el.scrollIntoView({ block: 'nearest' }); return; }
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // A LISTÁBÓL induló hover nem gördíthet: a sorok elcsúsznának a kurzor alól,
+    // az új sor `pointerover`-t kapna, az újabb hovert állítana → önmagát hajtó
+    // hurok. A `store.setHover` emitje szinkron, ezért egy egyszerű zászló elég:
+    // a feliratkozó még ezen az ablakon belül fut le.
+    var selfHover = false;
+    function setHoverFromList(id) {
+      selfHover = true;
+      try { store.setHover(id); } finally { selfHover = false; }
+    }
+
+    // A TÉRKÉPRŐL jövő hover odagördíti a listát. Rövid debounce, hogy a
+    // csomópontok közti gyors kurzor-söprés a végállapotra álljon be, ne
+    // gördüljön minden érintett dokumentumhoz külön.
+    var HOVER_SCROLL_DELAY = 90;
+    var hoverScrollTimer = 0;
+    function scheduleHoverScroll(id) {
+      if (hoverScrollTimer) global.clearTimeout(hoverScrollTimer);
+      hoverScrollTimer = global.setTimeout(function () {
+        hoverScrollTimer = 0;
+        // a hover időközben elmozdulhatott — mindig az ÉPP érvényes sorhoz igazítunk
+        if (store.state.hoverId === id) scrollRowIntoView(id);
+      }, HOVER_SCROLL_DELAY);
     }
 
     // ---------- interakció ----------
@@ -190,9 +224,20 @@
 
     function onOver(e) {
       var row = rowFromEvent(e);
-      store.setHover(row ? row.getAttribute('data-id') : null);
+      setHoverFromList(row ? row.getAttribute('data-id') : null);
     }
-    function onLeave() { store.setHover(null); }
+    function onLeave() { setHoverFromList(null); }
+
+    // Home/End: ugyanaz az út, mint a nyilaknál — aktív sor + hover-előnézet a
+    // térképen + odagördülés. (Korábban a Home/End nem gördült a sorhoz.)
+    function jumpTo(idx) {
+      if (!items.length) return;
+      activeId = items[idx].id;
+      applyHighlight(store.state);
+      setHoverFromList(activeId);
+      var el = rowsById[activeId];
+      if (el) el.scrollIntoView({ block: 'nearest' });
+    }
 
     function move(delta) {
       if (!items.length) return;
@@ -202,7 +247,8 @@
       if (idx > items.length - 1) idx = items.length - 1;
       activeId = items[idx].id;
       applyHighlight(store.state);
-      store.setHover(activeId);              // a térképen pulzál — előnézet kamera nélkül
+      setHoverFromList(activeId);            // a térképen pulzál — előnézet kamera nélkül
+      // billentyűzetnél azonnal (nem smooth): tartott nyílra ne fusson be tween-sor
       var el = rowsById[activeId];
       if (el) el.scrollIntoView({ block: 'nearest' });
     }
@@ -210,8 +256,8 @@
     function onKeyDown(e) {
       if (e.key === 'ArrowDown') { e.preventDefault(); move(activeId ? 1 : 1); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
-      else if (e.key === 'Home') { e.preventDefault(); if (items.length) { activeId = items[0].id; applyHighlight(store.state); store.setHover(activeId); } }
-      else if (e.key === 'End') { e.preventDefault(); if (items.length) { activeId = items[items.length - 1].id; applyHighlight(store.state); store.setHover(activeId); } }
+      else if (e.key === 'Home') { e.preventDefault(); jumpTo(0); }
+      else if (e.key === 'End') { e.preventDefault(); jumpTo(items.length - 1); }
       else if (e.key === 'Enter' || e.key === ' ') {
         if (!activeId) return;
         e.preventDefault();
@@ -239,13 +285,21 @@
       if (s.selectedId && s.selectedId !== prev.selectedId) {
         activeId = s.selectedId;
         applyHighlight(s);
-        scrollToSelected(s.selectedId);
+        scrollRowIntoView(s.selectedId);
+      }
+      // Térkép-hover → a lista odagördül, hogy a kiemelt sor LÁTHATÓ legyen (eddig
+      // csak a kiemelés cserélődött, néma maradt, ha a sor kilógott a nézetből).
+      // A kijelölés-váltás fentebb már gördült, azt nem duplázzuk.
+      if (s.hoverId && s.hoverId !== prev.hoverId && !selfHover &&
+          s.hoverId !== s.selectedId) {
+        scheduleHoverScroll(s.hoverId);
       }
     });
 
     function destroy() {
       unsubscribe();
       if (scrollRaf) global.cancelAnimationFrame(scrollRaf);
+      if (hoverScrollTimer) global.clearTimeout(hoverScrollTimer);
       listEl.removeEventListener('click', onClick);
       listEl.removeEventListener('dblclick', onDblClick);
       listEl.removeEventListener('pointerover', onOver);

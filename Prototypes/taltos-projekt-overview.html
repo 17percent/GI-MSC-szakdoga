@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="hu" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Táltos — tudásbázis-platform · architektúra &amp; felületi terv</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   TÁLTOS DESIGN SYSTEM — tokenek (elsődleges és szemantikus)
+   ========================================================= */
+:root {
+  --green-50:#ECF5F1; --green-100:#D2E8DF; --green-200:#A6D0C1; --green-300:#71B29C; --green-400:#479079;
+  --green-500:#2C7460; --green-600:#1F5C4C; --green-700:#194A3E; --green-800:#163C33; --green-900:#10281F;
+  --blue-50:#ECF2F9; --blue-100:#D3E1F2; --blue-200:#A9C5E6; --blue-300:#79A3D6; --blue-400:#4E82C4;
+  --blue-500:#3467AD; --blue-600:#29528C; --blue-700:#234471; --blue-800:#1E385C; --blue-900:#16273F;
+  --gold-50:#FBF3E4; --gold-100:#F6E3BF; --gold-200:#EFCB86; --gold-300:#E7B356; --gold-400:#DD9C2E;
+  --gold-500:#C9861A; --gold-600:#A66B14; --gold-700:#825313; --gold-800:#674214; --gold-900:#4A2F0F;
+  --bark-0:#FFFFFF; --bark-50:#F7F5F1; --bark-100:#EDE9E1; --bark-200:#DBD5C9; --bark-300:#BFB7A6;
+  --bark-400:#9C9384; --bark-500:#7A7264; --bark-600:#5E574C; --bark-700:#46413A; --bark-800:#302C27;
+  --bark-900:#1C1A16; --bark-950:#12100D;
+  --success-500:#2F855A; --success-600:#276749; --success-50:#E7F3EC;
+  --warning-500:#C9861A; --warning-600:#A66B14; --warning-50:#FBF3E4;
+  --danger-500:#C0492E;  --danger-600:#9E3A24;  --danger-50:#F9EAE6;
+  --info-500:#3467AD;    --info-600:#29528C;    --info-50:#ECF2F9;
+
+  --font-display:"Fraunces",Georgia,serif;
+  --font-body:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --font-mono:"JetBrains Mono","SF Mono",Menlo,monospace;
+  --text-xs:.75rem; --text-sm:.875rem; --text-base:1rem; --text-lg:1.125rem; --text-xl:1.25rem;
+  --text-2xl:1.5rem; --text-3xl:1.875rem; --text-4xl:2.25rem; --text-5xl:3rem; --text-6xl:3.75rem;
+  --leading-tight:1.15; --leading-snug:1.3; --leading-normal:1.6; --leading-relaxed:1.75;
+  --tracking-tight:-.02em; --tracking-normal:0; --tracking-wide:.04em; --tracking-wider:.14em;
+  --weight-regular:400; --weight-medium:500; --weight-semibold:600; --weight-bold:700;
+
+  --space-0:0; --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-5:1.25rem;
+  --space-6:1.5rem; --space-8:2rem; --space-10:2.5rem; --space-12:3rem; --space-16:4rem; --space-20:5rem; --space-24:6rem;
+
+  --radius-none:0; --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-xl:16px; --radius-2xl:24px; --radius-full:9999px;
+
+  --z-base:0; --z-raised:10; --z-sticky:100; --z-overlay:1000; --z-modal:1100; --z-toast:1200;
+
+  --ease-grow:cubic-bezier(.22,1,.36,1); --ease-standard:cubic-bezier(.4,0,.2,1);
+  --ease-enter:cubic-bezier(0,0,.2,1); --ease-exit:cubic-bezier(.4,0,1,1);
+  --duration-fast:150ms; --duration-base:250ms; --duration-slow:400ms; --duration-slower:600ms;
+
+  --content-max:1120px; --sidebar-w:264px; --read-width:70ch;
+
+  --bg:var(--bark-50); --bg-contour:rgba(31,92,76,.05);
+  --surface:var(--bark-0); --surface-raised:var(--bark-0); --surface-sunken:var(--bark-100); --surface-inverse:var(--green-900);
+  --border:var(--bark-200); --border-strong:var(--bark-300); --border-focus:var(--blue-500);
+  --text:var(--bark-900); --text-muted:var(--bark-600); --text-subtle:var(--bark-500); --text-inverse:var(--bark-0); --text-on-accent:var(--bark-950);
+  --primary:var(--green-600); --primary-hover:var(--green-700); --primary-active:var(--green-800); --primary-soft:var(--green-50); --primary-soft-text:var(--green-700); --on-primary:#FFFFFF;
+  --secondary:var(--blue-600); --secondary-hover:var(--blue-700); --secondary-soft:var(--blue-50); --on-secondary:#FFFFFF;
+  --accent:var(--gold-500); --accent-hover:var(--gold-600); --accent-soft:var(--gold-50);
+  --success:var(--success-600); --success-bg:var(--success-50);
+  --warning:var(--warning-600); --warning-bg:var(--warning-50);
+  --danger:var(--danger-600);   --danger-bg:var(--danger-50);
+  --info:var(--info-600);       --info-bg:var(--info-50);
+  --focus-ring:0 0 0 3px rgba(52,103,173,.35);
+  --shadow-xs:0 1px 2px rgba(28,26,22,.06);
+  --shadow-sm:0 1px 3px rgba(28,26,22,.08),0 1px 2px rgba(28,26,22,.05);
+  --shadow-md:0 4px 10px rgba(28,26,22,.08),0 2px 4px rgba(28,26,22,.05);
+  --shadow-lg:0 12px 28px rgba(28,26,22,.12),0 4px 8px rgba(28,26,22,.06);
+  --shadow-xl:0 24px 48px rgba(28,26,22,.16);
+}
+[data-theme="dark"] {
+  --bg:var(--bark-950); --bg-contour:rgba(113,178,156,.06);
+  --surface:#1C1A16; --surface-raised:#24211C; --surface-sunken:#16140F; --surface-inverse:var(--green-50);
+  --border:#34302A; --border-strong:#47423A; --border-focus:var(--blue-300);
+  --text:#F2EEE6; --text-muted:#B4AC9C; --text-subtle:#8A8272; --text-inverse:var(--bark-900); --text-on-accent:var(--bark-950);
+  --primary:var(--green-300); --primary-hover:var(--green-200); --primary-active:var(--green-100); --primary-soft:rgba(44,116,96,.18); --primary-soft-text:var(--green-200); --on-primary:var(--green-900);
+  --secondary:var(--blue-300); --secondary-hover:var(--blue-200); --secondary-soft:rgba(52,103,173,.18); --on-secondary:var(--blue-900);
+  --accent:var(--gold-300); --accent-hover:var(--gold-200); --accent-soft:rgba(201,134,26,.16);
+  --success:#6EC28E; --success-bg:rgba(47,133,90,.16);
+  --warning:var(--gold-300); --warning-bg:rgba(201,134,26,.16);
+  --danger:#E28468; --danger-bg:rgba(192,73,46,.18);
+  --info:var(--blue-300); --info-bg:rgba(52,103,173,.16);
+  --focus-ring:0 0 0 3px rgba(121,163,214,.45);
+  --shadow-xs:0 1px 2px rgba(0,0,0,.4);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.45),0 1px 2px rgba(0,0,0,.35);
+  --shadow-md:0 4px 12px rgba(0,0,0,.5);
+  --shadow-lg:0 14px 32px rgba(0,0,0,.55);
+  --shadow-xl:0 24px 50px rgba(0,0,0,.6);
+}
+
+/* ========================= RESET ========================= */
+*,*::before,*::after{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:var(--text-base);line-height:var(--leading-normal);transition:background var(--duration-slow) var(--ease-standard),color var(--duration-slow) var(--ease-standard);}
+ul,ol{margin:0;padding:0;}
+li{list-style:none;}
+img,svg{display:block;max-width:100%;}
+a{color:inherit;}
+button{font-family:inherit;}
+h1,h2,h3,h4,p{margin:0;}
+:focus-visible{outline:none;box-shadow:var(--focus-ring);border-radius:var(--radius-sm);}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important;}
+}
+
+/* ========================= LAYOUT UTIL ========================= */
+.container{max-width:var(--content-max);margin-inline:auto;padding-inline:var(--space-6);}
+.section{padding-block:var(--space-20);border-top:1px solid var(--border);}
+.section:first-of-type{border-top:none;}
+.section-head{max-width:var(--read-width);margin-bottom:var(--space-10);}
+.eyebrow{display:inline-flex;align-items:center;gap:var(--space-2);font:var(--weight-semibold) var(--text-xs)/1 var(--font-body);text-transform:uppercase;letter-spacing:var(--tracking-wide);color:var(--text-subtle);margin-bottom:var(--space-3);}
+.eyebrow::before{content:"";width:16px;height:1px;background:var(--border-strong);}
+.section-head h2{font:var(--weight-semibold) var(--text-3xl)/var(--leading-snug) var(--font-display);color:var(--text);letter-spacing:var(--tracking-tight);margin-bottom:var(--space-4);}
+.section-head .lead{color:var(--text-muted);font-size:var(--text-lg);line-height:var(--leading-relaxed);}
+.lead-narrow{max-width:var(--read-width);color:var(--text-muted);font-size:var(--text-base);margin-bottom:var(--space-8);}
+
+.grid{display:grid;gap:var(--space-6);}
+.grid-2{grid-template-columns:repeat(2,1fr);}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+@media (max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-6);}
+.card h3{font:var(--weight-semibold) var(--text-lg)/var(--leading-snug) var(--font-body);color:var(--text);margin-bottom:var(--space-2);}
+.card p{color:var(--text-muted);font-size:var(--text-sm);}
+.card .card-badge{margin-bottom:var(--space-3);}
+
+.badge{display:inline-flex;align-items:center;gap:var(--space-1);font:var(--weight-semibold) var(--text-xs)/1 var(--font-body);padding:2px var(--space-2);border-radius:var(--radius-full);}
+.badge--neutral{background:var(--surface-sunken);color:var(--text-muted);}
+.badge--primary{background:var(--primary-soft);color:var(--primary-soft-text);}
+.badge--success{background:var(--success-bg);color:var(--success);}
+.badge--warning{background:var(--warning-bg);color:var(--warning);}
+.badge--danger{background:var(--danger-bg);color:var(--danger);}
+.badge--info{background:var(--info-bg);color:var(--info);}
+
+.tag{display:inline-flex;font:var(--text-xs)/1 var(--font-mono);padding:3px var(--space-2);border-radius:var(--radius-sm);background:var(--surface-sunken);color:var(--text-muted);border:1px solid var(--border);}
+
+.chip{display:inline-flex;align-items:center;font:var(--text-xs)/1 var(--font-mono);padding:.35rem .7rem;border:1px solid var(--border);border-radius:var(--radius-full);color:var(--text-muted);background:var(--surface);}
+.chiprow{display:flex;flex-wrap:wrap;gap:var(--space-2);}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);height:40px;padding:0 var(--space-4);border-radius:var(--radius-md);font:var(--weight-semibold) var(--text-sm)/1 var(--font-body);border:none;cursor:pointer;transition:background var(--duration-fast) var(--ease-standard),transform var(--duration-fast) var(--ease-standard),opacity var(--duration-fast) var(--ease-standard);}
+.btn--sm{height:32px;padding:0 var(--space-3);font-size:var(--text-xs);}
+.btn--primary{background:var(--primary);color:var(--on-primary);}
+.btn--primary:hover{background:var(--primary-hover);}
+.btn--secondary{background:var(--secondary);color:var(--on-secondary);}
+.btn--secondary:hover{background:var(--secondary-hover);}
+.btn--outline{background:transparent;color:var(--text);border:1px solid var(--border-strong);}
+.btn--outline:hover{background:var(--surface-sunken);}
+.btn--ghost{background:transparent;color:var(--text-muted);}
+.btn--ghost:hover{background:var(--surface-sunken);}
+.btn--danger{background:var(--danger);color:#fff;}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+
+.alert{display:flex;gap:var(--space-3);padding:var(--space-4);border-radius:var(--radius-md);align-items:flex-start;}
+.alert--info{background:var(--info-bg);border:1px solid color-mix(in srgb, var(--info) 30%, transparent);}
+.alert--danger{background:var(--danger-bg);border:1px solid color-mix(in srgb, var(--danger) 30%, transparent);}
+.alert svg{flex-shrink:0;margin-top:2px;}
+.alert strong{color:var(--text);}
+.alert p{margin:0;color:var(--text-muted);font-size:var(--text-sm);}
+
+table{width:100%;border-collapse:collapse;font-size:var(--text-sm);}
+thead th{background:var(--surface-sunken);text-transform:uppercase;font-size:var(--text-xs);letter-spacing:var(--tracking-wide);color:var(--text-subtle);text-align:left;padding:var(--space-3) var(--space-4);font-weight:var(--weight-semibold);}
+tbody td{padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--border);color:var(--text-muted);vertical-align:top;}
+tbody td:first-child{color:var(--text);font-weight:var(--weight-medium);white-space:nowrap;}
+tbody tr:hover td{background:var(--surface-sunken);}
+.table-wrap{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface);}
+
+.diagram{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-6);box-shadow:var(--shadow-sm);}
+.diagram figcaption{margin-top:var(--space-4);color:var(--text-subtle);font-size:var(--text-sm);text-align:center;}
+
+.acc{border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);overflow:hidden;}
+.acc-item{border-bottom:1px solid var(--border);}
+.acc-item:last-child{border-bottom:none;}
+.acc-item summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);padding:var(--space-4) var(--space-5);font:var(--weight-semibold) var(--text-base)/1.3 var(--font-body);color:var(--text);}
+.acc-item summary::-webkit-details-marker{display:none;}
+.acc-item summary .chev{transition:transform var(--duration-base) var(--ease-standard);color:var(--text-subtle);flex-shrink:0;}
+.acc-item[open] summary .chev{transform:rotate(180deg);}
+.acc-item summary .meta{font:var(--text-xs) var(--font-mono);color:var(--text-subtle);font-weight:var(--weight-regular);}
+.acc-body{padding:0 var(--space-5) var(--space-5);color:var(--text-muted);font-size:var(--text-sm);line-height:var(--leading-relaxed);}
+.acc-body ul{margin-top:var(--space-2);padding-left:var(--space-5);}
+.acc-body li{list-style:disc;margin-bottom:var(--space-1);}
+.acc-body .price{margin-top:var(--space-3);padding-top:var(--space-3);border-top:1px dashed var(--border);color:var(--text-subtle);font-size:var(--text-xs);}
+.acc-body .price strong{color:var(--warning);}
+
+.checklist{display:flex;flex-direction:column;gap:var(--space-2);}
+.checklist li{display:flex;align-items:flex-start;gap:var(--space-3);padding:var(--space-3) var(--space-4);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);font-size:var(--text-sm);color:var(--text);}
+.checklist li .num{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-subtle);flex-shrink:0;margin-top:2px;}
+.checklist li svg{flex-shrink:0;color:var(--success);margin-top:2px;}
+.checklist li.deferred{border-style:dashed;border-color:var(--border-strong);}
+.checklist li.deferred svg{color:var(--warning);}
+
+.stage{background:var(--surface-sunken);border:1px dashed var(--border-strong);border-radius:var(--radius-lg);padding:var(--space-6);}
+.stage-label{display:flex;align-items:center;gap:var(--space-2);font:var(--weight-semibold) var(--text-xs)/1 var(--font-body);text-transform:uppercase;letter-spacing:var(--tracking-wide);color:var(--text-subtle);margin-bottom:var(--space-4);}
+.stage-label svg{color:var(--accent);}
+
+/* ========================= HEADER / HERO ========================= */
+.hero{position:relative;padding:var(--space-20) 0 var(--space-16);overflow:hidden;}
+.hero__contours{position:absolute;inset:0;z-index:0;opacity:1;pointer-events:none;}
+.hero .container{position:relative;z-index:1;display:flex;align-items:center;gap:var(--space-12);}
+.hero__text{flex:1;min-width:0;}
+.hero__text h1{font:var(--weight-semibold) clamp(2.25rem,4vw + 1rem,3.75rem)/var(--leading-tight) var(--font-display);letter-spacing:var(--tracking-tight);color:var(--text);margin-bottom:var(--space-5);}
+.hero__text h1 em{font-style:normal;color:var(--primary);}
+.hero__graphic{flex-shrink:0;width:220px;}
+@media (max-width:900px){.hero .container{flex-direction:column;}.hero__graphic{width:180px;}}
+
+/* ========================= SUBNAV ========================= */
+.subnav{position:sticky;top:0;z-index:100;background:color-mix(in srgb, var(--bg) 86%, transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);}
+.subnav .container{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);padding-block:var(--space-3);}
+.subnav__brand{display:flex;align-items:center;gap:var(--space-2);font:var(--weight-semibold) var(--text-sm)/1 var(--font-display);color:var(--text);flex-shrink:0;}
+.subnav__brand svg{color:var(--primary);}
+.subnav__links{display:flex;gap:var(--space-1);overflow-x:auto;scrollbar-width:none;}
+.subnav__links::-webkit-scrollbar{display:none;}
+.subnav__links a{white-space:nowrap;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:var(--weight-medium);color:var(--text-muted);text-decoration:none;transition:background var(--duration-fast) var(--ease-standard),color var(--duration-fast) var(--ease-standard);}
+.subnav__links a:hover{background:var(--surface-sunken);color:var(--text);}
+.subnav__links a.active{background:var(--primary-soft);color:var(--primary-soft-text);}
+.theme-toggle{flex-shrink:0;display:inline-flex;align-items:center;gap:var(--space-2);height:36px;padding:0 var(--space-3);border-radius:var(--radius-full);border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:var(--text-xs);font-weight:var(--weight-semibold);cursor:pointer;}
+.theme-toggle:hover{background:var(--surface-sunken);}
+.theme-toggle svg{width:14px;height:14px;}
+
+/* ========================= COLOR / TYPE PREVIEW ========================= */
+.ramp-row{display:flex;flex-direction:column;gap:var(--space-2);margin-bottom:var(--space-5);}
+.ramp-row .ramp-label{font:var(--weight-semibold) var(--text-xs)/1 var(--font-mono);text-transform:uppercase;letter-spacing:var(--tracking-wide);color:var(--text-subtle);}
+.ramp{display:flex;border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--border);}
+.ramp span{flex:1;height:44px;position:relative;cursor:default;}
+.ramp span:hover::after{content:attr(data-hex);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--surface-inverse);color:var(--text-inverse);font:var(--text-xs) var(--font-mono);padding:2px 6px;border-radius:var(--radius-sm);margin-bottom:4px;white-space:nowrap;}
+
+.semantic-chips{display:flex;flex-wrap:wrap;gap:var(--space-3);}
+.semantic-chips .schip{display:flex;align-items:center;gap:var(--space-2);font:var(--text-xs) var(--font-mono);color:var(--text-muted);padding:var(--space-2) var(--space-3);border:1px solid var(--border);border-radius:var(--radius-full);background:var(--surface);}
+.schip .dot{width:14px;height:14px;border-radius:var(--radius-full);border:1px solid var(--border);flex-shrink:0;}
+
+.type-scale{display:flex;flex-direction:column;}
+.type-row{display:flex;align-items:baseline;gap:var(--space-5);padding:var(--space-4) 0;border-bottom:1px solid var(--border);}
+.type-row:last-child{border-bottom:none;}
+.type-row .role-label{width:90px;flex-shrink:0;font:var(--text-xs) var(--font-mono);color:var(--text-subtle);}
+.type-row .sample{color:var(--text);}
+
+.component-row{display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;}
+
+/* ========================= LOGIN MOCKUP ========================= */
+.login-demo{position:relative;border-radius:var(--radius-xl);overflow:hidden;background:var(--bg);min-height:440px;display:grid;place-items:center;padding:var(--space-8);border:1px solid var(--border);}
+.login-demo__field{position:absolute;inset:0;width:100%;height:100%;}
+.login-demo__card{position:relative;z-index:1;width:100%;max-width:340px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg);padding:var(--space-8) var(--space-6);transition:opacity var(--duration-slow) var(--ease-standard),transform var(--duration-slow) var(--ease-standard);}
+.login-demo__mark{color:var(--primary);margin-bottom:var(--space-4);}
+.login-demo__eyebrow{font:var(--weight-semibold) var(--text-xs)/1 var(--font-body);text-transform:uppercase;letter-spacing:var(--tracking-wide);color:var(--text-subtle);margin-bottom:var(--space-2);}
+.login-demo__title{font:var(--weight-semibold) var(--text-2xl)/var(--leading-tight) var(--font-display);color:var(--text);margin-bottom:var(--space-2);letter-spacing:var(--tracking-tight);}
+.login-demo__lead{color:var(--text-muted);font-size:var(--text-sm);margin-bottom:var(--space-6);}
+.login-demo__provider{width:100%;height:44px;justify-content:flex-start;gap:var(--space-3);margin-bottom:var(--space-2);}
+.login-demo__logo{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.login-demo__logo svg{width:100%;height:100%;}
+.login-demo__logo--g{background:#fff;border:1px solid var(--border);}
+.login-demo__logo--g svg{width:14px;height:14px;}
+.login-demo__logo--m{background:transparent;}
+.login-demo__status{min-height:var(--space-8);margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid var(--border);font-size:var(--text-sm);color:var(--text-muted);display:flex;align-items:center;gap:var(--space-2);}
+.login-demo__status .spin{width:14px;height:14px;border:2px solid var(--border-strong);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.login-demo__status .ok{color:var(--success);}
+.login-demo__status .err{color:var(--danger);}
+.login-demo__card.is-connecting .login-demo__provider:not(.is-active){opacity:.5;}
+.login-demo__card.is-redirecting{opacity:0;transform:translateY(-14px);}
+.login-demo__card.is-error{animation:shake .35s var(--ease-standard);}
+@keyframes shake{20%{transform:translateX(-4px);}40%{transform:translateX(4px);}60%{transform:translateX(-3px);}80%{transform:translateX(3px);}100%{transform:translateX(0);}}
+
+.demo-controls{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-4);}
+
+/* ========================= FSM DIAGRAM ========================= */
+.fsm{width:100%;height:auto;}
+.fsm rect.state{fill:var(--surface);stroke:var(--border-strong);stroke-width:1;transition:fill var(--duration-base) var(--ease-standard),stroke var(--duration-base) var(--ease-standard);}
+.fsm rect.state.is-active{fill:var(--primary-soft);stroke:var(--primary);stroke-width:1.5;}
+.fsm rect.state.is-error{fill:var(--danger-bg);stroke:var(--danger);}
+.fsm text.state-label{fill:var(--text);font:600 11px var(--font-body);}
+.fsm text.edge-label{fill:var(--text-subtle);font:10px var(--font-mono);}
+.fsm path.edge{fill:none;stroke:var(--border-strong);stroke-width:1.3;marker-end:url(#arrow);}
+.fsm path.edge.dashed{stroke-dasharray:3 3;}
+
+/* ========================= ATLAS MOCKUP ========================= */
+.atlas-demo{display:grid;grid-template-columns:1.3fr 1fr;gap:var(--space-4);min-height:380px;}
+.atlas-demo__map{position:relative;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.atlas-demo__map svg{position:absolute;inset:0;width:100%;height:100%;}
+.atlas-demo__list{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-2);overflow:auto;display:flex;flex-direction:column;gap:2px;}
+.atlas-row{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3);border-radius:var(--radius-md);cursor:pointer;transition:background var(--duration-fast) var(--ease-standard);font-size:var(--text-sm);}
+.atlas-row .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--text-muted);}
+.atlas-row .title{color:var(--text);}
+.atlas-row .sub{color:var(--text-subtle);font-size:var(--text-xs);margin-left:auto;font-family:var(--font-mono);flex-shrink:0;}
+.atlas-row:hover,.atlas-row.is-hover{background:var(--surface-sunken);}
+.atlas-row.is-selected{background:var(--primary-soft);}
+.node{fill:var(--surface);stroke:var(--border-strong);stroke-width:1.4;cursor:pointer;transition:stroke var(--duration-fast) var(--ease-standard);}
+.node.is-domain{fill:var(--primary);stroke:none;}
+.node.is-hover,.node.is-selected{stroke:var(--primary);stroke-width:2;}
+.node-halo{fill:var(--primary-soft);opacity:0;transition:opacity var(--duration-fast) var(--ease-standard);}
+.node-halo.show{opacity:1;}
+.edge-line{stroke:var(--border);stroke-width:1;opacity:.7;}
+.node-label{fill:var(--text-subtle);font:600 8px var(--font-body);text-transform:uppercase;letter-spacing:.02em;}
+.atlas-status{margin-top:var(--space-3);font-size:var(--text-sm);color:var(--text-subtle);min-height:1.4em;}
+
+/* ========================= FOOTER ========================= */
+footer{padding:var(--space-16) 0 var(--space-10);border-top:1px solid var(--border);}
+footer h4{font:var(--weight-semibold) var(--text-sm)/1 var(--font-body);color:var(--text-subtle);text-transform:uppercase;letter-spacing:var(--tracking-wide);margin-bottom:var(--space-3);}
+footer p.note{color:var(--text-subtle);font-size:var(--text-sm);margin-top:var(--space-8);max-width:var(--read-width);}
+
+/* ========================= MISC ========================= */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-8);align-items:start;}
+@media (max-width:900px){.two-col{grid-template-columns:1fr;}}
+.legend{display:flex;flex-wrap:wrap;gap:var(--space-4);font-size:var(--text-xs);color:var(--text-subtle);margin-top:var(--space-3);}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.legend .sw{width:10px;height:10px;border-radius:50%;}
+</style>
+</head>
+<body>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero">
+  <svg class="hero__contours" viewBox="0 0 1200 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <circle cx="1000" cy="120" r="260" fill="none" stroke="var(--bg-contour)" stroke-width="90"/>
+    <circle cx="150" cy="420" r="220" fill="none" stroke="var(--bg-contour)" stroke-width="70"/>
+  </svg>
+  <div class="container">
+    <div class="hero__text">
+      <p class="eyebrow">Szakdolgozati előterjesztés · architektúra és felületi terv</p>
+      <h1>„<em>Táltos</em>" tudásbázis&#8209;platform</h1>
+      <p class="lead" style="font-size:var(--text-lg);color:var(--text-muted);max-width:62ch;">
+        Egyedi fejlesztésű, markdown-alapú tudásmegosztó rendszer egy kb. 200 fős szervezet számára.
+        Ez a dokumentum a backend-architektúra döntéseit és a frontend felületi tervét foglalja össze
+        közepes részletességgel — a konzultációhoz előkészített áttekintésként.
+      </p>
+      <div class="chiprow" style="margin-top:var(--space-6);">
+        <span class="chip">React · Vite</span>
+        <span class="chip">Fastify · TypeScript</span>
+        <span class="chip">PostgreSQL · Drizzle</span>
+        <span class="chip">Git — kettős remote</span>
+        <span class="chip">Docker Compose</span>
+        <span class="chip">OIDC: Google → Entra ID</span>
+      </div>
+    </div>
+    <div class="hero__graphic" aria-hidden="true">
+      <svg viewBox="0 0 220 220" width="100%">
+        <circle cx="110" cy="110" r="95" fill="none" stroke="var(--border)" stroke-width="1"/>
+        <circle cx="110" cy="110" r="66" fill="none" stroke="var(--secondary)" stroke-width="1.4" stroke-dasharray="2 4" opacity=".7"/>
+        <circle cx="110" cy="110" r="38" fill="none" stroke="var(--primary)" stroke-width="1.6"/>
+        <circle cx="110" cy="110" r="6" fill="var(--accent)"/>
+        <text x="110" y="20" text-anchor="middle" class="node-label" style="font-size:9px;">korona · felület</text>
+        <text x="110" y="54" text-anchor="middle" class="node-label" style="font-size:9px;">törzs · backend</text>
+        <text x="110" y="108" text-anchor="middle" class="node-label" style="font-size:8px;fill:var(--text-inverse);opacity:.01;">·</text>
+        <text x="110" y="147" text-anchor="middle" class="node-label" style="font-size:9px;">gyökér · adat</text>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== SUBNAV ===================== -->
+<nav class="subnav" id="subnav" aria-label="Riport szekciói">
+  <div class="container">
+    <div class="subnav__brand">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2v20M12 8l-6-4M12 8l6-4M12 16l-5 4M12 16l5 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      Táltos&nbsp;riport
+    </div>
+    <div class="subnav__links" id="subnavLinks">
+      <a href="#attekintes" data-target="attekintes">Áttekintés</a>
+      <a href="#gyokerek" data-target="gyokerek">Gyökerek</a>
+      <a href="#torzs" data-target="torzs">Törzs</a>
+      <a href="#korona" data-target="korona">Korona</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Téma váltása">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none"><path d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.4 6.4-1.4-1.4M6 6 4.6 4.6m12.8 0L16 6M6 18l1.4-1.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/></svg>
+      <span id="themeLabel">Sötét téma</span>
+    </button>
+  </div>
+</nav>
+
+<main>
+
+<!-- ===================== 00 ÁTTEKINTÉS ===================== -->
+<section class="section" id="attekintes">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">00 · Áttekintés</p>
+      <h2>Milyen problémát old meg?</h2>
+      <p class="lead">
+        A szervezetben a tudás ma sok helyen és sok formában él — dokumentumokban, levelekben,
+        emberek fejében. A cél egy közös, könnyen kereshető tudástár, ahova a szervezet tagjai feltölthetik, ami
+        hasznos lehet másoknak, és ahol minden korábbi változat, szerkesztés és döntés visszakövethető
+        marad. Így a tudás idővel nem elavul és szétforgácsolódik, hanem gyűlik és egyre megbízhatóbbá válik.
+      </p>
+    </div>
+    <div class="grid grid-3">
+      <div class="card">
+        <span class="card-badge badge badge--primary">cél</span>
+        <h3>Egy közös tudástár</h3>
+        <p>A szétszórt dokumentumok, útmutatók és belső tapasztalat egy helyen, kereshető formában
+        gyűlnek össze — bárki megtalálja, amire szüksége van.</p>
+      </div>
+      <div class="card">
+        <span class="card-badge badge badge--warning">hozzáférés</span>
+        <h3>Szerepkör-alapú hozzáférés és jóváhagyás</h3>
+        <p>Ki mit láthat és szerkeszthet, jogosultsági szintek és egy jóváhagyási (review) lépés
+        szabályozza majd — a pontos modell kidolgozása jelenleg folyamatban van.</p>
+      </div>
+      <div class="card">
+        <span class="card-badge badge badge--success">ütemezés</span>
+        <h3>Fokozatos, kockázatkezelt bevezetés</h3>
+        <p>A fejlesztés jól elhatárolt szakaszokban halad: előbb a működő alapmag épül fel, majd rá
+        a kényelmi funkciók — így a projekt korai fázistól demózható állapotban van.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 01 GYÖKEREK ===================== -->
+<section class="section" id="gyokerek">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">01 · Gyökerek</p>
+      <h2>Adat és architektúra alapjai</h2>
+      <p class="lead">
+        A rendszer alapja a tárolási réteg: A source-of-truth a Git repository, amely a markdown fájlokat tartalmazza.
+        A backend a Git repository-t indexeli, és a felhasználói felület számára egy REST API-n keresztül elérhetővé teszi a tartalmat.
+        A felhasználói felület egy React SPA, amely a REST API-t használja a tartalom megjelenítésére.
+      </p>
+    </div>
+
+    <figure class="diagram" style="margin-bottom:var(--space-10);">
+      <svg viewBox="0 0 860 400" width="100%" role="img" aria-label="Architektúra-diagram">
+        <defs>
+          <marker id="arrowG" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="var(--border-strong)"/>
+          </marker>
+        </defs>
+        <!-- Böngésző -->
+        <rect x="330" y="10" width="200" height="46" rx="10" fill="var(--surface)" stroke="var(--border-strong)"/>
+        <text x="430" y="38" text-anchor="middle" style="fill:var(--text);font:600 13px var(--font-body);">Felhasználó (böngésző)</text>
+        <path d="M430,56 L430,88" stroke="var(--border-strong)" stroke-width="1.4" marker-end="url(#arrowG)"/>
+
+        <!-- React SPA -->
+        <rect x="290" y="90" width="280" height="52" rx="10" fill="var(--secondary-soft)" stroke="var(--secondary)"/>
+        <text x="430" y="112" text-anchor="middle" style="fill:var(--text);font:600 13px var(--font-body);">React SPA — Vite + React Router</text>
+        <text x="430" y="130" text-anchor="middle" style="fill:var(--text-muted);font:10px var(--font-mono);">react-md-editor · keresés · kommentek</text>
+        <path d="M430,142 L430,174" stroke="var(--border-strong)" stroke-width="1.4" marker-end="url(#arrowG)"/>
+        <text x="446" y="162" style="fill:var(--text-subtle);font:10px var(--font-mono);">REST /api/v1</text>
+
+        <!-- Backend -->
+        <rect x="270" y="176" width="320" height="60" rx="10" fill="var(--primary-soft)" stroke="var(--primary)"/>
+        <text x="430" y="200" text-anchor="middle" style="fill:var(--text);font:600 13px var(--font-body);">Backend API — Fastify (TypeScript)</text>
+        <text x="430" y="220" text-anchor="middle" style="fill:var(--text-muted);font:10px var(--font-mono);">pg-boss worker queue · GitService · lock · audit</text>
+
+        <!-- Local clone <-> remote -->
+        <path d="M300,236 L170,270" stroke="var(--border-strong)" stroke-width="1.4" marker-end="url(#arrowG)"/>
+        <rect x="30" y="272" width="220" height="52" rx="10" fill="var(--surface)" stroke="var(--border-strong)"/>
+        <text x="140" y="294" text-anchor="middle" style="fill:var(--text);font:600 12px var(--font-body);">Lokális Git clone</text>
+        <text x="140" y="310" text-anchor="middle" style="fill:var(--text-muted);font:10px var(--font-mono);">tartós volume · git log/diff/show</text>
+        <path d="M140,324 L140,352" stroke="var(--border-strong)" stroke-width="1.4" marker-end="url(#arrowG)"/>
+        <text x="180" y="342" style="fill:var(--text-subtle);font:9px var(--font-mono);">SSH push (queue)</text>
+        <rect x="20" y="354" width="240" height="42" rx="10" fill="var(--surface-sunken)" stroke="var(--border)"/>
+        <text x="140" y="380" text-anchor="middle" style="fill:var(--text);font:600 11px var(--font-body);">Remote repo (forrásigazság)</text>
+
+        <!-- Postgres -->
+        <path d="M470,236 L470,270" stroke="var(--border-strong)" stroke-width="1.4" marker-end="url(#arrowG)"/>
+        <rect x="340" y="272" width="260" height="66" rx="10" fill="var(--surface)" stroke="var(--border-strong)"/>
+        <text x="470" y="296" text-anchor="middle" style="fill:var(--text);font:600 12px var(--font-body);">PostgreSQL</text>
+        <text x="470" y="313" text-anchor="middle" style="fill:var(--text-muted);font:10px var(--font-mono);">index (eldobható) + events/comments/</text>
+        <text x="470" y="327" text-anchor="middle" style="fill:var(--text-muted);font:10px var(--font-mono);">favorites/allowlist (elsődleges!)</text>
+
+        <!-- OIDC -->
+        <path d="M590,206 L680,206" stroke="var(--border-strong)" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#arrowG)"/>
+        <rect x="682" y="180" width="170" height="52" rx="10" fill="var(--surface)" stroke="var(--border)"/>
+        <text x="767" y="202" text-anchor="middle" style="fill:var(--text);font:600 11px var(--font-body);">OIDC szolgáltató</text>
+        <text x="767" y="218" text-anchor="middle" style="fill:var(--text-muted);font:10px var(--font-mono);">dev: Google · éles: Entra ID</text>
+      </svg>
+      <figcaption>1. ábra — a rendszer réteg-architektúrája: böngésző → SPA → backend, amely a Git-et és a Postgrest is önállóan kezeli.</figcaption>
+    </figure>
+
+    <div class="table-wrap" style="margin-bottom:var(--space-10);">
+      <table>
+        <thead><tr><th>Réteg</th><th>Feladata</th></tr></thead>
+        <tbody>
+          <tr><td>Lokális Git clone</td><td>A tudásanyagok munkapéldánya; minden olvasás (történet, diff, korábbi verzió) helyben, API-hívás nélkül.</td></tr>
+          <tr><td>Remote repo</td><td>Forrásigazság + tartalmi backup. Fejlesztésben GitHub, élesben Azure Repos.</td></tr>
+          <tr><td>PostgreSQL</td><td>Újraépíthető keresőindex + elsődleges adatok: audit-események, kommentek, allowlist, lockok.</td></tr>
+          <tr><td>Backend API</td><td>Minden írás egyetlen kapuja; commit a felhasználó nevében; Git-műveletek sorosítása; eseménynaplózás.</td></tr>
+          <tr><td>Frontend</td><td>Szerkesztés, böngészés, keresés, kommentfolyam, diff-megjelenítés.</td></tr>
+          <tr><td>OIDC szolgáltató</td><td>Csak autentikáció — a jelszó- és identitáskezelés kiszervezve.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font:var(--weight-semibold) var(--text-xl)/1.3 var(--font-body);margin-bottom:var(--space-4);">Adatmodell — mi mentendő, mi épül újra?</h3>
+    <div class="grid grid-3" style="margin-bottom:var(--space-10);">
+      <div class="card"><span class="card-badge badge badge--info">vegyes</span><h3><span class="tag">documents</span></h3><p>Cím, státusz, tulajdonos, is_template, utolsó commit hash, tsvector-index. A szöveg Git-ben, az index Postgresben él.</p></div>
+      <div class="card"><span class="card-badge badge badge--danger">elsődleges</span><h3><span class="tag">categories</span></h3><p>Kategória mint entitás; az üres (még nem használt) kategória csak itt él — nem épül vissza a repóból.</p></div>
+      <div class="card"><span class="card-badge badge badge--success">újraépíthető</span><h3><span class="tag">document_categories</span></h3><p>Dokumentum↔kategória kapcsolótábla — a frontmatter kategórianév-listájából reindexeléskor visszaépül.</p></div>
+      <div class="card"><span class="card-badge badge badge--danger">elsődleges</span><h3><span class="tag">favorites</span></h3><p>Felhasználó↔dokumentum, privát kedvencek. Az első valódi, kizárólag per-user elsődleges adat.</p></div>
+      <div class="card"><span class="card-badge badge badge--danger">elsődleges</span><h3><span class="tag">events</span></h3><p>A teljes auditnyom: ki, mit, mikor — ebből épül a rendszerüzenet-folyam és a globális audit-nézet.</p></div>
+      <div class="card"><span class="card-badge badge badge--danger">elsődleges</span><h3><span class="tag">comments</span></h3><p>Szerző, tartalom, szerkesztve-jelölés, soft delete jelölés; a rendszerüzenetek az events-ből vetítve.</p></div>
+      <div class="card"><span class="card-badge badge badge--neutral">átmeneti</span><h3><span class="tag">locks</span></h3><p>Dokumentum, felhasználó, heartbeat — a pesszimista szerkesztési zár állapota.</p></div>
+      <div class="card"><span class="card-badge badge badge--danger">elsődleges</span><h3><span class="tag">allowlist</span></h3><p>Engedélyezett e-mail címek — a beléptetési kapu, minden API-kérésnél ellenőrizve.</p></div>
+      <div class="card"><span class="card-badge badge badge--warning">nem tisztán cache</span><h3><span class="tag">users</span></h3><p>OIDC-identitások; a favorites-hivatkozások miatt már nem dobható el gondolkodás nélkül.</p></div>
+    </div>
+
+    <h3 style="font:var(--weight-semibold) var(--text-xl)/1.3 var(--font-body);margin-bottom:var(--space-4);">Tárolási döntések</h3>
+    <div class="acc">
+      <details class="acc-item" open>
+        <summary>Git a forrásigazság, Postgres az index<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+        <div class="acc-body">
+          A Git ingyen adja a verziótörténetet, a diffet, a visszaállítást és a fájlrendszer-szintű
+          hordozhatóságot (a teljes tudásbázis egy clone-nal menthető). A Postgres a keresés és a
+          metaadat-lekérdezések gyengeségét pótolja. Mérlegelt alternatívák: tisztán PostgreSQL;
+          hálózati meghajtó / Obsidian vault; kész platform (Outline, Wiki.js).
+          <div class="price">Ár: <strong>két mozgó alkatrész</strong> — a commit ↔ index varratot kezelni kell.</div>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary>A Postgres index eldobható — a Postgres nem<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+        <div class="acc-body">
+          Mentési sorrend: Git commit → indexfrissítés. Ha az indexelés hibázik, a mentés attól még
+          sikeres; automatikus reindex kijavítja. Az eldobhatóság <strong>kizárólag</strong> az indexelt
+          mezőkre igaz — az <span class="tag">events</span>, <span class="tag">comments</span> és
+          <span class="tag">allowlist</span> táblák elsődleges adatok, kötelező pg_dump-pal mentve.
+          <ul>
+            <li>Automatizált konzisztencia-őr: commit hash összevetés, eltérésnél automatikus reindex.</li>
+            <li>Ütemezett napi pg_dump, külön tárolóra, dokumentált visszaállítási eljárással.</li>
+          </ul>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary>Lokális clone + git protokoll <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+        <div class="acc-body">
+          Minden olvasás (történet, diff, korábbi verzió) lokális, ezredmásodperces
+          <span class="tag">git log/diff/show</span> — nulla hálózati hívás, nulla rate limit.
+          Egyben ez adja a provider-függetlenséget: GitHub → Azure Repos átállás csupán remote URL +
+          kulcs csere.
+          <ul>
+            <li>Sorosítás pg-boss worker queue-n keresztül — konkurens <span class="tag">index.lock</span> ütközés kizárva.</li>
+            <li>Push retry exponenciális visszavárakozással; lemaradás-monitoring riasztással.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 02 TÖRZS ===================== -->
+<section class="section" id="torzs">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">02 · Törzs</p>
+      <h2>Backend — a rendszer gerince</h2>
+      <p class="lead">
+        Végponttól végpontig TypeScript, séma-vezérelt API, és egyetlen kapu minden íráshoz —
+        a Fastify-backend fogja össze a Git-műveleteket, a keresőindexet és az auditnyomot.
+      </p>
+    </div>
+
+    <div class="grid grid-4" style="margin-bottom:var(--space-10);">
+      <div class="card"><h3>Fastify · TypeScript</h3><p>Könnyű, séma-vezérelt keretrendszer; a JSON Schema validáció az API-kontraktus egyetlen forrása.</p></div>
+      <div class="card"><h3>Drizzle ORM</h3><p>Típusos query builder + generált migrációk; a keresési infrastruktúra kézzel írt SQL-migrációként él mellette.</p></div>
+      <div class="card"><h3>pg-boss queue</h3><p>A meglévő PostgreSQL-re épülő worker queue — nincs új üzemeltetendő alkatrész (nincs Redis).</p></div>
+      <div class="card"><h3>simple-git · GitService</h3><p>Saját szerviz-absztrakció mögé rejtett natív git CLI-hívás — egy helyen cserélhető, ha kell.</p></div>
+    </div>
+
+    <h3 style="font:var(--weight-semibold) var(--text-xl)/1.3 var(--font-body);margin-bottom:var(--space-4);">Döntési csoportok</h3>
+    <div class="acc" style="margin-bottom:var(--space-10);">
+      <details class="acc-item" open>
+        <summary>Hitelesítés &amp; hozzáférés <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+        <div class="acc-body">
+          <ul>
+            <li><strong>SSH kulcs, provider-agnosztikusan:</strong> a backend deploy key/service-account kulccsal hitelesít — GitHubon és Azure Reposon azonos mechanizmus.</li>
+            <li><strong>Cserélhető OIDC réteg:</strong> fejlesztésben Google, élesben Microsoft Entra ID; az allowlist-tagság minden kérésnél ellenőrzött, nem csak beléptetéskor.</li>
+            <li><strong>Jogosultságkezelés és review:</strong> a korábban tervezett, teljesen nyitott hozzáférés elvét felülírtuk — a rendszerben szerepkör-alapú jogosultságkezelés és egy jóváhagyási (review) lépés is lesz. A pontos szerepkör- és workflow-modell kidolgozása folyamatban.</li>
+            <li><strong>Secret-kezelés:</strong> SSH kulcs és minden secret Docker Compose secrets-ként, sosem repóban; környezetenként külön kulcspár, dokumentált rotációval.</li>
+          </ul>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary>Egyidejűség &amp; törlés<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+        <div class="acc-body">
+          <ul>
+            <li><strong>Pesszimista lock + heartbeat:</strong> szerkesztéskor a dokumentum lockolt; 30–60 mp-es heartbeat, 2–5 perc után automatikus lejárat, piszkozat-őrzéssel.</li>
+            <li><strong>Archívum + visszaállítás:</strong> törléskor a dokumentum archív állapotba kerül, sosem vész el.</li>
+            <li><strong>Soft delete mindenhol:</strong> dokumentum, komment, kategória — végleges törlés csak egy később kidolgozandó, időzített megőrzési (retention) folyamat keretében történik.</li>
+          </ul>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary>Tartalom-modell<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+        <div class="acc-body">
+          <ul>
+            <li><strong>Csak szöveg a repóban:</strong> a statikus képek alkalmazásszintű, mountolt assets mappából jelennek meg — nincs képfeltöltés.</li>
+            <li><strong>@uiw/react-md-editor + rehype-sanitize:</strong> a nyers HTML és a külső kép-URL kizárva; szerkesztő és olvasó nézet azonos render-pipeline-t használ.</li>
+            <li><strong>Sablon = tudásanyag:</strong> „létrehozás forrásból" egységes művelet üres canvasból, sablonból vagy duplikálással — a származás <span class="tag">duplicated_from</span> eseményben nyomon követve.</li>
+            <li><strong>Lapos kategória-rendszer:</strong> egy dokumentum több kategóriába tartozhat; használatban lévő kategória nem törölhető/nevezhető át.</li>
+          </ul>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary>API &amp; konzisztencia<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+        <div class="acc-body">
+          <ul>
+            <li>REST <span class="tag">/api/v1</span>, httpOnly cookie-session + CSRF-token a mutáló kéréseken.</li>
+            <li>Hibaformátum: RFC 9457 Problem Details + stabil, gépi hibakód.</li>
+            <li>Mentés: a lokális commit szinkron visszaigazolt, a push aszinkron retry-jal fut; kötelező <span class="tag">baseCommitHash</span> optimista ellenőrzés a lock mellett második védvonalként.</li>
+            <li>Code-first kontraktus: az OpenAPI a Fastify JSON Schema-ból generálódik — validálás és dokumentáció nem csúszhat szét.</li>
+          </ul>
+        </div>
+      </details>
+      <details class="acc-item">
+        <summary>Megvalósítási sorrend<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+        <div class="acc-body">
+          A fejlesztés jól elhatárolt munkacsomagokban halad, négy elv szerint:
+          <ul>
+            <li><strong>Kockázat-előrehozás:</strong> a Git-kezelő szolgáltatás és a háttérfeldolgozó sor közvetlenül a séma után épül — minden funkciós csomag előtt tisztázza a legkockázatosabb alkatrészt.</li>
+            <li><strong>Gerinc először:</strong> a korai szakasz végén már végigjátszható alapmag áll rendelkezésre (login → létrehozás → mentés=commit); a további funkciók erre rakódnak, egymástól függetlenül.</li>
+            <li><strong>Hátulról védett demó-érték:</strong> határidő-nyomásnál a csomagok hátulról előre esnek ki, elsőként az export.</li>
+            <li><strong>Csomag-zárási fegyelem:</strong> minden csomag CI-zöld tesztekkel zárul; új igény csak a döntési naplón át kerülhet be.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <h3 style="font:var(--weight-semibold) var(--text-xl)/1.3 var(--font-body);margin-bottom:var(--space-4);">MVP — 13 pont</h3>
+        <ul class="checklist">
+          <li><span class="num">01</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Google OIDC login + e-mail allowlist</li>
+          <li><span class="num">02</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Dokumentum CRUD, „létrehozás forrásból" (canvas / sablon / duplikálás)</li>
+          <li><span class="num">03</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Verziótörténet + visszaállítás + diff-nézet UI</li>
+          <li><span class="num">04</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Teljes szövegű keresés (magyar) + kategória/státusz/kedvenc szűrés</li>
+          <li><span class="num">05</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Lock heartbeat-tel</li>
+          <li><span class="num">06</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Eseménynaplózás + kommentfolyam auditnyommal</li>
+          <li><span class="num">07</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Reindex parancs + automatizált konzisztencia-ellenőrzés</li>
+          <li><span class="num">08</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Archívum + visszaállítás felület</li>
+          <li><span class="num">09</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Postgres backup (ütemezett pg_dump)</li>
+          <li><span class="num">10</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Kategóriakezelés (CRUD, védelmi szabályokkal)</li>
+          <li><span class="num">11</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Kedvencek — privát megjelölés és szűrés</li>
+          <li><span class="num">12</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Vágólapra másolás + nyers .md letöltés</li>
+          <li class="deferred"><span class="num">13</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Export .pdf/.docx (pandoc) — <em>hátrasorolt, elsőként kieső</em></li>
+        </ul>
+      </div>
+      <div>
+        <h3 style="font:var(--weight-semibold) var(--text-xl)/1.3 var(--font-body);margin-bottom:var(--space-4);">Vállalt kockázatok</h3>
+        <ul style="display:flex;flex-direction:column;gap:var(--space-3);">
+          <li class="card" style="padding:var(--space-4);"><p style="color:var(--text);font-size:var(--text-sm);">A pontos jogosultsági szerepkör- és jóváhagyási (review) modell kidolgozása folyamatban.</p></li>
+          <li class="card" style="padding:var(--space-4);"><p style="color:var(--text);font-size:var(--text-sm);">Az audit megbízhatósági gyökere az alkalmazás-backend maga — kriptográfiai kötés nélkül.</p></li>
+          <li class="card" style="padding:var(--space-4);"><p style="color:var(--text);font-size:var(--text-sm);">A vészhelyzeti elérés (clone+Obsidian) a szöveget adja, a képeket nem - ez még tervezés alatt.</p></li>
+          <li class="card" style="padding:var(--space-4);"><p style="color:var(--text);font-size:var(--text-sm);">Egyszemélyes fejlesztés és üzemeltetés a bevezetésig. </p></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 03 KORONA ===================== -->
+<section class="section" id="korona">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">03 · Korona</p>
+      <h2>Frontend — a felület, amit a felhasználó lát</h2>
+      <p class="lead">
+        A felületi terv egy kész, kétrétegű (primitív → szemantikus) token-rendszerre épül.
+        Ugyanazok a változók hajtják ezt a riportot is — kapcsold a témát fent, és nézd, hogyan vált.
+      </p>
+    </div>
+
+    <h3 style="font:var(--weight-semibold) var(--text-xl)/1.3 var(--font-body);margin-bottom:var(--space-5);">Design tokenek</h3>
+
+    <div class="ramp-row">
+      <span class="ramp-label">green — elsődleges (Világfa)</span>
+      <div class="ramp">
+        <span style="background:#ECF5F1;" data-hex="#ECF5F1"></span><span style="background:#D2E8DF;" data-hex="#D2E8DF"></span><span style="background:#A6D0C1;" data-hex="#A6D0C1"></span><span style="background:#71B29C;" data-hex="#71B29C"></span><span style="background:#479079;" data-hex="#479079"></span><span style="background:#2C7460;" data-hex="#2C7460"></span><span style="background:#1F5C4C;" data-hex="#1F5C4C"></span><span style="background:#194A3E;" data-hex="#194A3E"></span><span style="background:#163C33;" data-hex="#163C33"></span><span style="background:#10281F;" data-hex="#10281F"></span>
+      </div>
+    </div>
+    <div class="ramp-row">
+      <span class="ramp-label">blue — másodlagos (Sólyomkék)</span>
+      <div class="ramp">
+        <span style="background:#ECF2F9;" data-hex="#ECF2F9"></span><span style="background:#D3E1F2;" data-hex="#D3E1F2"></span><span style="background:#A9C5E6;" data-hex="#A9C5E6"></span><span style="background:#79A3D6;" data-hex="#79A3D6"></span><span style="background:#4E82C4;" data-hex="#4E82C4"></span><span style="background:#3467AD;" data-hex="#3467AD"></span><span style="background:#29528C;" data-hex="#29528C"></span><span style="background:#234471;" data-hex="#234471"></span><span style="background:#1E385C;" data-hex="#1E385C"></span><span style="background:#16273F;" data-hex="#16273F"></span>
+      </div>
+    </div>
+    <div class="ramp-row">
+      <span class="ramp-label">gold — akcentus (Csillagarany)</span>
+      <div class="ramp">
+        <span style="background:#FBF3E4;" data-hex="#FBF3E4"></span><span style="background:#F6E3BF;" data-hex="#F6E3BF"></span><span style="background:#EFCB86;" data-hex="#EFCB86"></span><span style="background:#E7B356;" data-hex="#E7B356"></span><span style="background:#DD9C2E;" data-hex="#DD9C2E"></span><span style="background:#C9861A;" data-hex="#C9861A"></span><span style="background:#A66B14;" data-hex="#A66B14"></span><span style="background:#825313;" data-hex="#825313"></span><span style="background:#674214;" data-hex="#674214"></span><span style="background:#4A2F0F;" data-hex="#4A2F0F"></span>
+      </div>
+    </div>
+    <div class="ramp-row" style="margin-bottom:var(--space-6);">
+      <span class="ramp-label">bark — meleg semleges (Kéreg)</span>
+      <div class="ramp">
+        <span style="background:#F7F5F1;" data-hex="#F7F5F1"></span><span style="background:#EDE9E1;" data-hex="#EDE9E1"></span><span style="background:#DBD5C9;" data-hex="#DBD5C9"></span><span style="background:#BFB7A6;" data-hex="#BFB7A6"></span><span style="background:#9C9384;" data-hex="#9C9384"></span><span style="background:#7A7264;" data-hex="#7A7264"></span><span style="background:#5E574C;" data-hex="#5E574C"></span><span style="background:#46413A;" data-hex="#46413A"></span><span style="background:#302C27;" data-hex="#302C27"></span><span style="background:#1C1A16;" data-hex="#1C1A16"></span>
+      </div>
+    </div>
+
+    <div class="semantic-chips" style="margin-bottom:var(--space-10);">
+      <span class="schip"><span class="dot" style="background:var(--bg);"></span>--bg</span>
+      <span class="schip"><span class="dot" style="background:var(--surface);"></span>--surface</span>
+      <span class="schip"><span class="dot" style="background:var(--border-strong);"></span>--border-strong</span>
+      <span class="schip"><span class="dot" style="background:var(--text);"></span>--text</span>
+      <span class="schip"><span class="dot" style="background:var(--primary);"></span>--primary</span>
+      <span class="schip"><span class="dot" style="background:var(--secondary);"></span>--secondary</span>
+      <span class="schip"><span class="dot" style="background:var(--accent);"></span>--accent</span>
+      <span class="schip"><span class="dot" style="background:var(--success);"></span>--success</span>
+      <span class="schip"><span class="dot" style="background:var(--warning);"></span>--warning</span>
+      <span class="schip"><span class="dot" style="background:var(--danger);"></span>--danger</span>
+      <span class="schip"><span class="dot" style="background:var(--info);"></span>--info</span>
+    </div>
+
+    <div class="two-col" style="margin-bottom:var(--space-10);">
+      <div class="card">
+        <h3 style="margin-bottom:var(--space-4);">Tipográfiai skála</h3>
+        <div class="type-scale">
+          <div class="type-row"><span class="role-label">display</span><span class="sample" style="font:600 var(--text-3xl)/1.15 var(--font-display);">Árvíztűrő tükörfúrógép</span></div>
+          <div class="type-row"><span class="role-label">h2 · display</span><span class="sample" style="font:600 var(--text-2xl)/1.3 var(--font-display);">Árvíztűrő tükörfúrógép</span></div>
+          <div class="type-row"><span class="role-label">h3 · body</span><span class="sample" style="font:600 var(--text-xl)/1.3 var(--font-body);">Árvíztűrő tükörfúrógép</span></div>
+          <div class="type-row"><span class="role-label">törzs</span><span class="sample" style="font:400 var(--text-base)/1.6 var(--font-body);">Árvíztűrő tükörfúrógép — a törzsszöveg olvasható marad max 70ch szélességig.</span></div>
+          <div class="type-row"><span class="role-label">kis szöveg</span><span class="sample" style="font:400 var(--text-sm)/1.4 var(--font-body);color:var(--text-muted);">Árvíztűrő tükörfúrógép</span></div>
+          <div class="type-row"><span class="role-label">adat/kód</span><span class="sample" style="font:400 var(--text-sm)/1.4 var(--font-mono);">document.id → uuid</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:var(--space-4);">Komponens-előnézet</h3>
+        <div class="component-row" style="margin-bottom:var(--space-4);">
+          <button class="btn btn--primary">Mentés</button>
+          <button class="btn btn--secondary">Megnyitás</button>
+          <button class="btn btn--outline">Duplikálás</button>
+          <button class="btn btn--ghost">Mégse</button>
+          <button class="btn btn--danger">Törlés</button>
+        </div>
+        <div class="component-row" style="margin-bottom:var(--space-4);">
+          <span class="badge badge--primary">draft</span>
+          <span class="badge badge--info">review</span>
+          <span class="badge badge--warning">tesztelt</span>
+          <span class="badge badge--success">publikált</span>
+          <span class="tag">git · commit a1b2c3</span>
+        </div>
+        <div class="alert alert--info">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 8v5m0 4h.01" stroke="var(--info)" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="var(--info)" stroke-width="1.6"/></svg>
+          <p><strong style="color:var(--text);">Lock aktív.</strong> Kovács Anna most szerkeszti ezt a dokumentumot.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGIN CONCEPT -->
+    <h3 style="font:var(--weight-semibold) var(--text-xl)/1.3 var(--font-body);margin-bottom:var(--space-3);">Bejelentkezés — UI koncepció</h3>
+    <p class="lead-narrow">
+      Élő Canvas-háttér (csillagkép-mező), determinisztikus állapotgép (FSM) és két belépési mód —
+      Google, illetve Microsoft Entra ID. Sem jelszót, sem hitelesítő adatot nem kezel az oldal:
+      az OAuth-átirányítás a providernél történik.
+    </p>
+    <div class="login-demo" style="margin-bottom:var(--space-4);">
+      <canvas class="login-demo__field" id="loginField"></canvas>
+      <div class="login-demo__card" id="loginCard">
+        <div class="login-demo__mark">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M12 8l-6-4M12 8l6-4M12 16l-5 4M12 16l5 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </div>
+        <p class="login-demo__eyebrow">Kollektív emlékezet</p>
+        <h4 class="login-demo__title">Lépj a küszöbön át</h4>
+        <p class="login-demo__lead">A szervezet emlékezete vár. Válaszd a belépés módját.</p>
+        <button class="btn btn--outline login-demo__provider" data-provider="google" id="btnGoogle">
+          <span class="login-demo__logo login-demo__logo--g" aria-hidden="true"><svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.259h2.908c1.702-1.567 2.684-3.874 2.684-6.617z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.348 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg></span> Folytatás Google-fiókkal
+        </button>
+        <button class="btn btn--outline login-demo__provider" data-provider="microsoft" id="btnMicrosoft">
+          <span class="login-demo__logo login-demo__logo--m" aria-hidden="true"><svg viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="9" height="9" fill="#F25022"/><rect x="11" y="1" width="9" height="9" fill="#7FBA00"/><rect x="1" y="11" width="9" height="9" fill="#00A4EF"/><rect x="11" y="11" width="9" height="9" fill="#FFB900"/></svg></span> Bejelentkezés Microsoft-fiókkal
+        </button>
+        <div class="login-demo__status" id="loginStatus" role="status" aria-live="polite">Válassz egy belépési módot a demóhoz.</div>
+      </div>
+    </div>
+    <div class="demo-controls" style="margin-bottom:var(--space-8);">
+      <button class="btn btn--ghost btn--sm" id="btnLoginError">Hiba szimulálása</button>
+      <button class="btn btn--ghost btn--sm" id="btnLoginReset">Alaphelyzet</button>
+    </div>
+
+    <figure class="diagram" style="margin-bottom:var(--space-10);">
+      <svg class="fsm" viewBox="0 0 860 130" role="img" aria-label="Bejelentkezés állapotgépe">
+        <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--border-strong)"/></marker></defs>
+        <rect class="state" id="st-loading" x="10" y="45" width="120" height="40" rx="8"/><text x="70" y="69" text-anchor="middle" class="state-label">loading</text>
+        <path class="edge" d="M130,65 L190,65"/><text x="135" y="58" class="edge-label">READY</text>
+        <rect class="state" id="st-idle" x="190" y="45" width="110" height="40" rx="8"/><text x="245" y="69" text-anchor="middle" class="state-label">idle</text>
+        <path class="edge" d="M300,65 L370,65"/><text x="303" y="58" class="edge-label">SELECT</text>
+        <rect class="state" id="st-connecting" x="370" y="45" width="140" height="40" rx="8"/><text x="440" y="69" text-anchor="middle" class="state-label">connecting</text>
+        <path class="edge" d="M510,58 L570,30"/><text x="512" y="30" class="edge-label">CONNECT_OK</text>
+        <rect class="state" id="st-redirecting" x="570" y="8" width="130" height="40" rx="8"/><text x="635" y="32" text-anchor="middle" class="state-label">redirecting</text>
+        <path class="edge dashed" d="M510,75 L570,100"/><text x="512" y="112" class="edge-label">CONNECT_ERR</text>
+        <rect class="state" id="st-error" x="570" y="80" width="110" height="40" rx="8"/><text x="625" y="104" text-anchor="middle" class="state-label">error</text>
+        <path class="edge" d="M570,95 C480,140 340,140 300,80" fill="none"/><text x="400" y="128" class="edge-label">RETRY</text>
+      </svg>
+      <figcaption>2. ábra — a login-állapotgép: ismeretlen esemény no-op, nincs illegális ugrás.</figcaption>
+    </figure>
+
+    <!-- ATLAS CONCEPT -->
+    <h3 style="font:var(--weight-semibold) var(--text-xl)/1.3 var(--font-body);margin-bottom:var(--space-3);">Kezdőoldal — „Élő Atlasz" koncepció</h3>
+    <p class="lead-narrow">
+      Kétpaneles nézet: egy <strong style="color:var(--text);">kurált</strong> tudás-térkép (soha nem a teljes gráf!)
+      a felfedezéshez, és egy a11y-elsődleges lista a megtaláláshoz — közös kiválasztásból,
+      snap-mentes átmenetekkel. Próbáld ki: mutass a listasorra vagy a térkép egy pontjára.
+    </p>
+    <div class="atlas-demo" style="margin-bottom:var(--space-2);">
+      <div class="atlas-demo__map">
+        <svg viewBox="0 0 400 320" id="atlasSvg" role="img" aria-label="Tudás-térkép demó"></svg>
+      </div>
+      <div class="atlas-demo__list" id="atlasList"></div>
+    </div>
+    <p class="atlas-status" id="atlasStatus" role="status" aria-live="polite">8 dokumentum, 3 klaszter — Tier 0 (levezetett gráf, közös kategória alapján).</p>
+    <div class="legend" style="margin-bottom:var(--space-10);">
+      <span><span class="sw" style="background:var(--primary);"></span>domén-klaszter</span>
+      <span><span class="sw" style="background:var(--surface);border:1px solid var(--border-strong);"></span>dokumentum</span>
+      <span>·</span>
+      <span>Tier 0: mappa/kategória/szerző együttes-előfordulásból levezetett gráf</span>
+    </div>
+
+    <figure class="diagram">
+      <svg class="fsm" viewBox="0 0 860 130" role="img" aria-label="Atlasz állapotgépe">
+        <rect class="state" x="10" y="45" width="100" height="40" rx="8"/><text x="60" y="69" text-anchor="middle" class="state-label">loading</text>
+        <path class="edge" d="M110,65 L170,65"/><text x="113" y="58" class="edge-label">READY</text>
+        <rect class="state" x="170" y="45" width="110" height="40" rx="8"/><text x="225" y="69" text-anchor="middle" class="state-label">overview</text>
+        <path class="edge" d="M280,58 L340,30"/><text x="282" y="24" class="edge-label">SELECT</text>
+        <rect class="state" x="340" y="8" width="100" height="40" rx="8"/><text x="390" y="32" text-anchor="middle" class="state-label">focused</text>
+        <path class="edge" d="M280,75 L340,100"/><text x="282" y="112" class="edge-label">SEARCH</text>
+        <rect class="state" x="340" y="80" width="110" height="40" rx="8"/><text x="395" y="104" text-anchor="middle" class="state-label">searching</text>
+        <path class="edge" d="M450,88 L520,60"/><text x="452" y="58" class="edge-label">n=0</text>
+        <rect class="state" x="520" y="45" width="90" height="40" rx="8"/><text x="565" y="69" text-anchor="middle" class="state-label">empty</text>
+        <path class="edge dashed" d="M280,45 L640,45" fill="none"/><text x="640" y="40" class="edge-label">DATA_ERR</text>
+        <rect class="state is-error" x="650" y="45" width="90" height="40" rx="8"/><text x="695" y="69" text-anchor="middle" class="state-label">error</text>
+      </svg>
+      <figcaption>3. ábra — az Atlasz nézet-állapotgépe: hiba esetén mindig a sima listára esik vissza.</figcaption>
+    </figure>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="container">
+    <p class="note" style="margin-top:0;">
+      Ez az összefoglaló a projekt tervezési és döntési anyagai alapján készült, architektúra- és
+      felület-szintű, közepes mélységű áttekintésként, a konzultációra előkészítve.
+      Generálva: 2026. augusztus 14.
+    </p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- Téma váltó ---------- */
+  var root = document.documentElement;
+  var toggle = document.getElementById('themeToggle');
+  var label = document.getElementById('themeLabel');
+  function applyTheme(t){
+    root.setAttribute('data-theme', t);
+    label.textContent = t === 'light' ? 'Sötét téma' : 'Világos téma';
+    try { localStorage.setItem('taltos-report-theme', t); } catch(e){}
+  }
+  var saved = null;
+  try { saved = localStorage.getItem('taltos-report-theme'); } catch(e){}
+  applyTheme(saved === 'dark' ? 'dark' : 'light');
+  toggle.addEventListener('click', function(){
+    applyTheme(root.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+  });
+
+  /* ---------- Scrollspy ---------- */
+  var links = Array.prototype.slice.call(document.querySelectorAll('#subnavLinks a'));
+  var sections = links.map(function(a){ return document.getElementById(a.dataset.target); });
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) {
+          links.forEach(function(a){ a.classList.remove('active'); });
+          var match = links.find(function(a){ return a.dataset.target === entry.target.id; });
+          if (match) match.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-40% 0px -50% 0px' });
+    sections.forEach(function(s){ if (s) io.observe(s); });
+  }
+
+  /* ---------- Login ambient constellation (idle mode, contained canvas) ---------- */
+  var canvas = document.getElementById('loginField');
+  var ctx = canvas.getContext('2d');
+  var particles = [];
+  var raf = null;
+  function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function hexToRgb(hex){
+    hex = hex.replace('#','');
+    if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
+    var num = parseInt(hex,16);
+    return [(num>>16)&255,(num>>8)&255,num&255];
+  }
+  function resizeCanvas(){
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    initParticles(rect.width, rect.height);
+  }
+  function initParticles(w,h){
+    var count = Math.min(60, Math.floor((w*h)/14000));
+    particles = [];
+    for (var i=0;i<count;i++){
+      particles.push({
+        x: Math.random()*w, y: Math.random()*h,
+        vx: (Math.random()-0.5)*0.25, vy: (Math.random()-0.5)*0.25,
+        r: 1 + Math.random()*1.6
+      });
+    }
+  }
+  function drawField(){
+    var rect = canvas.parentElement.getBoundingClientRect();
+    var w = rect.width, h = rect.height;
+    ctx.clearRect(0,0,w,h);
+    var primary = hexToRgb(getPrimaryHex());
+    var border = hexToRgb(getBorderHex());
+    for (var i=0;i<particles.length;i++){
+      var p = particles[i];
+      if (!reduceMotion) { p.x += p.vx; p.y += p.vy; }
+      if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
+      if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
+      for (var j=i+1;j<particles.length;j++){
+        var q = particles[j];
+        var dx = p.x-q.x, dy = p.y-q.y;
+        var dist = Math.sqrt(dx*dx+dy*dy);
+        if (dist < 90) {
+          ctx.strokeStyle = 'rgba(' + border[0] + ',' + border[1] + ',' + border[2] + ',' + (0.5*(1-dist/90)) + ')';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.stroke();
+        }
+      }
+    }
+    for (var k=0;k<particles.length;k++){
+      var pt = particles[k];
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(' + primary[0] + ',' + primary[1] + ',' + primary[2] + ',0.55)';
+      ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI*2);
+      ctx.fill();
+    }
+    if (!reduceMotion) raf = requestAnimationFrame(drawField);
+  }
+  function getPrimaryHex(){
+    var v = cssVar('--primary');
+    if (v.indexOf('#') === 0) return v;
+    return root.getAttribute('data-theme') === 'dark' ? '#71B29C' : '#1F5C4C';
+  }
+  function getBorderHex(){
+    return root.getAttribute('data-theme') === 'dark' ? '#47423A' : '#BFB7A6';
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+  if (raf) cancelAnimationFrame(raf);
+  drawField();
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden && raf) { cancelAnimationFrame(raf); raf = null; }
+    else if (!document.hidden && !reduceMotion) { drawField(); }
+  });
+
+  /* ---------- Login FSM demó ---------- */
+  var card = document.getElementById('loginCard');
+  var statusEl = document.getElementById('loginStatus');
+  var btnGoogle = document.getElementById('btnGoogle');
+  var btnMicrosoft = document.getElementById('btnMicrosoft');
+  var btnError = document.getElementById('btnLoginError');
+  var btnResetLogin = document.getElementById('btnLoginReset');
+  var loginTimers = [];
+  function clearLoginTimers(){ loginTimers.forEach(clearTimeout); loginTimers = []; }
+  var fsmStates = ['st-loading','st-idle','st-connecting','st-redirecting','st-error'];
+  function setFsmActive(id, isError){
+    fsmStates.forEach(function(s){
+      var el = document.getElementById(s);
+      if (el) { el.classList.remove('is-active'); el.classList.remove('is-error'); }
+    });
+    var target = document.getElementById(id);
+    if (target) target.classList.add(isError ? 'is-error' : 'is-active');
+  }
+  setFsmActive('st-idle');
+  function resetLoginDemo(){
+    clearLoginTimers();
+    card.className = 'login-demo__card';
+    btnGoogle.disabled = false; btnMicrosoft.disabled = false;
+    btnGoogle.classList.remove('is-active'); btnMicrosoft.classList.remove('is-active');
+    statusEl.innerHTML = 'Válassz egy belépési módot a demóhoz.';
+    setFsmActive('st-idle');
+  }
+  function startLogin(provider, btn){
+    clearLoginTimers();
+    card.classList.add('is-connecting');
+    btn.classList.add('is-active');
+    setFsmActive('st-connecting');
+    statusEl.innerHTML = '<span class="spin"></span> Kapcsolódás a ' + (provider==='google' ? 'Google' : 'Microsoft') + '-fiókhoz…';
+    loginTimers.push(setTimeout(function(){
+      setFsmActive('st-redirecting');
+      statusEl.innerHTML = '<span class="ok">✓</span> Sikeres kapcsolat — átirányítás (demó).';
+      card.classList.add('is-redirecting');
+      loginTimers.push(setTimeout(resetLoginDemo, 1600));
+    }, 1100));
+  }
+  btnGoogle.addEventListener('click', function(){ startLogin('google', btnGoogle); });
+  btnMicrosoft.addEventListener('click', function(){ startLogin('microsoft', btnMicrosoft); });
+  btnError.addEventListener('click', function(){
+    clearLoginTimers();
+    card.className = 'login-demo__card is-connecting';
+    setFsmActive('st-connecting');
+    statusEl.innerHTML = '<span class="spin"></span> Kapcsolódás…';
+    loginTimers.push(setTimeout(function(){
+      setFsmActive('st-error', true);
+      card.classList.add('is-error');
+      statusEl.innerHTML = '<span class="err">⚠</span> Nem sikerült kapcsolódni. Próbáld újra, vagy válassz másik belépést.';
+    }, 900));
+  });
+  btnResetLogin.addEventListener('click', resetLoginDemo);
+
+  /* ---------- Atlasz hover-sync demó ---------- */
+  var nodes = [
+    {id:'domA', type:'domain', label:'Fejlesztés', cx:70, cy:75, r:14},
+    {id:'domB', type:'domain', label:'HR', cx:305, cy:55, r:12},
+    {id:'domC', type:'domain', label:'Ügyfélszolgálat', cx:200, cy:265, r:13},
+    {id:'d1', type:'doc', title:'Kódolási stílus-útmutató', cx:40, cy:130, cluster:'domA'},
+    {id:'d2', type:'doc', title:'Git branch-stratégia', cx:120, cy:115, cluster:'domA'},
+    {id:'d3', type:'doc', title:'CI/CD pipeline leírás', cx:35, cy:45, cluster:'domA'},
+    {id:'d4', type:'doc', title:'Onboarding checklist', cx:255, cy:105, cluster:'domB'},
+    {id:'d5', type:'doc', title:'Szabadságolási rend', cx:345, cy:110, cluster:'domB'},
+    {id:'d6', type:'doc', title:'Teljesítményértékelés', cx:310, cy:20, cluster:'domB'},
+    {id:'d7', type:'doc', title:'Ügyfél-eszkalációs folyamat', cx:150, cy:235, cluster:'domC'},
+    {id:'d8', type:'doc', title:'Panaszkezelési sablon', cx:235, cy:295, cluster:'domC'}
+  ];
+  var svg = document.getElementById('atlasSvg');
+  var NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs){
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  var byId = {};
+  nodes.forEach(function(n){ byId[n.id] = n; });
+  // edges
+  nodes.filter(function(n){return n.type==='doc';}).forEach(function(n){
+    var d = byId[n.cluster];
+    svg.appendChild(el('line', {x1:d.cx, y1:d.cy, x2:n.cx, y2:n.cy, class:'edge-line'}));
+  });
+  // halos + nodes
+  nodes.forEach(function(n){
+    if (n.type === 'doc') {
+      var halo = el('circle', {cx:n.cx, cy:n.cy, r:11, class:'node-halo', id:'halo-'+n.id});
+      svg.appendChild(halo);
+    }
+  });
+  nodes.forEach(function(n){
+    var r = n.type === 'domain' ? n.r : 6;
+    var circle = el('circle', {cx:n.cx, cy:n.cy, r:r, class:'node ' + (n.type==='domain'?'is-domain':''), 'data-id':n.id});
+    svg.appendChild(circle);
+    if (n.type === 'domain') {
+      var txt = el('text', {x:n.cx, y:n.cy - r - 6, 'text-anchor':'middle', class:'node-label'});
+      txt.textContent = n.label;
+      svg.appendChild(txt);
+    }
+  });
+
+  var listEl = document.getElementById('atlasList');
+  var statusAtlas = document.getElementById('atlasStatus');
+  var docTitles = { d1:'Kódolási stílus-útmutató', d2:'Git branch-stratégia', d3:'CI/CD pipeline leírás',
+                    d4:'Onboarding checklist', d5:'Szabadságolási rend', d6:'Teljesítményértékelés',
+                    d7:'Ügyfél-eszkalációs folyamat', d8:'Panaszkezelési sablon' };
+  var clusterLabel = { domA:'Fejlesztés', domB:'HR', domC:'Ügyfélszolgálat' };
+  nodes.filter(function(n){return n.type==='doc';}).forEach(function(n){
+    var row = document.createElement('div');
+    row.className = 'atlas-row';
+    row.setAttribute('data-id', n.id);
+    row.setAttribute('role','option');
+    row.innerHTML = '<span class="dot"></span><span class="title">' + docTitles[n.id] + '</span><span class="sub">' + clusterLabel[n.cluster] + '</span>';
+    listEl.appendChild(row);
+  });
+
+  var focusedFsmBoxes = svg; // not used directly, atlas fsm diagram is illustrative-only
+
+  function setHover(id, on){
+    var node = svg.querySelector('circle[data-id="'+id+'"]');
+    var halo = document.getElementById('halo-'+id);
+    var row = listEl.querySelector('.atlas-row[data-id="'+id+'"]');
+    if (node) node.classList.toggle('is-hover', on);
+    if (halo) halo.classList.toggle('show', on);
+    if (row) row.classList.toggle('is-hover', on);
+  }
+  function setSelected(id){
+    listEl.querySelectorAll('.atlas-row').forEach(function(r){ r.classList.remove('is-selected'); });
+    svg.querySelectorAll('circle').forEach(function(c){ c.classList.remove('is-selected'); });
+    if (!id) { statusAtlas.textContent = '8 dokumentum, 3 klaszter — Tier 0 (levezetett gráf, közös kategória alapján).'; return; }
+    var node = svg.querySelector('circle[data-id="'+id+'"]');
+    var row = listEl.querySelector('.atlas-row[data-id="'+id+'"]');
+    if (node) node.classList.add('is-selected');
+    if (row) { row.classList.add('is-selected'); row.scrollIntoView({block:'nearest'}); }
+    statusAtlas.textContent = 'Kiválasztva: "' + docTitles[id] + '" (' + clusterLabel[byId[id].cluster] + ').';
+  }
+  nodes.filter(function(n){return n.type==='doc';}).forEach(function(n){
+    var node = svg.querySelector('circle[data-id="'+n.id+'"]');
+    node.addEventListener('mouseenter', function(){ setHover(n.id, true); });
+    node.addEventListener('mouseleave', function(){ setHover(n.id, false); });
+    node.addEventListener('click', function(){ setSelected(n.id); });
+  });
+  Array.prototype.slice.call(listEl.querySelectorAll('.atlas-row')).forEach(function(row){
+    var id = row.getAttribute('data-id');
+    row.addEventListener('mouseenter', function(){ setHover(id, true); });
+    row.addEventListener('mouseleave', function(){ setHover(id, false); });
+    row.addEventListener('click', function(){ setSelected(id); });
+  });
+})();
+</script>
+</body>
+</html>

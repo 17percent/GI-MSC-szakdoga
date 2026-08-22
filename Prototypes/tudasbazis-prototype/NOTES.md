@@ -280,6 +280,95 @@ eredményére néz, nem a listára: ha a lista csak a kamera-nézet miatt ürül
 **Ellenőrzés:** a három módosított modul parse-ol; a viselkedés böngészős
 átnézése a felhasználónál van.
 
+## Visszajelzések alapján beépítve (8. kör — fejléc-térköz, keresőikon, élek)
+
+**1. Fejléc-térköz a kezdőoldalon.** A `.main--atlas { padding: 0 }` a teljes
+szélességű atlaszhoz kellett — de a topbar is a `.main` gyermeke, így az is
+elvesztette a paddingjét: a „Tudástár" cím a sidebar szegélyéhez tapadt, a
+felhasználóváltó + téma + Kijelentkezés pedig a képernyő széléhez, felső térköz
+nélkül. A fejléc most külön visszakapja a ritmust
+(`.main--atlas > .topbar`, `--space-6`/`--space-8`, 640px alatt `--space-4`).
+
+**2. Keresőikon a placeholderen.** Nem elírás volt, hanem **specificitás**: a
+`styles.css` `input[type="search"]` szabálya (elem + attribútum → 0,1,1)
+erősebb, mint az önmagában álló `.atlas__input` (0,1,0), így a recept
+`padding: 0 var(--space-3)` **shorthandje** visszaírta a `padding-left`-et
+40px-ről 12px-re — az ikon (12–30px) pont a szövegre került. Javítás:
+`.atlas__search .atlas__input` (0,2,0). Ez a csapda bekerült a `CLAUDE.md`
+„Gyakori hibák" listájába, mert minden alaprecept-felülírásnál visszatér.
+
+**3. „Prototípus · adatok memóriában" címke törölve** — a markupból és a
+`styles.css` `.proto-badge` szabályából is (nem hagytunk halott CSS-t).
+
+**4. Élek: halvány alapháló + élénk hover-kiemelés.** Az élek eddig
+gyakorlatilag láthatatlanok voltak (áttekintésben ~0,09–0,14 alfa), a „kiemelt"
+állapot pedig ennek csak 1,6-szorosa — azaz szintén halvány. Most:
+- az alapháló **halvány, de olvasható** (`EDGE_A_BASE`/`EDGE_A_WEIGHT`, és a
+  zoom-tényező padlója 0,55 → **0,75**);
+- a hoverelt (vagy kijelölt) csomópontból **induló és oda befutó** élek élénk
+  `--accent`-re váltanak (a keverés 45/55 → **20/80** az accent felé),
+  vastagabb vonallal (`EDGE_W_HI`);
+- a kiemelt alfa **szándékosan nem skálázódik a zoommal** — áttekintésben is
+  ugyanolyan határozott, mint közelről.
+A hover mindkét irányban működik (térkép ↔ lista), mert a `selectionStore`
+`hoverId`-jét a renderer `setHighlight`-ja is feldolgozza.
+Az él-paraméterek megnevezett konstansok a fájl elején, hogy hangolhatók legyenek.
+
+**5. Térkép-hover → a lista odagördül.** A kiemelés eddig is átváltott a megfelelő
+listasoron, de ha az kilógott a nézetből, a visszajelzés néma maradt. Most a
+`selectionStore` `hoverId`-változására a lista a sorhoz gördül
+(`block: 'nearest'` — csak ha tényleg kell, és csak amennyit kell).
+
+Két csapda, amit külön kezelni kellett:
+- **A listából induló hover nem gördíthet.** Különben a sorok elcsúsznának a
+  kurzor alól, az új sor `pointerover`-t kapna, az újabb hovert állítana → a
+  hurok önmagát hajtja. A `store.setHover` emitje szinkron, ezért egy `selfHover`
+  zászló elég: a feliratkozó még ezen az ablakon belül fut le. Minden listából
+  induló hover (`pointerover`, `pointerleave`, nyilak, Home/End) ezen megy át.
+- **Gyors kurzor-söprés** a csomópontok fölött: 90 ms debounce, és a lejáratkor
+  újraellenőrizzük, hogy még mindig az az `id` a hover — így a végállapotra áll
+  be, nem gördül minden érintett dokumentumhoz külön.
+
+Közben javítva: a **Home/End** eddig átállította az aktív sort, de nem gördült
+hozzá (a nyilak igen) — most mindkettő ugyanazon az úton fut (`jumpTo`).
+
+**6. A kategória-legördülő nem a vezérlő alatt jelent meg.** Nem a számítás volt
+hibás: az `.atlas__bar` **`backdrop-filter`-e** (mint a `filter`/`transform`)
+**containing blockot csinál a `position:fixed` leszármazottaknak**, így a panel a
+SÁV boxához igazodott — miközben a `getBoundingClientRect()` viewport-koordinátát
+ad neki. Innen az elcsúszás. Javítás: a panel **portálozva a `<body>`-ba**, ahol a
+`fixed` újra a viewporthoz mér (és 640px alatt a facet-sáv `overflow-x:auto`-ja
+sem vágja le — ez volt az eredeti indok a `fixed`-re).
+
+Amit a portál miatt kézzel kell kezelni, mert a panel már nem a `.catfilter`
+leszármazottja: a **kívülre-kattintás** (`catPanel.contains` is kell), az
+**Escape** (a listener a panelre is felkerült), és a **`destroy()`** (a body-ból
+külön el kell távolítani). Az `aria-controls`/`aria-expanded` id-alapú, azt a
+portál nem érinti.
+
+A pozicionálás egyben pontosabb is lett: a panel **valódi méretét** mérjük
+(ezért ELŐBB látható, aztán igazítunk), a viewport-széli levágást tokenből jövő
+réssel kerüljük (nem a régi bűvös `232`), és ha alul nem fér el, **fölfelé nyílik**.
+Görgetésre is újraigazít (capture fázis).
+
+**7. Jelmagyarázat a térkép bal alsó sarkában.** Szín → kategória, dokumentum-
+számmal (mono), és egy lábjegyzettel a többkategóriás csomópontok átmenetéről —
+e nélkül a két színű gombóc megmagyarázatlan maradt. Az adat a **modellből** jön
+(`categoryLegend()`), tehát ugyanabból az igazságforrásból, mint a csomópontok
+slotjai: nem tud elcsúszni tőlük. Csak a **használatban lévő** kategóriák kerülnek
+bele (az „Üres kategória" egyetlen csomópontot sem színez, felsorolni félrevezető
+lenne), de a kategória nélküli doksik gyűjtője („Egyéb") igen, mert az IS színez.
+- A HUD ezzel kétsorossá lett (jelmagyarázat + „Áttekintés" gomb egymás alatt).
+- 900px alatt a jelmagyarázat elrejtve: ott a térkép már csak a színpad ~35%-a,
+  és a jelentés nem veszik el (a listasorok színpontjai + a legördülő is az).
+- A színjel osztálya `.catfilter__swatch` → **`.catswatch`**: a jelmagyarázat nem
+  függhet egy `catfilter__`-scope-olt osztálytól. Egy definíció szolgálja a
+  legördülőt, a tag-eket és a jelmagyarázatot.
+
+**Ellenőrzés:** a módosított JS parse-ol, a `home.css`-ben nincs nyers hex, a
+`proto-badge` nyom nélkül eltűnt; a vizuális átnézés (mindkét téma, 360px-ig) a
+felhasználónál van.
+
 ## Verdikt (kitöltendő átnézés után)
 
 - Mi működik jól: …

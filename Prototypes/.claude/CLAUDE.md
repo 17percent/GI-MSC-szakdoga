@@ -77,6 +77,9 @@ Ha bármelyik pont bukik, javítsd ki, mielőtt átadod.
 - Hideg, szürke `box-shadow`. → A rendszer árnyékai melegek (barnás); használd a `--shadow-*` tokeneket.
 - Jelentés kizárólag színnel. → Kísérd ikonnal/felirattal.
 - Abszolút pozicionált háttér-SVG, amit egy `*`-alapú szabály visszatol a flow-ba. → Zárd ki a háttérréteget (`:not(...)`), különben üres helyet nyit.
+- **Egy osztály felülírná az elem+attribútum alapreceptet.** `input[type="search"]` (0,1,1) **erősebb**, mint `.sajat-input` (0,1,0), így a recept `padding` shorthandje visszaírja a te `padding-left`-edet — az ikon ráül a placeholderre. → Emeld a specificitást (`.wrapper .sajat-input`), ne `!important`-tal told át.
+- Konténer-padding kinullázása „full-bleed" tartalomhoz úgy, hogy a fejléc is a konténer gyermeke. → A fejlécnek külön add vissza a térközt, különben a cím a sidebar szegélyéhez tapad.
+- **`position:fixed` popover `backdrop-filter`/`filter`/`transform`-os szülő alatt.** Ezek **containing blockot** csinálnak a fixed leszármazottnak, így a panel a SZÜLŐ boxához igazodik, nem a viewporthoz — a `getBoundingClientRect()` koordinátái viszont viewport-alapúak, tehát a panel elcsúszik. → Portálozd a panelt a `<body>`-ba (és utána kézzel kezeld a kívülre-kattintást, az Escape-et és a `destroy()`-t).
 - Folklorisztikus/fantasy vizuál (agancs, sámándob, rovásírás-giccs). → Kerüld; a rendszer visszafogott és professzionális.
 
 ---

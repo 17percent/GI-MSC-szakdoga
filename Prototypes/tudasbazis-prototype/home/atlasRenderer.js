@@ -51,6 +51,18 @@
   var ZOOM_DETAIL_SPAN = 1.6;              // ennyi zoomRatio-nyi sávon fut 0→1 a részletesség
   function smooth01(t) { t = t < 0 ? 0 : t > 1 ? 1 : t; return t * t * (3 - 2 * t); }
 
+  // Él-fényerő. Az élek ALAPÉRTELMEZETTEN halványan, de LÁTHATÓAN ott vannak — a
+  // kapcsolati szövet a térkép fő olvasata, nem díszítés. Hover (vagy kijelölés)
+  // hatására a csomópontba futó élek élénk `--accent`-re váltanak: a kiemelt
+  // alfa szándékosan NEM skálázódik a zoommal, hogy áttekintésben is ugyanolyan
+  // egyértelmű legyen, mint közelről.
+  var EDGE_A_BASE = 0.20;                  // a legkisebb súlyú él alap-alfája
+  var EDGE_A_WEIGHT = 0.16;                // súly szerinti ráadás az alapra
+  var EDGE_A_HI = 0.62;                    // kiemelt (hover/kijelölt) él alfája
+  var EDGE_A_HI_WEIGHT = 0.30;             // súly szerinti ráadás a kiemeltre
+  var EDGE_W_HI = 1.75;                    // kiemelt él vonalvastagsága (px)
+  var EDGE_A_EXCLUDED = 0.3;               // szűrőből kiesett végpont → visszahúzódik
+
   // Kattinthatósági padló: a KIRAJZOLT sugár sosem esik ez alá, akármilyen kicsi
   // a modell-súly vagy a térkép-panel. A hit-test ezen felül még +6 px-t ad, így
   // a legkisebb célfelület is ~26 px átmérőjű marad.
@@ -103,7 +115,7 @@
     var camTouched = false;                 // igaz, ha a felhasználó/fókusz már mozgatta a kamerát
 
     // folytonos részlet-paraméterek (a zoomból, nem discrete LOD-ból)
-    var P = { docAlpha: 0.55, docScale: 0.62, docLabel: 0.15, docLabelTop: 5, edge: 0.55 };
+    var P = { docAlpha: 0.55, docScale: 0.62, docLabel: 0.15, docLabelTop: 5, edge: 0.75 };
 
     // kiemelés
     var selectedId = null, hoverId = null, selIdx = -1, hovIdx = -1;
@@ -212,11 +224,13 @@
 
       var e1 = toRGB(col.border);
       col.edgeStr = 'rgb(' + e1[0] + ',' + e1[1] + ',' + e1[2] + ')';
-      // kijelölt szomszédság: az él az --accent felé hangolva
+      // Hoverelt/kijelölt szomszédság: az él szinte tisztán --accent (csak egy
+      // csipet keret-szín marad benne, hogy a térkép meleg hangját tartsa) — ez
+      // adja az „élénkebb szín" olvasatot a halvány alaphálóhoz képest.
       var e2 = toRGB(col.accent);
-      col.edgeHiStr = 'rgb(' + Math.round(e1[0] * 0.45 + e2[0] * 0.55) + ',' +
-        Math.round(e1[1] * 0.45 + e2[1] * 0.55) + ',' +
-        Math.round(e1[2] * 0.45 + e2[2] * 0.55) + ')';
+      col.edgeHiStr = 'rgb(' + Math.round(e1[0] * 0.2 + e2[0] * 0.8) + ',' +
+        Math.round(e1[1] * 0.2 + e2[1] * 0.8) + ',' +
+        Math.round(e1[2] * 0.2 + e2[2] * 0.8) + ')';
 
       camDur = parseMs(readVar('--duration-slow', '400ms'), 400);
       ease = makeEase(readVar('--ease-grow', 'cubic-bezier(.22,1,.36,1)'));
@@ -536,7 +550,8 @@
       P.docScale = 1.00 + 0.30 * e;
       P.docLabel = 0.15 + 0.85 * e;
       P.docLabelTop = Math.round(5 + 40 * e);
-      P.edge = 0.55 + 0.45 * e;
+      // az alapháló áttekintésben is olvasható marad (0,75), közelítve erősödik
+      P.edge = 0.75 + 0.25 * e;
     }
 
     // ---------- méret ----------
@@ -663,11 +678,11 @@
           if (ehl[i]) continue;
           if (!nvis[ea[i]] && !nvis[eb[i]]) continue;
           var wA = Math.min(1, 0.35 + ew[i] * 0.18);
-          var al = (0.10 + wA * 0.16) * P.edge * cfg.edge;
+          var al = (EDGE_A_BASE + wA * EDGE_A_WEIGHT) * P.edge * cfg.edge;
           if (dimActive && ndim[ea[i]] && ndim[eb[i]]) al *= 0.35;
           // szűrőből kiesett végpont: az él is visszahúzódik — a kapcsolat látszik,
           // de nem versenyez a szűrt halmaz éleivel
-          if (outActive && (nout[ea[i]] || nout[eb[i]])) al *= 0.3;
+          if (outActive && (nout[ea[i]] || nout[eb[i]])) al *= EDGE_A_EXCLUDED;
           ctx.globalAlpha = al;
           ctx.beginPath();
           ctx.moveTo(nsx[ea[i]], nsy[ea[i]]);
@@ -675,16 +690,18 @@
           ctx.stroke();
         }
       }
-      // kijelölt/hoverelt szomszédság: ~1.6× fényesebb, --accent felé hangolva
+      // A hoverelt/kijelölt csomópontból INDULÓ és oda BEFUTÓ élek: élénk
+      // --accent, vastagabb vonal. Az alfa NEM a zoomból jön (nincs `P.edge`
+      // tényező), így a kiemelés áttekintésben is ugyanolyan határozott.
       ctx.strokeStyle = col.edgeHiStr;
-      ctx.lineWidth = 1.4;
+      ctx.lineWidth = EDGE_W_HI;
       for (i = 0; i < eCount; i++) {
         if (!ehl[i]) continue;
         if (!nvis[ea[i]] && !nvis[eb[i]]) continue;
         var wB = Math.min(1, 0.35 + ew[i] * 0.18);
-        var alB = Math.min(0.9, (0.10 + wB * 0.16) * Math.max(P.edge, 0.55) * 1.6 * cfg.edge);
+        var alB = Math.min(0.95, (EDGE_A_HI + wB * EDGE_A_HI_WEIGHT) * cfg.edge);
         // a kijelölt szomszédsága is visszafogott, ha a másik vége kiesett a szűrőből
-        if (outActive && (nout[ea[i]] || nout[eb[i]])) alB *= 0.3;
+        if (outActive && (nout[ea[i]] || nout[eb[i]])) alB *= EDGE_A_EXCLUDED;
         ctx.globalAlpha = alB;
         ctx.beginPath();
         ctx.moveTo(nsx[ea[i]], nsy[ea[i]]);

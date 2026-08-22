@@ -85,6 +85,11 @@
             '<canvas class="atlas__field" aria-hidden="true"></canvas>' +
             '<canvas class="atlas__graph" aria-hidden="true"></canvas>' +
             '<div class="atlas__hud">' +
+              '<div class="atlas__legend" data-legend hidden>' +
+                '<p class="atlas__legend-title">Kategóriák</p>' +
+                '<ul class="atlas__legend-list" data-legend-list></ul>' +
+                '<p class="atlas__legend-note">Több kategória → a csomópont a színek átmenetét kapja.</p>' +
+              '</div>' +
               '<button class="btn btn--sm atlas__zoomout" type="button" aria-label="Kizoomolás az áttekintésre">' +
                 ICON_ZOOM_OUT + '<span>Áttekintés</span>' +
               '</button>' +
@@ -115,6 +120,8 @@
     var fieldCanvas = root.querySelector('.atlas__field');
     var graphCanvas = root.querySelector('.atlas__graph');
     var zoomOutBtn = root.querySelector('.atlas__zoomout');
+    var legendEl = root.querySelector('[data-legend]');
+    var legendListEl = root.querySelector('[data-legend-list]');
     var listEl = root.querySelector('.atlas__list');
     var emptyEl = root.querySelector('.atlas__empty');
     var statusEl = root.querySelector('.atlas__status');
@@ -131,6 +138,18 @@
       fast: ms('--duration-fast', 150), base: ms('--duration-base', 250),
       slow: ms('--duration-slow', 400), slower: ms('--duration-slower', 600)
     };
+    // térköz-token → px (a legördülő kézi igazításához; rem-et is feloldunk)
+    function px(name, fallback) {
+      var v = cs.getPropertyValue(name).trim();
+      if (!v) return fallback;
+      var n = parseFloat(v);
+      if (isNaN(n)) return fallback;
+      if (v.indexOf('rem') > -1) {
+        return n * (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16);
+      }
+      return n;
+    }
+    var PANEL_GAP = px('--space-2', 8);
     var EASE_GROW = cs.getPropertyValue('--ease-grow').trim() || 'cubic-bezier(.22,1,.36,1)';
 
     // ---------------- szűrő-vezérlők feltöltése ----------------
@@ -166,7 +185,7 @@
     }
 
     function swatch(slot) {
-      return slot ? '<span class="catfilter__swatch" data-slot="' + slot + '" aria-hidden="true"></span>' : '';
+      return slot ? '<span class="catswatch" data-slot="' + slot + '" aria-hidden="true"></span>' : '';
     }
 
     function renderCategoryPanel() {
@@ -186,6 +205,26 @@
     // modell felépül) → ilyenkor még nincs színjel. A `boot()` a modell
     // elkészülte után ÚJRA rendereli, akkor kerülnek be a slot-színek.
     renderCategoryPanel();
+
+    // ---------------- jelmagyarázat a térkép bal alsó sarkában ----------------
+    // Szín → kategória, hogy a térkép színei dekódolhatók legyenek. Az adat a
+    // MODELLBŐL jön (`categoryLegend()`), tehát ugyanabból az egy igazságforrásból,
+    // mint a csomópontok slotjai — nem tud elcsúszni tőlük. A dokumentumszám mono
+    // betűvel (adat), és ott van a többkategóriás csomópontok magyarázata is.
+    function renderLegend() {
+      if (!model || !model.categoryLegend) { legendEl.hidden = true; return; }
+      var rows = model.categoryLegend(), html = '', i, nm;
+      for (i = 0; i < rows.length; i++) {
+        nm = H.esc ? H.esc(rows[i].name) : rows[i].name;
+        html += '<li class="atlas__legend-item">' +
+          swatch(rows[i].slot) +
+          '<span class="atlas__legend-name">' + nm + '</span>' +
+          '<span class="atlas__legend-count mono">' + rows[i].count + '</span>' +
+        '</li>';
+      }
+      legendListEl.innerHTML = html;
+      legendEl.hidden = !rows.length;
+    }
 
     // a trigger + panel vizuális állapotát a store `filters.categories`-ből tükrözi
     function paintCategoryFilter() {
@@ -230,23 +269,48 @@
       setSelectedCategories(cur);
     }
 
-    // `position:fixed` + kézi igazítás — 640px alatt a facet-sáv horizontális
-    // scroll-konténer (overflow-x:auto), ami levágná az `absolute` panelt.
+    // A panel a <body>-ba KERÜL ÁT (portál). Ez nem stílus-kérdés: az `.atlas__bar`
+    // `backdrop-filter`-e (mint a `filter`/`transform`) CONTAINING BLOCKOT csinál a
+    // `position:fixed` leszármazottaknak, így a panel a SÁV boxához igazodott, nem a
+    // viewporthoz — miközben a `getBoundingClientRect()` viewport-koordinátát ad.
+    // Innen jött, hogy a legördülő nem a vezérlő alatt jelent meg. A body-ban a
+    // `fixed` újra a viewporthoz mér, és 640px alatt a facet-sáv `overflow-x:auto`-ja
+    // sem vágja le. Ami emiatt kézi kezelést igényel: a kívülre-kattintás és az
+    // Escape (a panel már nem a `catfilter` leszármazottja) — lásd lentebb.
+    document.body.appendChild(catPanel);
+
     function positionCategoryPanel() {
       var r = catControl.getBoundingClientRect();
-      catPanel.style.top = Math.round(r.bottom + 8) + 'px';
-      catPanel.style.left = Math.round(Math.min(r.left, window.innerWidth - 232)) + 'px';
+      var vw = global.innerWidth, vh = global.innerHeight;
       catPanel.style.minWidth = Math.max(220, Math.round(r.width)) + 'px';
+
+      // a valódi méret csak láthatóan mérhető — ezért a megnyitás ELŐBB mutat, aztán igazít
+      var pw = catPanel.offsetWidth || 220;
+      var ph = catPanel.offsetHeight || 0;
+
+      var left = Math.min(r.left, vw - pw - PANEL_GAP);
+      if (left < PANEL_GAP) left = PANEL_GAP;
+
+      // alapból a vezérlő ALATT; ha ott nem fér el, de fölötte igen, felnyílik
+      var top = r.bottom + PANEL_GAP;
+      if (ph && top + ph > vh - PANEL_GAP && r.top - PANEL_GAP - ph > PANEL_GAP) {
+        top = r.top - PANEL_GAP - ph;
+      }
+
+      catPanel.style.left = Math.round(left) + 'px';
+      catPanel.style.top = Math.round(top) + 'px';
     }
 
     var catPanelOpen = false;
     function openCategoryPanel() {
       if (catPanelOpen) return;
       catPanelOpen = true;
-      positionCategoryPanel();
-      catPanel.hidden = false;
+      catPanel.hidden = false;              // ELŐBB látható, hogy mérhető legyen…
+      positionCategoryPanel();              // …és csak utána igazítunk (egy képkockán belül)
       catControl.setAttribute('aria-expanded', 'true');
       global.addEventListener('resize', positionCategoryPanel);
+      // capture: bármelyik szülő-konténer görgetése is elmozdítja a vezérlőt
+      global.addEventListener('scroll', positionCategoryPanel, true);
     }
     function closeCategoryPanel(refocus) {
       if (!catPanelOpen) return;
@@ -254,6 +318,7 @@
       catPanel.hidden = true;
       catControl.setAttribute('aria-expanded', 'false');
       global.removeEventListener('resize', positionCategoryPanel);
+      global.removeEventListener('scroll', positionCategoryPanel, true);
       if (refocus) catControl.focus();
     }
 
@@ -288,14 +353,19 @@
     function onCatFilterKeydown(e) {
       if (e.key === 'Escape' && catPanelOpen) { e.stopPropagation(); closeCategoryPanel(true); }
     }
+    // A panel a body-ban van, tehát NEM a `catfilter` leszármazottja: a
+    // „kívülre kattintás" és az Escape ezért mindkét gyökeret figyeli.
     function onDocClickForCatFilter(e) {
-      if (catPanelOpen && !catFilterEl.contains(e.target)) closeCategoryPanel(false);
+      if (!catPanelOpen) return;
+      if (catFilterEl.contains(e.target) || catPanel.contains(e.target)) return;
+      closeCategoryPanel(false);
     }
     catControl.addEventListener('click', onCatControlClick);
     catControl.addEventListener('keydown', onCatControlKeydown);
     catTagsEl.addEventListener('click', onCatTagsClick);
     catPanel.addEventListener('change', onCatPanelChange);
     catFilterEl.addEventListener('keydown', onCatFilterKeydown);
+    catPanel.addEventListener('keydown', onCatFilterKeydown);
     document.addEventListener('click', onDocClickForCatFilter);
 
     // ---------------- állapot-modulok ----------------
@@ -863,6 +933,7 @@
       recompute({ silent: true });
       paintFacetButtons();
       renderCategoryPanel();      // most már van modell → a színjelek is bekerülnek
+      renderLegend();
       paintCategoryFilter();
       announceCount(list.count, '');
       // a belépő koreográfia végén READY → overview
@@ -880,6 +951,7 @@
       } catch (e) { machine.send('DATA_ERR'); return; }
       fillStatusSelect();
       renderCategoryPanel();
+      renderLegend();
       statusSel.value = store.state.filters.status || '';
       paintFacetButtons();
       paintCategoryFilter();
@@ -907,8 +979,12 @@
       catTagsEl.removeEventListener('click', onCatTagsClick);
       catPanel.removeEventListener('change', onCatPanelChange);
       catFilterEl.removeEventListener('keydown', onCatFilterKeydown);
+      catPanel.removeEventListener('keydown', onCatFilterKeydown);
       document.removeEventListener('click', onDocClickForCatFilter);
       global.removeEventListener('resize', positionCategoryPanel);   // ha épp nyitva volt
+      global.removeEventListener('scroll', positionCategoryPanel, true);
+      // a portálozott panel a body-ban van — a root eltávolítása nem vinné magával
+      if (catPanel.parentNode) catPanel.parentNode.removeChild(catPanel);
       if (list) list.destroy();
       if (map && map.destroy) map.destroy();
       if (field) field.destroy();

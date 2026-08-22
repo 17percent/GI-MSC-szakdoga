@@ -19,7 +19,7 @@
  *     .getNeighborhood(id, { max: 32 })   -> { nodes, edges }
  *     .search(q, { max: 60 })             -> { nodes, edges, matchIds }
  *     .applyFacets(facets)                -> { docIds, nodeIds, active }   // facets.categories: [name,...] (VAGY-kapcsolat)
- *     .nodeById(id) .nodeForDoc(docId) .categorySlots() .stats()
+ *     .nodeById(id) .nodeForDoc(docId) .categorySlots() .categoryLegend() .stats()
  *
  * `getOverview({ includeInactive: true })` a SZŰRŐTŐL FÜGGETLEN teljes halmazt
  * adja. Erre azért van szükség, mert szűréskor a kiszűrt dokumentum nem tűnik el
@@ -668,6 +668,24 @@
       return out;
     }
 
+    // Jelmagyarázat-adat: CSAK a HASZNÁLATBAN lévő kategóriák (amelyeknek van
+    // dokumentumuk), a kanonikus sorrendben, a paletta-slotjukkal és a
+    // dokumentumszámukkal. Az üres kategória kimarad: egyetlen csomópontot sem
+    // színez, felsorolni félrevezető lenne. A kategória nélküli doksik gyűjtője
+    // („Egyéb") viszont bekerül, mert az IS színez csomópontot.
+    function categoryLegend() {
+      var out = [], ci2;
+      for (ci2 = 0; ci2 < cats.length; ci2++) {
+        if (!cats[ci2].docs.length) continue;
+        out.push({
+          name: cats[ci2].name,
+          slot: catSlotByKey[cats[ci2].key] || CAT_PALETTE_SIZE,
+          count: cats[ci2].docs.length
+        });
+      }
+      return out;
+    }
+
     function stats() {
       var ec = 0, i2;
       for (i2 = 0; i2 < docEdges.length; i2++) {
@@ -687,6 +705,7 @@
       nodeById: nodeByIdFn,
       nodeForDoc: nodeForDoc,
       categorySlots: categorySlots,
+      categoryLegend: categoryLegend,
       stats: stats
     };
   }
