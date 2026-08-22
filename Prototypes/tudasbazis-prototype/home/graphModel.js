@@ -2,14 +2,19 @@
  *
  * Nyers dokumentum-metaadatból SZÁRMAZTATOTT, könnyű gráfot épít:
  *   csomópont = dokumentum
- *   él        = közös kategória („topic") / közös közreműködő („coauthor")
+ *   él        = közös kategória („topic")
+ *
+ * Kiindulási állapot: KIZÁRÓLAG a közös kategória köt össze. A közös közre-
+ * működő („coauthor") él logikája megvan, de ki van kapcsolva — lásd a
+ * `LINK_BY_CATEGORY` / `LINK_BY_COAUTHOR` kapcsolókat. A közreműködők száma
+ * továbbra is beleszámít a csomópont SÚLYÁBA (méretébe), csak élt nem termel.
  *
  * A KATEGÓRIA NEM FIZIKAI HELY — nincs domén-csomópont, nincs „téma-kör".
  * Egy dokumentum ugyanolyan súllyal tartozhat több kategóriába is; ez korábban
  * (amikor a kategória volt a térkép szerkezete) követhetetlenné tette a többkate-
  * góriás dokumentumok elhelyezését. Most a kategória tisztán SZŰRŐ/facet (lásd
- * `applyFacets`); az elrendezést a dokumentumok KAPCSOLATA (közös kategória / közös
- * szerző → él) adja, erő-alapú, de DETERMINISZTIKUS szimulációval (a pszeudo-
+ * `applyFacets`); az elrendezést a dokumentumok KAPCSOLATA (közös kategória → él)
+ * adja, erő-alapú, de DETERMINISZTIKUS szimulációval (a pszeudo-
  * véletlen az azonosító hash-éből jön, nincs Math.random). Kemény ütközés-
  * feloldás zárja ki, hogy dokumentum-csomópontok fedjék egymást.
  *
@@ -39,6 +44,12 @@
   var MAX_EDGES_RETURNED = 420;
   var PAIRING_LIMIT = 120;                // párosítási védőkorlát nagy csoportokra
   var DAY = 86400000;
+
+  // Mi kössön össze két dokumentumot? Kiindulásképp KIZÁRÓLAG a közös kategória.
+  // A közös közreműködő („coauthor") logika a helyén van, de ki van kapcsolva —
+  // `true`-ra állítva visszakapcsolható, és onnantól a súly a kettő SZUMMÁJA lesz.
+  var LINK_BY_CATEGORY = true;
+  var LINK_BY_COAUTHOR = false;
 
   // Csomópont-sugár (px az ÁTTEKINTÉS zoomján). A minimum azért ilyen nagy, hogy
   // a legkisebb csomópont is jól látható és kényelmesen kattintható maradjon —
@@ -244,7 +255,7 @@
     if (!isFinite(minDocW)) { minDocW = 0; maxDocW = 1; }
     for (i = 0; i < n; i++) items[i].r = mapRadius(items[i].weight, minDocW, maxDocW, NODE_R_MIN, NODE_R_MAX);
 
-    // ---------- 4. élek (Tier 0: közös kategória + közös közreműködő) ----------
+    // ---------- 4. élek (Tier 0: közös kategória) ----------
     // MEG KELL előznie az elrendezést: az erő-szimuláció a kapcsolatot (élt)
     // használja rugóként — a kategória csak azon keresztül hat a helyre, hogy
     // KAPCSOLATOT jelent, nem azáltal, hogy „hazát" ad.
@@ -273,27 +284,31 @@
     }
 
     // közös kategória
-    for (ci = 0; ci < liveCats.length; ci++) {
-      var grp = limitedGroup(liveCats[ci].docs);
-      for (i = 0; i < grp.length; i++) {
-        for (k = i + 1; k < grp.length; k++) bumpPair(grp[i], grp[k], 't');
+    if (LINK_BY_CATEGORY) {
+      for (ci = 0; ci < liveCats.length; ci++) {
+        var grp = limitedGroup(liveCats[ci].docs);
+        for (i = 0; i < grp.length; i++) {
+          for (k = i + 1; k < grp.length; k++) bumpPair(grp[i], grp[k], 't');
+        }
       }
     }
 
-    // közös közreműködő
-    var byContrib = {};
-    for (i = 0; i < n; i++) {
-      var cl = items[i].contributors;
-      for (k = 0; k < cl.length; k++) {
-        if (!byContrib[cl[k]]) byContrib[cl[k]] = [];
-        byContrib[cl[k]].push(i);
+    // közös közreműködő — ma KI VAN KAPCSOLVA (lásd `LINK_BY_COAUTHOR`)
+    if (LINK_BY_COAUTHOR) {
+      var byContrib = {};
+      for (i = 0; i < n; i++) {
+        var cl = items[i].contributors;
+        for (k = 0; k < cl.length; k++) {
+          if (!byContrib[cl[k]]) byContrib[cl[k]] = [];
+          byContrib[cl[k]].push(i);
+        }
       }
-    }
-    for (var cid in byContrib) {
-      if (!Object.prototype.hasOwnProperty.call(byContrib, cid)) continue;
-      var g2 = limitedGroup(byContrib[cid]);
-      for (i = 0; i < g2.length; i++) {
-        for (k = i + 1; k < g2.length; k++) bumpPair(g2[i], g2[k], 'c');
+      for (var cid in byContrib) {
+        if (!Object.prototype.hasOwnProperty.call(byContrib, cid)) continue;
+        var g2 = limitedGroup(byContrib[cid]);
+        for (i = 0; i < g2.length; i++) {
+          for (k = i + 1; k < g2.length; k++) bumpPair(g2[i], g2[k], 'c');
+        }
       }
     }
 
