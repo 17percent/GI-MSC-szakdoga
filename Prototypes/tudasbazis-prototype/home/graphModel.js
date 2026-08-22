@@ -73,6 +73,8 @@
   var CENTER_K = 0.0006;                  // enyhe húzás a világ közepe felé (ne sodródjon el)
   var MAX_STEP = 14;                      // egy iterációban max ennyit mozoghat egy pont
   var DOC_PAD = 8;                        // végső ütközésfeloldás: minimális rés a sugarakon felül
+  var COLLIDE_ITERS = 400;                // ütközésfeloldó körök felső korlátja
+  var WORLD_MARGIN = 24;                  // a csomópont PEREME ennél közelebb ne kerüljön a világ széléhez
   // Ez a lépés O(n²·iter) — ennél a prototípus-méretnél (néhány tíz-száz doksi)
   // ez ezredmásodperces modell-építést jelent; nagyobb korpusznál (Tier 1/2,
   // valódi méretskála) ezt már a `getView` webworkerbe/inkrementálisra kellene
@@ -406,11 +408,41 @@
         }
       }
 
+      // A szerkezet MÉRETE a csomópontszámmal nő: a taszítás minden pár közt hat,
+      // így n-nel együtt az egyensúlyi átmérő is (~n^(1/3)), a középre-húzás pedig
+      // szándékosan gyenge. Ezért a kész elrendezést BELEILLESZTJÜK a világ-
+      // négyzetbe: középre igazítjuk, és ha kilóg, egyenletesen ZSUGORÍTJUK.
+      // Nagyítás nincs — kis korpusz ne feszüljön szét erőszakkal a szélekig.
+      // Csak a POZÍCIÓK skálázódnak, a sugarak nem: azok px-ben értett rajzolási
+      // méretek. Ez KELL, hogy megelőzze az ütközésfeloldást: korábban a
+      // kilógó pontokat csak egy záró `clamp` húzta be, ami a világ peremére
+      // lapította és EGYMÁSRA tolta őket (7 doksinál nem látszott, 50+-nál igen).
+      var cx0 = Infinity, cy0 = Infinity, cx1 = -Infinity, cy1 = -Infinity, maxR = 0;
+      for (i = 0; i < n; i++) {
+        it = items[i];
+        if (it.px < cx0) cx0 = it.px;
+        if (it.px > cx1) cx1 = it.px;
+        if (it.py < cy0) cy0 = it.py;
+        if (it.py > cy1) cy1 = it.py;
+        if (it.r > maxR) maxR = it.r;
+      }
+      var midX = (cx0 + cx1) / 2, midY = (cy0 + cy1) / 2;
+      var avail = WORLD / 2 - WORLD_MARGIN - maxR;        // ennyi fél-kiterjedés férhet el
+      var half = Math.max(cx1 - midX, cy1 - midY);
+      var fit = (half > avail && half > 0) ? avail / half : 1;
+      for (i = 0; i < n; i++) {
+        items[i].px = WORLD / 2 + (items[i].px - midX) * fit;
+        items[i].py = WORLD / 2 + (items[i].py - midY) * fit;
+      }
+
       // Kemény ütközésfeloldás: dokumentum-csomópontok SOSE fedjék egymást,
       // függetlenül attól, hogy hány kategórián/kapcsolaton keresztül húzzák
-      // őket egymáshoz az erő-szimulációban.
-      var relaxA, relaxB, rdx, rdy, rd, need, push, rux, ruy, moved;
-      for (iter = 0; iter < 250; iter++) {
+      // őket egymáshoz az erő-szimulációban. A beillesztés UTÁN fut, mert a
+      // zsugorítás közelebb hozza a pontokat — az átfedés-mentesség itt dől el.
+      // A határon való megtartás minden körben megtörténik, így a peremre
+      // szorult pont sem csúszik ki, és a következő kör fel tudja oldani.
+      var relaxA, relaxB, rdx, rdy, rd, need, push, rux, ruy, moved, lim, IC;
+      for (iter = 0; iter < COLLIDE_ITERS; iter++) {
         moved = false;
         for (relaxA = 0; relaxA < n; relaxA++) {
           for (relaxB = relaxA + 1; relaxB < n; relaxB++) {
@@ -427,21 +459,16 @@
             moved = true;
           }
         }
+        for (relaxA = 0; relaxA < n; relaxA++) {
+          IC = items[relaxA];
+          lim = WORLD_MARGIN + IC.r;
+          IC.px = clamp(IC.px, lim, WORLD - lim);
+          IC.py = clamp(IC.py, lim, WORLD - lim);
+        }
         if (!moved) break;
       }
-
-      // a szerkezetet a világ közepére igazítjuk (a renderer illeszti a kamerát,
-      // de tartsuk a koordinátákat rendben)
-      var bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
-      for (i = 0; i < n; i++) {
-        it = items[i];
-        if (it.px - it.r < bx0) bx0 = it.px - it.r;
-        if (it.py - it.r < by0) by0 = it.py - it.r;
-        if (it.px + it.r > bx1) bx1 = it.px + it.r;
-        if (it.py + it.r > by1) by1 = it.py + it.r;
-      }
-      var offX = WORLD / 2 - (bx0 + bx1) / 2, offY = WORLD / 2 - (by0 + by1) / 2;
-      for (i = 0; i < n; i++) { items[i].px += offX; items[i].py += offY; }
+      // Középre-igazítás itt SZÁNDÉKOSAN nincs: egy záró eltolás visszatolhatná
+      // a peremre szorult csomópontokat a világ határán kívülre.
     }
 
     // ---------- 6. csomópontok ----------
@@ -462,8 +489,11 @@
         id: nodeIdOf(i),
         label: it.doc.title || it.doc.id,
         type: 'document',
-        x: clamp(it.px, 24, WORLD - 24),
-        y: clamp(it.py, 24, WORLD - 24),
+        // Védőháló: a beillesztés + ütközésfeloldás után ez már nem mozdít
+        // semmit. A korlát a csomópont PEREMÉRE értendő (`+ it.r`), különben
+        // épp ez a záró lépés tolna egymásra a szélső csomópontokat.
+        x: clamp(it.px, WORLD_MARGIN + it.r, WORLD - WORLD_MARGIN - it.r),
+        y: clamp(it.py, WORLD_MARGIN + it.r, WORLD - WORLD_MARGIN - it.r),
         weight: it.weight,
         r: it.r,
         docId: it.doc.id,

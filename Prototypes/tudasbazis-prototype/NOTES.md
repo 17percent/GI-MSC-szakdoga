@@ -99,8 +99,9 @@ helyén mock belépés fut (a valódi `loginRedirect()` helye a kódban megjelö
 
 **Kezdőoldal: „Élő Atlasz"** (`home/`) — a szűrős lista helyén kurált **tudás-térkép +
 gyors találati lista**, egyetlen közös kiválasztással. Modulok: `graphModel.js`
-(Tier 0: származtatott gráf címke/szerző együttes-előfordulásból, determinisztikus
-elrendezés), `atlasRenderer.js` (Canvas térkép, semantic zoom L0/L1/L2 crossfade-del,
+(Tier 0: származtatott gráf **közös kategóriából**, determinisztikus elrendezés —
+a közös-szerző él a `LINK_BY_COAUTHOR` kapcsoló mögött ki van kapcsolva),
+`atlasRenderer.js` (Canvas térkép, semantic zoom L0/L1/L2 crossfade-del,
 kamera-tween, rács hit-test, culling), `selectionStore.js` (egyetlen igazságforrás),
 `atlasMachine.js` (FSM: overview/focused/searching/empty/error), `resultsList.js`
 (`role="listbox"`, FLIP-átrendezés, billentyűzet-navigáció), `atlasView.js` (koreográfia).
@@ -125,6 +126,16 @@ kamera-tween, rács hit-test, culling), `selectionStore.js` (egyetlen igazságfo
 
 Az app-váz **egyszer épül fel és megmarad** (`ensureShell`), így a kedvencezés, userváltás
 és témaváltás nem indítja újra a térkép élő animációját.
+
+**Seed: generált, nem hardkódolt.** Kézzel kiírt dummy dokumentum nincs — a korpuszt
+a `seedGenerator.js` állítja elő induláskor, a `data.js` már csak belépési pont.
+A generátor **determinisztikus** (seed-elt PRNG, nincs `Math.random`), mert az Atlasz
+elrendezése is az: ugyanaz a seed → ugyanaz a térkép újratöltés után. A szerkezet
+nem uniform-véletlen, hanem tervezett (`CATEGORY_PLAN`): van nagy és kicsi klaszter,
+egydokumentumos kategória (izolált csomópont), üres kategória (facet-demó), kategória
+nélküli doksi („Egyéb" gyűjtő) és több kategóriás „híd" dokumentum. Hangolás:
+`SEED_CONFIG` a `data.js`-ben, illetve `?seed=<szám>` és `?docs=<szám>` URL-paraméter
+— utóbbi a ≤150 csomópontos sapka próbájához is jó.
 
 **Ismert kompromisszumok:**
 - A soron belüli ikongombok (kedvenc, megnyitás) `tabindex="-1"`-esek, mert egy
