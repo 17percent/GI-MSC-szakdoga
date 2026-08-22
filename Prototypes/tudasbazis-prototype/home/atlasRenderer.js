@@ -4,10 +4,16 @@
  * címke. Kezeli a kamerát (pan/zoom, tween), a viewport-cullingot, a címke-
  * ütközést és a rács-alapú hit-testet.
  *
- * NINCS domén-/klaszter-kör és nincs LOD-szint (0/1/2) — a kategória a modellben
- * is csak facet, itt nincs külön megjelenítése. A részletesség (címke-budget,
- * csomópont-méret/-alfa, él-fényerő) FOLYTONOSAN skálázódik a zoommal, nem
- * ugrik szinteken.
+ * NINCS domén-/klaszter-kör és nincs LOD-szint (0/1/2): a klasztereket a modell
+ * GEOMETRIÁJA adja, itt nincs külön rajzolt burok. A részletesség (címke-budget,
+ * alfa, él-fényerő) FOLYTONOSAN skálázódik a zoommal, nem ugrik szinteken.
+ *
+ * CSOMÓPONT-MÉRET: minden csomópont egyforma, és a zoommal LINEÁRISAN skálázódik
+ * (mint a távolságok), ezért a csomópont/térköz arány zoom-független. A rajzolt
+ * sugárnak felső korlátja a legszűkebb csomópont-pár félút-távolsága, így
+ * SEMMILYEN zoom-állapotban nem lehet átfedés — sem a kattinthatósági padló,
+ * sem a hover/kijelölés nagyítása nem tudja átlépni. Lásd `nodeScreenR` /
+ * `capScreenR` / `computeMinGap`.
  *
  * Nem dönt állapotot: a kiemelést és a kamerát a view vezérli. Színt SOSEM éget be —
  * a design tokeneket olvassa (getComputedStyle), így témával EGYÜTT vált.
@@ -63,10 +69,15 @@
   var EDGE_W_HI = 1.75;                    // kiemelt él vonalvastagsága (px)
   var EDGE_A_EXCLUDED = 0.3;               // szűrőből kiesett végpont → visszahúzódik
 
-  // Kattinthatósági padló: a KIRAJZOLT sugár sosem esik ez alá, akármilyen kicsi
-  // a modell-súly vagy a térkép-panel. A hit-test ezen felül még +6 px-t ad, így
-  // a legkisebb célfelület is ~26 px átmérőjű marad.
+  // Kattinthatósági padló: a KIRAJZOLT sugár nem esik ez alá attól, hogy a térkép-
+  // panel kicsi vagy a kamera kizoomolt. A hit-test ezen felül még +6 px-t ad.
+  // FIGYELEM: a padló nem előzi meg a felső korlátot (`capScreenR`) — ha a valódi
+  // térköz szűkebb, a korlát nyer, mert az átfedés-mentesség az erősebb szabály.
   var MIN_NODE_R = 7;
+  // Ennyi px rés maradjon KÉT KÖR PEREME között a legszűkebb párnál is. A rajzolt
+  // sugár felső korlátja ebből jön (lásd `nodeScreenR`) — ez a garancia arra,
+  // hogy semmilyen zoom-állapotban ne legyen átfedés.
+  var NODE_GAP_KEEP = 1.5;
   var CAT_PALETTE_SIZE = 8;
   var SPRITE_PX = 64;                      // a többkategóriás színátmenet sprite mérete
 
@@ -105,6 +116,10 @@
 
     // világ-befoglaló + kamera
     var bMinX = 0, bMinY = 0, bMaxX = WORLD_SPAN, bMaxY = WORLD_SPAN;
+    // A legszűkebb csomópont-pár középpont-távolsága VILÁG-egységben. A rajzolt
+    // sugár felső korlátja ebből jön, ezért MÉRJÜK az adatból, nem a modelltől
+    // kérjük: így a garancia akkor is áll, ha a modell elrendezése változik.
+    var minGapWorld = WORLD_SPAN;
     var fitBase = 1;                        // px / világ-egység zoom 1-en
     var ovZoom = 1, ovX = WORLD_SPAN / 2, ovY = WORLD_SPAN / 2;
     var camX = WORLD_SPAN / 2, camY = WORLD_SPAN / 2, camZ = 1;
@@ -115,7 +130,7 @@
     var camTouched = false;                 // igaz, ha a felhasználó/fókusz már mozgatta a kamerát
 
     // folytonos részlet-paraméterek (a zoomból, nem discrete LOD-ból)
-    var P = { docAlpha: 0.55, docScale: 0.62, docLabel: 0.15, docLabelTop: 5, edge: 0.75 };
+    var P = { docAlpha: 0.55, docLabel: 0.15, docLabelTop: 5, edge: 0.75 };
 
     // kiemelés
     var selectedId = null, hoverId = null, selIdx = -1, hovIdx = -1;
@@ -319,6 +334,7 @@
       buildAdjacency();
 
       computeBounds();
+      computeMinGap();
       buildGrid();
       selIdx = selectedId != null && idIndex[selectedId] != null ? idIndex[selectedId] : -1;
       hovIdx = hoverId != null && idIndex[hoverId] != null ? idIndex[hoverId] : -1;
@@ -371,6 +387,21 @@
       ovX = (bMinX + bMaxX) / 2;
       ovY = (bMinY + bMaxY) / 2;
       ovZoom = fitZoom(bMinX, bMinY, bMaxX, bMaxY, 1);
+    }
+
+    // A legszűkebb csomópont-pár középpont-távolsága. O(n²), de n ≤ 150 (MAX_VISIBLE),
+    // és csak `setData`-nkor fut — ez néhány tízezer összehasonlítás, nem per-frame.
+    function computeMinGap() {
+      minGapWorld = WORLD_SPAN;
+      var i, k, dx, dy, d2;
+      for (i = 0; i < nCount; i++) {
+        for (k = i + 1; k < nCount; k++) {
+          dx = nx[i] - nx[k]; dy = ny[i] - ny[k];
+          d2 = dx * dx + dy * dy;
+          if (d2 < minGapWorld * minGapWorld) minGapWorld = Math.sqrt(d2);
+        }
+      }
+      if (!(minGapWorld > 0)) minGapWorld = WORLD_SPAN;
     }
 
     // fit-to-bounds: mekkora zoom mellett fér be a téglalap (margóval)
@@ -545,9 +576,7 @@
     function updateVisualParams() {
       var e = smooth01((zoomRatio() - 1) / ZOOM_DETAIL_SPAN);
       P.docAlpha = 0.80 + 0.20 * e;
-      // Áttekintésben 1.0: a modell `r`-je EGY-AZ-EGYBEN px — így a legkisebb
-      // csomópont is a modell minimumát (8 px) kapja, nem annak 62%-át.
-      P.docScale = 1.00 + 0.30 * e;
+      // (A csomópont-méret NEM innen jön: lásd `nodeScreenR` — lineáris a zoomban.)
       P.docLabel = 0.15 + 0.85 * e;
       P.docLabelTop = Math.round(5 + 40 * e);
       // az alapháló áttekintésben is olvasható marad (0,75), közelítve erősödik
@@ -577,15 +606,44 @@
 
     // ---------- projekció ----------
     function zoomFactor() {
-      // az áttekintéshez normalizálva: a modell `r`-je AZ áttekintésben érvényes px-méret,
-      // és szublineárisan nő, hogy közelítve se legyen „bogyó"
-      return Math.pow(Math.max(0.05, zoomRatio()), 0.5);
+      // A modell `r`-je AZ ÁTTEKINTÉSBEN érvényes px-méret, és a zoommal
+      // LINEÁRISAN skálázódik — pontosan úgy, ahogy a távolságok. Így a
+      // csomópont/térköz arány MINDEN zoom-állapotban ugyanaz, tehát ha
+      // áttekintésben nincs átfedés, akkor semelyik zoomon sincs.
+      //
+      // Korábban ez `sqrt(zoomRatio)` volt („közelítve ne legyen bogyó"), a
+      // távolságok viszont lineárisan nőttek: kizoomolva (a tényleges alsó
+      // határ `ovZoom × 0.55`) a körök relatíve felnagyultak, és összeértek.
+      return Math.max(0.05, zoomRatio());
     }
 
+    // A csomópont KIRAJZOLT sugara. Három lépés, ebben a sorrendben:
+    //   1. a modell mérete, lineárisan a zoommal (lásd `zoomFactor`)
+    //   2. kattinthatósági padló (`MIN_NODE_R`), hogy kis panelen se legyen pont
+    //   3. FELSŐ korlát a valódi térköz feléből — ez a garancia: a rajzolt sugár
+    //      soha nem több, mint a legszűkebb csomópont-pár félút-távolsága, így a
+    //      körök nem érhetnek össze. A padló emiatt nem tud átfedést okozni.
+    // A `P.docScale` szándékosan NEM szerepel: az a zoommal 1,0→1,3 között nőtt,
+    // ami megtörte volna a lineáris arányt (közelítve összenyomta a köröket).
     function nodeScreenR(i, scale) {
-      var r = nr[i] * zoomFactor() * P.docScale;
-      // kattinthatósági padló — kis panelen/alacsony súlynál se essen pont-méretűre
-      return r < MIN_NODE_R ? MIN_NODE_R : r;
+      var r = nr[i] * zoomFactor();
+      if (r < MIN_NODE_R) r = MIN_NODE_R;
+      return capScreenR(r);
+    }
+
+    // A legszűkebb csomópont-pár középpont-távolsága KÉPERNYŐ-pixelben.
+    function minGapPx() {
+      return minGapWorld * fitBase * camZ;
+    }
+
+    // A felső korlát külön is kell: a hover/kijelölés NAGYÍTJA a kört, és azt a
+    // nagyítást is le kell vágni, különben épp a kiemelt csomópont érne össze a
+    // szomszédjával. A kiemelés így is egyértelmű marad — gyűrű, glória és szín
+    // jelzi, nem a testméret.
+    function capScreenR(r) {
+      var cap = minGapPx() * 0.5 - NODE_GAP_KEEP;
+      if (cap > 0 && r > cap) r = cap;
+      return r > 0.5 ? r : 0.5;
     }
 
     // ---------- kategória-színezés ----------
@@ -747,7 +805,7 @@
       // A szűrőből kiesett dokumentum NEM tűnik el: halvány ÜRES karika marad
       // belőle. A jelentést nem a szín hordozza, hanem a KITÖLTÉS eltűnése — a
       // kategória-színt sem viszi tovább, így a paletta csak a szűrt halmazt
-      // írja le. A méret marad (az továbbra is a súlyt jelenti).
+      // írja le. A méret változatlan — az minden csomóponton egységes.
       if (outActive && nout[i]) {
         ctx.globalAlpha = Math.min(0.55, a * 0.5);
         ctx.strokeStyle = col.textSubtle;
@@ -760,6 +818,7 @@
 
       if (isHov && !reduced) r *= 1 + 0.09 * pulse * cfg.pulse;
       if (isSel) r *= 1.12;
+      r = capScreenR(r);                      // a nagyítás sem érhet át a szomszédra
 
       // A kitöltés a KATEGÓRIÁ(I)T tükrözi: egy kategória = tömör szín, több
       // kategória = finom átmenet a színei között (sprite). Ha nincs kategória-

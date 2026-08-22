@@ -99,13 +99,33 @@ helyén mock belépés fut (a valódi `loginRedirect()` helye a kódban megjelö
 
 **Kezdőoldal: „Élő Atlasz"** (`home/`) — a szűrős lista helyén kurált **tudás-térkép +
 gyors találati lista**, egyetlen közös kiválasztással. Modulok: `graphModel.js`
-(Tier 0: származtatott gráf **közös kategóriából**, determinisztikus elrendezés —
-a közös-szerző él a `LINK_BY_COAUTHOR` kapcsoló mögött ki van kapcsolva),
-`atlasRenderer.js` (Canvas térkép, semantic zoom L0/L1/L2 crossfade-del,
+(Tier 0: származtatott gráf **közös kategóriából**, kategória-klaszteres
+determinisztikus geometria — a közös-szerző él a `LINK_BY_COAUTHOR` kapcsoló
+mögött ki van kapcsolva), `atlasRenderer.js` (Canvas térkép, semantic zoom L0/L1/L2 crossfade-del,
 kamera-tween, rács hit-test, culling), `selectionStore.js` (egyetlen igazságforrás),
 `atlasMachine.js` (FSM: overview/focused/searching/empty/error), `resultsList.js`
 (`role="listbox"`, FLIP-átrendezés, billentyűzet-navigáció), `atlasView.js` (koreográfia).
 
+- **Egységes méret.** Minden csomópont sugara ugyanaz (`NODE_R`) — a méret nem hordoz
+  jelentést, azt a szín (kategória), a pozíció (klaszter) és az élek adják. A fokszám
+  és az aktivitás csak rangsorol (felirat-prioritás, kuráció). Előbb aktivitásból,
+  majd fokszámból méreteztünk; egyik sem vált be.
+- **Átfedés semmilyen zoomon.** A rajzolt sugár a zoommal LINEÁRISAN skálázódik (mint
+  a távolságok), így a csomópont/térköz arány zoom-független — korábban `sqrt(zoom)`
+  volt, ezért kizoomolva (alsó határ `ovZoom × 0,55`) a körök összeértek. Felső korlát:
+  a rajzolt sugár sosem több a legszűkebb csomópont-pár félút-távolságánál, amit a
+  renderer az adatból MÉR (`computeMinGap`). Így sem a kattinthatósági padló, sem a
+  hover/kijelölés nagyítása nem tud átfedést okozni; mért minimum 3px perem-rés
+  360px–1600px canvas-szélességen, 20–300 doksis korpuszon, a teljes zoom-tartományon.
+- **A kategória adja a helyet.** A dokumentum az *elsődleges* (első) kategóriája
+  klaszterébe kerül, azon belül koncentrikus, egyenletesen osztott gyűrűkre: kis
+  kategória szabályos N-szög, nagyobb szabályos gyűrűs korong. A korongok nem érnek
+  össze, így egy csomópont sem lóg ki a klaszteréből. Nincs erő-szimuláció — a
+  geometria zárt formulából jön, az átfedés-mentesség konstrukció szerint teljesül.
+  Ez szándékos visszafordítása a korábbi „a kategória nem fizikai hely" elvnek:
+  az 50+ doksis korpuszon a kapcsolat-vezérelt erő-elrendezés nem adott klasztert.
+  Következmény: a többkategóriás („híd") doksi is a klaszterén BELÜL áll — a többi
+  kategóriája a színátmenetben, a facetekben és a klaszterek közti élekben látszik.
 - **Soha nincs teljes gráf a képernyőn:** kurálás (≤150 csomópont) + LOD + culling.
 - **Térkép ↔ lista szinkron:** hover és kiválasztás kétirányú, egy store-ból.
 - **A lista az a11y-elsődleges nézet:** nyilak lépnek, Enter kiválaszt (kamera ráközelít),
