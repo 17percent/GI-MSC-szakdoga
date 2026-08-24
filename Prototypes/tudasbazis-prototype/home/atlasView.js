@@ -375,47 +375,16 @@
     var lastView = null;          // { nodes, edges, matchIds }
     var destroyed = false;
 
-    // ---------------- zoom ↔ szűrés összhang ----------------
-    // Amíg a kamera lényegesen közelebb van, mint az áttekintés-illesztés, a
-    // lista a NÉZETBEN LÁTHATÓ dokumentumokra szűkül — pontosan azokra, amiket
-    // a térképen látsz (a `atlasRenderer` csomópont-id-ket jelent, nem
-    // kategóriát: a kategória itt már csak facet). Kizoomoláskor (vissza az
-    // áttekintésre) ez a korlátozás megszűnik — újra minden dokumentum elérhető.
-    var VIEWPORT_ZOOM_THRESHOLD = 1.12;   // az ovZoom hányadában — kis tolerancia a fit-kerekítésre
-    var viewportIds = null;               // null = nincs korlátozás
-    var viewportSet = null;
-
-    function setViewportFilter(ids) {
-      viewportIds = ids;
-      viewportSet = null;
-      if (ids) {
-        viewportSet = {};
-        for (var i = 0; i < ids.length; i++) viewportSet[ids[i]] = true;
-      }
-    }
-
-    function clearViewportFilter() { setViewportFilter(null); }
-
-    // a renderer debounce-olva jelzi, mi látszik a nézetben (kamera mozgás / zoom)
-    function onAtlasViewport(info) {
-      if (!info) return;
-      var next = (info.zoomRatio > VIEWPORT_ZOOM_THRESHOLD) ? info.visibleIds : null;
-      var sameAsBefore =
-        (next === viewportIds) ||
-        (next && viewportIds && next.length === viewportIds.length &&
-          next.every(function (id) { return viewportSet && viewportSet[id]; }));
-      if (sameAsBefore) return;
-      setViewportFilter(next);
-      // Keresés közben a globális találati listát mutatjuk, nem a kamera-nézetet —
-      // ott a viewport-szűrés szünetel (recompute() ezt már figyeli).
-      if (machine.state !== 'searching' && machine.state !== 'empty') recompute();
-    }
-
-    function inViewport(docId) {
-      if (!viewportSet || !model) return true;
-      var nodeId = docToNode(docId);
-      return !!(nodeId && viewportSet[nodeId]);
-    }
+    // ---------------- zoom ↔ lista: NINCS összefüggés ----------------
+    // A lista tartalmát KIZÁRÓLAG a facetek és a keresés határozzák meg — a
+    // kamera állása nem. Korábban rázoomolva a lista a nézetben látható
+    // dokumentumokra szűkült; ez két okból került ki:
+    //   1. minden zoom/pan újraépítette és átrendezte a listát, ami csak zaj volt;
+    //   2. a csomópontra kattintás kamera-tweent indít, a tween utáni szűkítés
+    //      pedig ÚJRAÉPÍTETTE a sorokat — így a kijelölt sorhoz való odagördülés
+    //      elveszett, és a lista nem ott állt, ahol a kiválasztott elem van.
+    // A „mit látsz a térképen" kérdésre továbbra is a halványítás
+    // (`setDimmed` / `setExcluded`) válaszol, nem a lista megkurtítása.
 
     // ambient részecskemező — a BEJELENTKEZŐBŐL újrahasznosított motor
     field = global.createConstellation(fieldCanvas, {
@@ -435,8 +404,8 @@
         intensity: 'balanced',
         reducedMotion: reduced,
         onHover: function (id) { store.setHover(nodeToDoc(id)); },
-        onSelect: onMapSelect,
-        onViewport: onAtlasViewport
+        onSelect: onMapSelect
+        // `onViewport` szándékosan nincs: a lista nem követi a kamerát (lásd fentebb)
       });
     } catch (err) {
       map = null;
@@ -609,13 +578,6 @@
         docIds = facetRes.docIds.slice();
       }
 
-      // Zoom ↔ szűrés összhang: rázoomolva a lista a nézetben látható
-      // DOKUMENTUMOKRA szűkül (pontos csomópont-egyezés, nem kategórián
-      // keresztül); kizoomolva (viewportSet === null) minden, a facetnek
-      // megfelelő dokumentum újra elérhető. Keresésnél a globális találati
-      // lista a mérvadó, a kamera-korlátozás nem érvényesül.
-      if (!q && viewportSet) docIds = docIds.filter(inViewport);
-
       // Aktív szűrő: a teljes halmazt KONTEXTUS-RÉTEGKÉNT húzzuk a nézet alá, és
       // a szűrőn kívüliek listáját átadjuk a rendererrel halványításra. A szűkebb
       // nézet az UNIÓ ELEJÉN van, így a renderer 150-es sapkája sosem tőle vág le.
@@ -715,7 +677,6 @@
 
       if (now === 'overview') {
         emptyEl.hidden = true;
-        clearViewportFilter();            // kizoomolva minden dokumentum újra elérhető
         if (map) map.toOverview({ animate: prev !== 'loading' });
         if (prev === 'loading') playEntrance();
       } else if (now === 'focused') {

@@ -11,6 +11,12 @@
  * hover viszont sosem gördít (különben a sorok a kurzor alól csúsznának el, és a
  * `pointerover` önmagát hajtó hurokba kerülne).
  *
+ * A KIJELÖLÉS gördülése nem egyszeri kísérlet: a szándékot megjegyezzük, és minden
+ * újrafestés után újrapróbáljuk (`requestScrollTo` / `flushPendingScroll`). Erre
+ * azért van szükség, mert a kijelölés ugyanabban a körben újraépítheti a sorokat,
+ * és egy már megtörtént gördülés elveszne — emiatt nem oda állt a lista, ahol a
+ * térképen kiválasztott elem van.
+ *
  * Billentyűzet:
  *   ↑/↓/Home/End — lépés a sorok között (aktív sor + a térképen pulzálás)
  *   Enter/Space  — kiválasztás (a térkép kamerája ráközelít)
@@ -129,6 +135,11 @@
           );
         }
       }
+
+      // A sorok most cserélődtek ki: ha volt elmaradt gördülés-szándék (pl. egy
+      // térkép-kattintás kijelölése, ami épp újraépítette a listát), most van
+      // értelme újrapróbálni.
+      flushPendingScroll();
     }
 
     function setItems(next, meta) {
@@ -161,14 +172,40 @@
 
     // `block: 'nearest'` — csak akkor gördül, ha a sor tényleg kilóg a nézetből,
     // és akkor is a lehető legkevesebbet: a lista nem ugrik feleslegesen.
-    // Megjegyzés: ablakozott listában (`windowed`, 200 tétel felett) a sor lehet,
-    // hogy még nincs kirenderelve — ilyenkor ez no-op. A prototípus korpusza
-    // ennél kisebb; ha a korpusz nő, itt kell a becsült pozícióra ugrás.
     function scrollRowIntoView(id) {
       var el = rowsById[id];
-      if (!el) return;
-      if (reduced) { el.scrollIntoView({ block: 'nearest' }); return; }
+      if (!el) return false;
+      if (reduced) { el.scrollIntoView({ block: 'nearest' }); return true; }
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return true;
+    }
+
+    // A KIJELÖLÉSHEZ való odagördülés nem lehet egyszeri kísérlet: a kijelölés
+    // ugyanabban a körben újraépítheti a listát (a nézet `recompute`-ol, a sorok
+    // kicserélődnek), és akkor egy már megtörtént gördülés elveszik. Ezért a
+    // szándékot MEGJEGYEZZÜK, és minden újrarajzolás után újrapróbáljuk, amíg a
+    // sor tényleg létezik.
+    var pendingScrollId = null;
+
+    function requestScrollTo(id) {
+      pendingScrollId = id || null;
+      flushPendingScroll();
+    }
+
+    function flushPendingScroll() {
+      if (!pendingScrollId) return;
+      var id = pendingScrollId;
+      if (scrollRowIntoView(id)) { pendingScrollId = null; return; }
+      // A sor nincs a DOM-ban. Ha egyáltalán nincs a listában, nincs mit várni.
+      var idx = findIndex(id) - 1;
+      if (idx < 0) { pendingScrollId = null; return; }
+      // Ablakozott listában (200 tétel felett) a sor létezik, csak nincs
+      // kirenderelve: a becsült pozícióra ugrunk, mire a következő festés
+      // kirendereli, és a `paint()` újrahívja ezt a pontos igazításhoz.
+      if (windowed) {
+        var target = idx * ROW_ESTIMATE - (listEl.clientHeight || 0) / 2 + ROW_ESTIMATE / 2;
+        listEl.scrollTop = target > 0 ? target : 0;
+      }
     }
 
     // A LISTÁBÓL induló hover nem gördíthet: a sorok elcsúsznának a kurzor alól,
@@ -285,7 +322,9 @@
       if (s.selectedId && s.selectedId !== prev.selectedId) {
         activeId = s.selectedId;
         applyHighlight(s);
-        scrollRowIntoView(s.selectedId);
+        // Nem közvetlen gördülés: a kijelölés a nézetben újraépítheti a sorokat,
+        // ezért a szándékot jegyezzük meg, és a festés után is érvényesítjük.
+        requestScrollTo(s.selectedId);
       }
       // Térkép-hover → a lista odagördül, hogy a kiemelt sor LÁTHATÓ legyen (eddig
       // csak a kiemelés cserélődött, néma maradt, ha a sor kilógott a nézetből).

@@ -87,9 +87,12 @@
     var reduced = !!options.reducedMotion;
     var onHover = typeof options.onHover === 'function' ? options.onHover : noop;
     var onSelect = typeof options.onSelect === 'function' ? options.onSelect : noop;
-    // A nézetben lévő csomópontokat jelenti a hívónak (a lista ehhez szűkül:
-    // amit a térképen látsz, azt kapod a listában is).
-    var onViewport = typeof options.onViewport === 'function' ? options.onViewport : noop;
+    // A nézetben lévő csomópontokat jelenti a hívónak.
+    // Opcionális: ha nincs feliratkozó, a látható halmaz jelzését KI IS HAGYJUK
+    // (nem csak noop-ra hívjuk) — így kamera-mozgásonként nem épül fel egy
+    // id-lista senkinek. A kezdőoldal ma nem használja: a lista tartalma nem
+    // követi a kamerát.
+    var onViewport = typeof options.onViewport === 'function' ? options.onViewport : null;
 
     function noop() {}
 
@@ -718,15 +721,17 @@
         nvis[i] = (sx > -m && sx < W + m && sy > -m && sy < H + m) ? 1 : 0;
       }
 
-      // A látható halmaz jelzése a hívónak. Per-frame NEM allokálunk: csak egy
-      // egész-szignatúrát számolunk, és eltérés esetén ütemezünk egy (debounce-olt)
-      // visszahívást, ami akkor építi fel az id-listát.
-      var vsig = 0, vcnt = 0;
-      for (i = 0; i < nCount; i++) {
-        if (nvis[i]) { vcnt++; vsig = (vsig * 31 + i + 1) % 2147483647; }
+      // A látható halmaz jelzése a hívónak — csak ha van feliratkozó. Per-frame
+      // NEM allokálunk: egy egész-szignatúrát számolunk, és eltérés esetén
+      // ütemezünk egy (debounce-olt) visszahívást, ami akkor építi fel a listát.
+      if (onViewport) {
+        var vsig = 0, vcnt = 0;
+        for (i = 0; i < nCount; i++) {
+          if (nvis[i]) { vcnt++; vsig = (vsig * 31 + i + 1) % 2147483647; }
+        }
+        vsig = (vsig * 131 + vcnt * 7 + Math.round(zoomRatio() * 20)) % 2147483647;
+        if (vsig !== lastVpSig) { lastVpSig = vsig; scheduleViewport(); }
       }
-      vsig = (vsig * 131 + vcnt * 7 + Math.round(zoomRatio() * 20)) % 2147483647;
-      if (vsig !== lastVpSig) { lastVpSig = vsig; scheduleViewport(); }
 
       // 1) élek — két menet (alap / kiemelt), hogy a strokeStyle ne váltogasson
       ctx.lineWidth = 1;
