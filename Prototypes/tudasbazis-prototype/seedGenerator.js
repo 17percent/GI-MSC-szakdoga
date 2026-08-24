@@ -15,6 +15,12 @@
  * állítható, illetve `?seed=<szám>` URL-paraméterrel felülírható — így egyetlen
  * újratöltéssel teljesen más korpuszon lehet megnézni, hogyan viselkedik a térkép.
  *
+ * MIT tartalmaz a korpusz? A tudástár AI-ESZKÖZÖKET őriz, ezért a generált
+ * dokumentumok is azok: promptok, skillek, rendszerutasítások, sablonok,
+ * guide-ok, best practice-ek, agent-definíciók és kiértékelő készletek. A
+ * kategória tehát a dokumentum FAJTÁJA, nem témakör — egyetlen dimenzió, így a
+ * térkép klaszterei olvashatók: egy klaszter = egy eszközfajta.
+ *
  * A korpusz szerkezete nem uniform-véletlen, hanem TERVEZETT (lásd `CATEGORY_PLAN`):
  * szándékosan van benne nagy és kicsi klaszter, egydokumentumos kategória (izolált
  * csomópont), üres kategória (facet-demó), kategória nélküli doksi („Egyéb"
@@ -133,234 +139,171 @@
     email: 'kata.szabo@kulsos.hu', initials: 'SK', avatar: 4
   };
 
-  // ---------- kategória-terv ----------
+  // ---------- kategória-terv: AI-eszköz FAJTÁK ----------
+  // A tudásbázis AI-eszközöket őriz, ezért a kategória a dokumentum FAJTÁJA
+  // (prompt, skill, rendszerutasítás, sablon, guide, best practice, agent,
+  // kiértékelő készlet) — nem témakör. Egyetlen dimenzió, így a térkép
+  // klaszterei értelmezhetők: egy klaszter = egy eszközfajta.
+  //
   // `weight`  : relatív részesedés a dokumentumokból (0 = sosem kap doksit)
   // `solo`    : pontosan 1 dokumentum — izolált csomópont a térképen
   // `bridge`  : kaphat-e MÁSODIK kategóriaként doksit (a solo/üres nem kaphat,
   //             mert azzal elveszne a demó, amit szemléltet)
+  // `template`: ebben a kategóriában MINDEN dokumentum sablon (`isTemplate`)
   var CATEGORY_PLAN = [
     {
-      name: 'Folyamatok', description: 'Belső folyamatleírások', dir: 'folyamatok',
-      weight: 9, bridge: true,
+      name: 'Promptok', description: 'Újrahasznosítható promptok konkrét feladatokra',
+      dir: 'promptok', weight: 9, bridge: true,
       titles: [
-        'Döntési jegyzőkönyv sablon', 'Incidenskezelési folyamat',
-        'Változáskezelés — jóváhagyási lánc', 'Kódreview folyamat',
-        'Beszerzési kérelem útja', 'Projektindítás — checklist',
-        'Kilépési folyamat (offboarding)', 'Heti státuszriport — mit tartalmazzon',
-        'Eszkalációs szintek és felelősök', 'Dokumentum-életciklus: vázlattól a publikálásig',
-        'Belső auditra való felkészülés', 'Szerződés-jóváhagyás lépései'
+        'Ügyfél-email megválaszolása — alap prompt', 'Jegyzőkönyv-összefoglaló prompt',
+        'Kódreview prompt — biztonsági fókusz', 'Hibajelentés-osztályozó prompt',
+        'Terméktájékoztató szöveg írása', 'SQL-lekérdezés generálása leírásból',
+        'Dokumentum-összefoglaló prompt (hosszú kontextus)',
+        'Fordítási prompt — magyar-angol szakszöveg',
+        'Ügyféli hangnem átírása formálisra', 'Adatkinyerés számlából — strukturált JSON',
+        'Tesztadat-generáló prompt', 'Ütemezett riport szöveges kommentárja',
+        'Panaszlevél kategorizálása és priorizálása', 'Állásinterjú-kérdések generálása'
       ],
-      topics: ['Mikor indul a folyamat?', 'Szereplők és felelősségek', 'Lépések', 'Határidők', 'Kivételek'],
+      topics: ['Cél', 'A prompt szövege', 'Változók', 'Példák (few-shot)', 'Ismert korlátok'],
       lines: [
-        'A folyamat a kérelem beérkezésével indul, a rögzítés a belső portálon történik.',
-        'A jóváhagyást a közvetlen vezető adja meg, hiányában a helyettese.',
-        'Minden lépés nyomot hagy az eseménynaplóban — utólag visszakövethető.',
-        'Két munkanapon belül visszajelzést kell adni a kérelmezőnek.',
-        'Sürgős esetben a folyamat rövidíthető, de a jóváhagyás nem hagyható ki.',
-        'A lezárás után a dokumentumot publikált státuszba kell állítani.'
+        'A prompt egyetlen feladatra való — összetett kérést bontsd lépésekre.',
+        'A változók `{{kapcsos}}` jelöléssel állnak; a behelyettesítés a hívó felelőssége.',
+        'A kimenet formátumát a prompt utolsó bekezdése köti meg — ne írd át mérés nélkül.',
+        'Két-három few-shot példa érdemben javít; öt fölött már romlik a felidézés.',
+        'Hosszú bemenetnél a lényeget a prompt VÉGÉRE tedd — oda figyel jobban a modell.',
+        'Ha a modell adatot talál ki, a bizonytalanság kimondását a rendszerutasítás kérje.'
       ]
     },
     {
-      name: 'DevOps', description: 'Üzemeltetés, CI/CD, infrastruktúra', dir: 'devops',
-      weight: 8, bridge: true,
+      name: 'Skillek', description: 'Csomagolt képességek, amiket az asszisztens előhív',
+      dir: 'skillek', weight: 8, bridge: true,
       titles: [
-        'Deploy folyamat — staging és éles', 'Runbook sablon', 'CI pipeline felépítése',
-        'Kubernetes klaszter — üzemeltetési tudnivalók',
-        'Titkos kulcsok és környezeti változók kezelése', 'Monitorozás és riasztások',
-        'Mentés és visszaállítás', 'Terraform modulok — konvenciók',
-        'Log-gyűjtés és -megőrzés', 'Verziócímkézés és release-kezelés',
-        'Terheléses teszt a staging környezeten'
+        'Számla-feldolgozó skill', 'Ügyfélszolgálati válaszgenerátor skill',
+        'Dokumentum-kivonatoló skill', 'Naptár-egyeztető skill',
+        'Adatbázis-kérdező skill (csak olvasás)', 'Jelentéskészítő skill',
+        'Beszállító-ellenőrző skill', 'Fordító skill — beépített glosszáriummal',
+        'Bejelentés-továbbító skill a fejlesztés felé', 'Onboarding-asszisztens skill',
+        'Szerződés-kivonatoló skill', 'Költségriport-összeállító skill',
+        'E-mail-tisztító skill (idézetek levágása)'
       ],
-      topics: ['Áttekintés', 'Staging', 'Éles környezet', 'Riasztások', 'Rollback'],
+      topics: ['Mit tud?', 'Mikor induljon el?', 'Bemenet és kimenet', 'Eszközök és jogosultságok', 'Kiértékelés'],
       lines: [
-        'A CI a `develop` branchre érkező merge után automatikusan buildel és deployol.',
-        'Éles deployhoz release tag kell (`v1.2.3` formátum) és jóváhagyás a release csatornán.',
-        'Pénteken munkaidőben nem deployolunk — hotfix kivétel, de jóváhagyással.',
-        'A titkos kulcsok kizárólag a secret store-ból jönnek, repóba nem kerülnek.',
-        'Hiba esetén az előző tag újra-deployolható; az adatbázis-migráció visszavonása külön runbook.',
-        'A riasztás akkor jó, ha van mögötte teendő — egyébként zaj, és ki kell kapcsolni.'
+        'A skill LEÍRÁSA dönti el, hogy a modell egyáltalán előhívja-e — ezt írd meg először.',
+        'A leírás mondja meg, MIKOR kell használni, ne csak azt, hogy mit tud.',
+        'Csak olyan eszközt kap, amire tényleg szükség van; írási jog külön indoklással.',
+        'A kimenet sémáját rögzítjük, hogy a hívó oldal ne találgasson.',
+        'Minden skillhez tartozik legalább öt kiértékelő eset, köztük két hibás bemenet.',
+        'Ha a skill külső szolgáltatást hív, a hibát nem nyeljük el — jelezzük.'
       ]
     },
     {
-      name: 'Backend', description: 'Szerveroldali fejlesztés', dir: 'backend',
-      weight: 7, bridge: true,
+      name: 'Guide-ok', description: 'Gyakorlati útmutatók a napi AI-használathoz',
+      dir: 'guide-ok', weight: 6, bridge: true,
       titles: [
-        'Backend kódolási konvenciók', 'REST API tervezési irányelvek',
-        'Hibakezelés és hibaformátum', 'Aszinkron feldolgozás — queue-minták',
-        'Naplózás: mit, mikor, milyen szinten', 'Autentikáció és tokenkezelés',
-        'Migrációk írása és visszavonása', 'Gyorsítótárazási stratégia',
-        'Háttérfeladatok ütemezése', 'Külső integrációk hibatűrése'
+        'Első lépések az asszisztenssel', 'Hogyan írj jó promptot',
+        'Modellválasztás: mikor melyiket?', 'Kontextusablak-kezelés hosszú dokumentumoknál',
+        'Eszközhívás (tool use) alapjai', 'RAG-beállítás a saját tudásbázisra',
+        'Kiértékelés futtatása és olvasása', 'Költségkövetés és tokenszámlálás',
+        'Hibakeresés: miért nem hívta meg a skillt?', 'Strukturált kimenet kérése',
+        'Több lépéses feladatok bontása'
       ],
-      topics: ['Elnevezések', 'Hibakezelés', 'Naplózás', 'Tesztelhetőség', 'Teljesítmény'],
+      topics: ['Kinek szól?', 'Előfeltételek', 'Lépések', 'Gyakori hibák', 'Hol kérj segítséget?'],
       lines: [
-        'Szolgáltatás-osztályok neve `XyzService`, az aszinkron függvények igével kezdődnek.',
-        'Minden végpont egységes hibaformátumot ad vissza; nyelt kivétel (üres `catch`) tilos.',
-        'A naplóba strukturált objektum kerül, nem összefűzött szöveg.',
-        'Külső hívás körül időkorlát és újrapróbálkozás kell, exponenciális várakozással.',
-        'A queue-ra tett feladatnak idempotensnek kell lennie — kétszer is lefuthat.',
-        'A migráció legyen visszavonható, vagy legyen leírva, miért nem az.'
+        'Először a legkisebb működő példát rakd össze, utána bővítsd.',
+        'A modell nem emlékszik az előző beszélgetésre — a kontextust neked kell átadni.',
+        'Ha a válasz elúszik, előbb a promptot egyszerűsítsd, ne a modellt cseréld.',
+        'A tokenszám a költség alapja: a hosszú bemenet drága és lassabb is.',
+        'Kiértékelés nélkül a „jobb lett" állítás csak érzés.',
+        'Kérdés esetén az AI-munkacsoport belső csatornája a legrövidebb út.'
       ]
     },
     {
-      name: 'Frontend', description: 'Kliensoldali fejlesztés', dir: 'frontend',
-      weight: 5, bridge: true,
+      name: 'Sablonok', description: 'Kitöltendő vázak új AI-eszközökhöz',
+      dir: 'sablonok', weight: 5, bridge: true, template: true,
       titles: [
-        'Frontend komponens-katalógus', 'Akadálymentesség — minimumkövetelmények',
-        'Állapotkezelés a kliensen', 'Design tokenek használata a kódban',
-        'Űrlapok és validáció', 'Reszponzív breakpointok',
-        'Betöltési és üres állapotok', 'Ikonok és illusztrációk kezelése'
+        'Prompt-sablon — feladatleírás váz', 'Skill-leírás sablon',
+        'Rendszerutasítás sablon', 'Kiértékelési terv sablon',
+        'AI-használati kérelem sablon', 'Modellváltás — átállási sablon',
+        'Incidensjelentés sablon (hibás AI-kimenet)', 'Adatvédelmi hatásvizsgálat sablon',
+        'Prompt-változásnapló sablon'
       ],
-      topics: ['Gombok', 'Űrlapok', 'Színek és tokenek', 'Fókusz és billentyűzet', 'Állapotok'],
+      topics: ['Mire jó ez a sablon?', 'Kitöltendő részek', 'Példa', 'Ellenőrzőlista'],
       lines: [
-        'Elsődleges akció kitöltött gomb, másodlagos körvonalas, veszélyes művelet megerősítéssel.',
-        'Minden mező alatt fenn van tartva a hibaüzenet helye, hogy a layout ne ugráljon.',
-        'Nyers hex és px nem kerül komponens-CSS-be — minden érték tokenből jön.',
-        'Minden interaktív elemen látható fókuszjelzés kell, egérrel is használható marad.',
-        'A jelentést sosem csak szín hordozza: ikon vagy felirat kíséri.',
-        'Üres állapotban is mondjuk meg, mi a következő lépés — ne csak azt, hogy nincs adat.'
+        'A szögletes zárójeles részek kitöltendők, a többi maradjon változatlan.',
+        'Ha egy szakasz nem értelmezhető, írd be, hogy miért — ne töröld.',
+        'A sablonból készült dokumentum új azonosítót és önálló történetet kap.',
+        'A kitöltött sablont a felelős hagyja jóvá publikálás előtt.',
+        'A sablon maga is verziózott: a belőle készült doksik nem követik automatikusan.'
       ]
     },
     {
-      name: 'HR', description: 'Munkaügyi tudnivalók', dir: 'hr',
-      weight: 5, bridge: true,
+      name: 'Best practice-ek', description: 'Bevált elvek, amiket mindenkitől elvárunk',
+      dir: 'best-practice', weight: 4, bridge: true,
       titles: [
-        'Szabadság igénylése', 'Home office szabályzat', 'Béren kívüli juttatások',
-        'Teljesítményértékelés menete', 'Betegszabadság és táppénz',
-        'Belső képzések és konferenciák', 'Munkaidő-nyilvántartás', 'Ajánlási program'
+        'Prompt-verziózás és -mérés', 'Érzékeny adat kezelése modellhívásnál',
+        'Emberi jóváhagyás — hol kötelező?', 'Kimenetellenőrzés automatizálása',
+        'Hallucináció csökkentése forrásmegjelöléssel', 'Költséghatékony modellhasználat',
+        'Prompt-injekció elleni védekezés'
       ],
-      topics: ['Kinek szól?', 'Igénylés', 'Határidők', 'Jóváhagyás', 'Gyakori kérdések'],
+      topics: ['Az elv', 'Miért?', 'Hogyan alkalmazd?', 'Ellenpélda'],
       lines: [
-        'Az igénylés a HR-portálon indul, papíralapú kérelmet nem fogadunk.',
-        '1–2 nap esetén legalább 3 munkanappal, egy hétnél hosszabb esetén 2 héttel előre.',
-        'A jóváhagyást a közvetlen vezető adja meg a portálon.',
-        'Betegség esetén a jelzés aznap reggel esedékes, az igazolás utólag töltendő fel.',
-        'A juttatási keret naptári évre szól, a fel nem használt rész nem vihető át.',
-        'Kérdés esetén a HR-kapcsolattartó a belső címtárban megtalálható.'
+        'Minden prompt-módosítás mellé tartozik mérés — különben nem tudjuk, javult-e.',
+        'Éles ügyféladat nem kerül kísérleti promptba.',
+        'Ahol a kimenet pénzt vagy jogot érint, ott ember hagyja jóvá.',
+        'A modell kimenetét ADATNAK tekintjük, nem utasításnak.',
+        'Forrásmegjelölés nélküli összefoglaló nem publikálható.',
+        'A drága modellt csak ott használjuk, ahol mérhetően jobb.'
       ]
     },
     {
-      name: 'Onboarding', description: 'Új belépők anyagai', dir: 'onboarding',
-      weight: 4, bridge: true,
+      name: 'Rendszerutasítások', description: 'Az asszisztensek viselkedését rögzítő utasítások',
+      dir: 'rendszerutasitasok', weight: 3, bridge: true,
       titles: [
-        'Első hét — új belépő checklist', 'Fejlesztői környezet beállítása',
-        'Kihez fordulj? — kapcsolattartók', 'Céges eszközök átvétele',
-        'Belső rendszerek és hozzáférések', 'Mentorprogram — mentoroknak',
-        'Első hónap célkitűzései'
+        'Alap rendszerutasítás — belső asszisztens',
+        'Ügyfélkapcsolati asszisztens rendszerutasítása',
+        'Fejlesztői asszisztens rendszerutasítása',
+        'Hangnem és stílus — közös szabályblokk',
+        'Adatkezelési korlátok — kötelező blokk',
+        'Eszkalációs szabályok az asszisztensben'
       ],
-      topics: ['Első nap', 'Első hét', 'Hozzáférések', 'Mentorprogram', 'Hasznos linkek'],
+      topics: ['Szerep', 'Kötelező viselkedés', 'Tilalmak', 'Eszkaláció', 'Verziózás'],
       lines: [
-        'Laptop és jogosultságok átvétele az IT-tól, céges e-mail beállítása.',
-        'VPN kliens telepítése a belső wikiből, kétfaktoros hitelesítés bekapcsolása.',
-        'Bemutatkozó kör a csapatban — a mentor segít az első körben.',
-        'Minden új belépő mellé mentort rendelünk az első hónapra.',
-        'A fejlesztői környezet felállítása után futtasd le a teszteket — ez az első zöld pipa.',
-        'Ha valami nem világos, kérdezz az első héten — később drágább.'
+        'A rendszerutasítás szerepet ad, nem személyiséget — kerüld a jellemrajzot.',
+        'Amit tilos, azt kimondjuk: a hallgatásból a modell engedélyt olvas ki.',
+        'Bizonytalanság esetén a visszakérdezés az elvárt viselkedés.',
+        'Személyes adat nem hagyhatja el a rendszert az utasítás engedélye nélkül.',
+        'Minden módosítás új revizió, indoklással — a hatás legyen visszamérhető.',
+        'Az utasítás szabályt tartalmaz, konkrét ügyféladatot soha.'
       ]
     },
     {
-      name: 'Tesztelés', description: 'Tesztelési gyakorlat és eszközök', dir: 'teszteles',
-      weight: 4, bridge: true,
-      titles: [
-        'Tesztpiramis — mit hol tesztelünk', 'Manuális tesztforgatókönyvek',
-        'E2E tesztek karbantartása', 'Hibajelentés — mit írjunk bele',
-        'Tesztadatok előállítása', 'Regressziós körök a release előtt',
-        'Teljesítménytesztek kiértékelése'
-      ],
-      topics: ['Mit tesztelünk?', 'Eszközök', 'Tesztadatok', 'Hibajelentés', 'Release előtt'],
+      name: 'Agent-definíciók', description: 'Több lépéses, önállóan dolgozó folyamatok',
+      dir: 'agentek', weight: 1, solo: true, bridge: false,
+      titles: ['Jóváhagyási folyamat-agent', 'Riport-összeállító agent', 'Beszerzési asszisztens agent'],
+      topics: ['Cél', 'Lépések', 'Korlátok', 'Felügyelet'],
       lines: [
-        'A gyors, sok egységteszt alá tesszük a lassú, kevés végponti tesztet.',
-        'Az E2E teszt akkor ér valamit, ha stabil — a villogó tesztet javítjuk vagy töröljük.',
-        'A hibajelentés tartalmazza a lépéseket, az elvárt és a tapasztalt viselkedést.',
-        'Tesztadat sosem éles adat — a generált korpusz erre való.',
-        'Release előtt a regressziós kör kötelező, a kihagyást indokolni kell.',
-        'A teljesítménytesztet mindig ugyanazon a környezeten futtatjuk, különben nem összevethető.'
+        'Az agent minden külső hívást naplóz.',
+        'Írási művelet előtt megerősítést kér.',
+        'A lépésszám felső korláttal van megkötve — nem futhat el.',
+        'Hiba esetén megáll, nem próbálkozik tovább vaktában.'
       ]
     },
     {
-      name: 'Biztonság', description: 'Információbiztonság és adatvédelem', dir: 'biztonsag',
-      weight: 3, bridge: true,
-      titles: [
-        'Jelszókezelés és jelszótár', 'Adatvédelmi incidens — első 24 óra',
-        'Jogosultságok felülvizsgálata', 'Phishing — mit tegyél, ha kaptál',
-        'Titkosítás nyugalmi és átvitt adaton', 'Sérülékenység-bejelentés kezelése'
-      ],
-      topics: ['Alapszabályok', 'Bejelentés', 'Első 24 óra', 'Felülvizsgálat', 'Képzés'],
+      name: 'Kiértékelő készletek', description: 'Mérőesetek, amikkel a változást ellenőrizzük',
+      dir: 'kiertekeles', weight: 1, solo: true, bridge: false,
+      titles: ['Ügyfélválasz-kiértékelő készlet', 'Összefoglaló-minőség mérése', 'Regressziós készlet promptváltáshoz'],
+      topics: ['Mit mér?', 'Esetek', 'Pontozás', 'Elfogadási küszöb'],
       lines: [
-        'Jelszó kizárólag jelszókezelőben tárolható, megosztott fiók nem használható.',
-        'Gyanús levelet ne továbbíts — jelentsd a biztonsági csatornán.',
-        'Incidens esetén az első lépés a hatókör megállapítása, nem a javítás.',
-        'A jogosultságokat negyedévente átnézzük, a felesleges hozzáférést visszavonjuk.',
-        'Éles adatot fejlesztői környezetbe másolni tilos.',
-        'A bejelentőt nem érheti hátrány — a hibát megköszönjük.'
-      ]
-    },
-    {
-      name: 'Adatbázis', description: 'Adatmodell, lekérdezések, üzemeltetés', dir: 'adatbazis',
-      weight: 3, bridge: true,
-      titles: [
-        'Séma-konvenciók', 'Indexelési irányelvek', 'Lassú query-k felderítése',
-        'Adatmegőrzési és archiválási szabályok', 'Kapcsolatkezelés és pool-méretezés',
-        'Riportlekérdezések elkülönítése'
-      ],
-      topics: ['Elnevezések', 'Indexek', 'Lekérdezések', 'Archiválás', 'Monitorozás'],
-      lines: [
-        'A táblanevek többes számban, a mezők `snake_case` formában állnak.',
-        'Index csak mért igény alapján kerül fel — a nem használt index is költség.',
-        'A lassú lekérdezéseket a napló alapján hetente átnézzük.',
-        'Az archiválás nem törlés: az adat elérhető marad, csak külön táblában.',
-        'A riportlekérdezések olvasó replikán futnak, nem az elsődlegesen.',
-        'Minden migráció előtt mentés készül, a visszaállítást ki is próbáljuk.'
-      ]
-    },
-    {
-      name: 'Ügyfélszolgálat', description: 'Bejelentések fogadása és kezelése', dir: 'ugyfelszolgalat',
-      weight: 2, bridge: true,
-      titles: [
-        'Hibabejelentés fogadása', 'Válasz-sablonok gyakori kérdésekre',
-        'Eszkaláció a fejlesztés felé', 'SLA-szintek és határidők',
-        'Ügyfél-visszajelzések gyűjtése'
-      ],
-      topics: ['Bejelentés felvétele', 'Osztályozás', 'Eszkaláció', 'Válaszadás', 'Zárás'],
-      lines: [
-        'A bejelentéshez rögzítjük a hatókört: egy ügyfelet érint vagy többet?',
-        'Az első válasz határideje SLA-szinttől függ, de sosem több egy munkanapnál.',
-        'Eszkalálás előtt gyűjtsük össze a reprodukciós lépéseket.',
-        'A sablonválaszt mindig szabjuk az ügyfél kérdésére — vakon ne küldjük ki.',
-        'Zárás előtt kérdezzünk vissza, hogy a megoldás valóban megfelel-e.',
-        'A visszatérő kérdésekből dokumentum lesz, nem újabb sablon.'
-      ]
-    },
-    {
-      name: 'Pénzügy', description: 'Elszámolás, számlázás, büdzsé', dir: 'penzugy',
-      weight: 1, solo: true, bridge: false,
-      titles: ['Költségtérítés elszámolása', 'Számlázási alapfogalmak', 'Éves büdzsé tervezése'],
-      topics: ['Mit lehet elszámolni?', 'Beadás', 'Határidők', 'Kifizetés'],
-      lines: [
-        'Az elszámoláshoz eredeti bizonylat kell, a fotó csak a beadáshoz elég.',
-        'A hónap 5. napjáig beadott elszámolás a következő bérrel érkezik.',
-        'Kérdéses tétel esetén előre egyeztess, ne utólag.',
-        'A keretet meghaladó tétel külön jóváhagyást igényel.'
-      ]
-    },
-    {
-      name: 'Jog és megfelelés', description: 'Szerződések, szabályozói megfelelés', dir: 'jog',
-      weight: 1, solo: true, bridge: false,
-      titles: [
-        'Adatkezelési tájékoztató — belső változat', 'Alvállalkozói szerződések alapjai',
-        'Szerzői jog a dokumentációban'
-      ],
-      topics: ['Mire figyeljünk?', 'Jóváhagyás', 'Megőrzés', 'Kapcsolat'],
-      lines: [
-        'Szerződést csak az arra felhatalmazott személy írhat alá.',
-        'A jogi véleményezés legalább 5 munkanapot igényel.',
-        'Külső féllel megosztott dokumentum előtt titoktartási megállapodás kell.',
-        'A megőrzési idő lejárta után a dokumentum archiválható.'
+        'A készlet a hibás bemeneteket is tartalmazza, nem csak a szépeket.',
+        'A pontozás kritériumai előre rögzítettek.',
+        'Küszöb alatt a változás nem mehet élesbe.',
+        'Minden esethez tartozik elvárt kimenet vagy elfogadási szabály.'
       ]
     },
     {
       // Szándékosan üres: a facet-lista és a jelmagyarázat viselkedését mutatja
       // olyan kategórián, amely egyetlen csomópontot sem színez.
-      name: 'Üres kategória', description: 'Még egy dokumentum sem használja — törölhető/átnevezhető',
+      name: 'MCP-szerverek', description: 'Még egy dokumentum sem használja — törölhető/átnevezhető',
       dir: 'egyeb', weight: 0, bridge: false, titles: [], topics: [], lines: []
     }
   ];
@@ -369,42 +312,50 @@
   var UNCATEGORIZED = {
     dir: 'vegyes',
     titles: [
-      'Ötletek — még nincs helye', 'Kávégép használati útmutató',
-      'Csapatépítő — helyszínjavaslatok', 'Vegyes jegyzetek a hétfői megbeszélésről',
-      'Konferencia-jegyzetek (rendezésre vár)', 'Elnevezési ötletek a új modulhoz',
-      'Olvasmánylista', 'Kísérleti jegyzet — ne hivatkozz rá'
+      'Prompt-kísérletek (rendezésre vár)', 'Ötletek — még nincs helye',
+      'Konferencia-jegyzetek: LLM-ek a gyakorlatban',
+      'Olvasmánylista — modellek és kiértékelés',
+      'Vegyes jegyzetek az AI-munkacsoport üléséről',
+      'Kísérleti jegyzet — ne hivatkozz rá',
+      'Modell-összehasonlítás — nyers jegyzetek',
+      'Elnevezési ötletek az asszisztensnek'
     ],
     topics: ['Jegyzetek', 'Nyitott kérdések', 'Következő lépés'],
     lines: [
       'Ez a jegyzet még nem talált kategóriát — rendezésre vár.',
-      'A pontokat a következő megbeszélésen átnézzük.',
-      'Ha ebből dokumentum lesz, kategóriát is kap.',
+      'A pontokat a következő AI-munkacsoport-ülésen átnézzük.',
+      'Ha ebből dokumentum lesz, kategóriát (eszközfajtát) is kap.',
       'Egyelőre gyűjtés, nem döntés.'
     ]
   };
 
   var SAVE_MESSAGES_FIRST = ['Első vázlat', 'Kezdeti leírás', 'Első verzió', 'Vázlat'];
   var SAVE_MESSAGES_LATER = [
-    'Pontosítás a visszajelzések alapján', 'Elírások javítása', 'Példa hozzáadva',
-    'Átszerkesztett bevezető', 'Elavult rész törölve', 'Hivatkozások frissítve'
+    'Pontosítás a visszajelzések alapján', 'Elírások javítása',
+    'Few-shot példák bővítve', 'Átszerkesztett bevezető',
+    'Elavult rész törölve', 'Kimeneti formátum szigorítva',
+    'Kiértékelés után finomítva', 'Korlátok szakasz hozzáadva'
   ];
 
   var COMMENT_LINES = [
     'Ehhez a részhez jó lenne egy konkrét példa.',
-    'A hivatkozott portál címe megváltozott, frissítsük.',
-    'Szerintem ez a lépés kihagyható, ha már van jóváhagyás.',
-    'Van erre valahol egy ábra? Sokat segítene.',
-    'A határidő itt 3 vagy 5 munkanap? A másik doksi mást ír.',
+    'Hosszabb bemeneten ez a prompt elkezd kitalálni adatot — érdemes mérni.',
+    'A kimeneti sémát rögzítenéd? Most a hívó oldal találgat.',
+    'Van ehhez kiértékelő készlet, vagy csak ránézésre jó?',
+    'A változó neve itt más, mint a sablonban — egységesítsük.',
     'Köszi, ez így sokkal érthetőbb lett!',
-    'Ezt a szakaszt átvenném a sablonba is.',
-    'Kérdés: ez az éles környezetre is vonatkozik?',
+    'Ezt a szakaszt átvenném a rendszerutasításba is.',
+    'Kérdés: ez a drágább modellre is érvényes?',
     'A csapattal átnéztük, részünkről rendben.',
-    'Kicsit hosszú — érdemes lenne kettéválasztani.'
+    'Kicsit hosszú — érdemes lenne kettéválasztani.',
+    'Az utolsó bekezdés ellentmond a best practice-nek, amit a múlt héten írtunk.',
+    'Éles adatot ne tegyünk a példákba, cseréljük műtartalomra.'
   ];
 
   var ARCHIVE_REASONS = [
-    'Elavult a szerverköltözés óta', 'Beolvadt egy másik dokumentumba',
-    'A folyamat megszűnt', 'Duplikátum volt'
+    'Modellváltás után nem érvényes', 'Beolvadt egy másik dokumentumba',
+    'Kiértékelésen alulmaradt', 'Duplikátum volt',
+    'A skill kivezetésre került'
   ];
 
   // ---------- eloszlás: tervből konkrét darabszámok ----------
@@ -496,11 +447,13 @@
   }
 
   var INTROS = [
-    'Ez a dokumentum a téma gyakorlati tudnivalóit gyűjti össze.',
+    'Ez a dokumentum a gyakorlatban bevált változatot rögzíti.',
     'Rövid, működő leírás — ha valami nem stimmel, írj kommentet.',
     'A cél, hogy ezt elolvasva önállóan tudj továbbmenni.',
     'Élő dokumentum: ahogy változik a gyakorlat, itt is frissül.',
-    'Ez a leírás a jelenlegi működést tükrözi, nem a kívánatosat.'
+    'Ez a leírás a jelenlegi működést tükrözi, nem a kívánatosat.',
+    'Használat előtt olvasd el a korlátokat is, ne csak a példát.',
+    'Minden módosítást kiértékelés követ — a mérés nélküli finomítás visszaüt.'
   ];
 
   // ---------- fő generátor ----------
@@ -628,8 +581,15 @@
       for (k = 0; k < versions.length; k++) versions[k].rev = k + 1;
 
       // --- státusz, sablon, archiválás ---
+      // A sablon-jelleg a KATEGÓRIÁBÓL jön (`template: true`), nem érmefeldobásból:
+      // a Sablonok minden tagja sablon. Emellett a promptok és rendszerutasítások
+      // egy kis része paraméterezett váz, ezért az is sablonnak számít — így a
+      // „Sablon" facet nem pontosan ugyanazt adja, mint a Sablonok kategória.
+      // (Korábban 8% véletlen doksi kapott sablon-jelleget, és a címéhez
+      // hozzáfűztük a „sablon" szót — ebből jöttek a „Kódreview folyamat sablon"
+      // típusú elnevezések.)
       var status = rng.weighted(STATUS_WEIGHTS);
-      var isTemplate = rng.chance(0.08);
+      var isTemplate = !!d.plan.template || (d.plan.bridge && rng.chance(0.06));
       if (isTemplate) status = 'publikált';                    // sablon nem marad vázlatban
       var archived = rng.chance(0.05);
       var deletedAt = archived ? now - rng.between(1, 30) * DAY : null;
@@ -638,7 +598,7 @@
       docs.push({
         id: docId,
         repoPath: dirName + '/' + slug(d.title) + '.md',
-        title: isTemplate && !/sablon/i.test(d.title) ? d.title + ' sablon' : d.title,
+        title: d.title,
         status: status,
         ownerId: owner.id,
         iteration: versions.length,

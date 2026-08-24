@@ -151,12 +151,24 @@ Az app-váz **egyszer épül fel és megmarad** (`ensureShell`), így a kedvence
 **Seed: generált, nem hardkódolt.** Kézzel kiírt dummy dokumentum nincs — a korpuszt
 a `seedGenerator.js` állítja elő induláskor, a `data.js` már csak belépési pont.
 A generátor **determinisztikus** (seed-elt PRNG, nincs `Math.random`), mert az Atlasz
-elrendezése is az: ugyanaz a seed → ugyanaz a térkép újratöltés után. A szerkezet
-nem uniform-véletlen, hanem tervezett (`CATEGORY_PLAN`): van nagy és kicsi klaszter,
-egydokumentumos kategória (izolált csomópont), üres kategória (facet-demó), kategória
-nélküli doksi („Egyéb" gyűjtő) és több kategóriás „híd" dokumentum. Hangolás:
+elrendezése is az: ugyanaz a seed → ugyanaz a térkép újratöltés után. Hangolás:
 `SEED_CONFIG` a `data.js`-ben, illetve `?seed=<szám>` és `?docs=<szám>` URL-paraméter
 — utóbbi a ≤150 csomópontos sapka próbájához is jó.
+
+**Mit tartalmaz a korpusz?** A tudástár **AI-eszközöket** őriz, ezért a generált
+dokumentumok is azok: promptok, skillek, rendszerutasítások, sablonok, guide-ok,
+best practice-ek, agent-definíciók és kiértékelő készletek. A **kategória tehát a
+dokumentum FAJTÁJA**, nem témakör — egyetlen dimenzió, így a térkép klaszterei
+olvashatók: egy klaszter = egy eszközfajta. A sablon-jelleg is ebből jön
+(`template: true` a Sablonok kategórián), nem érmefeldobásból; emellett a promptok
+kis része paraméterezett váz, hogy a „Sablon" facet ne pontosan a Sablonok
+kategóriát adja.
+
+A szerkezet nem uniform-véletlen, hanem tervezett (`CATEGORY_PLAN`): van nagy és
+kicsi klaszter, egydokumentumos kategória (Agent-definíciók, Kiértékelő készletek →
+izolált csomópont), üres kategória (MCP-szerverek → facet-demó), kategória nélküli
+doksi („Egyéb" gyűjtő) és több kategóriás „híd" dokumentum. A véletlen csak a
+részleteket adja: melyik cím hova, ki írta, mikor, milyen státusszal.
 
 **Ismert kompromisszumok:**
 - A soron belüli ikongombok (kedvenc, megnyitás) `tabindex="-1"`-esek, mert egy
