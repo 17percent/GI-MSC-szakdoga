@@ -324,7 +324,7 @@ footer p.note{color:var(--text-subtle);font-size:var(--text-sm);margin-top:var(-
         <span class="chip">React · Vite</span>
         <span class="chip">Fastify · TypeScript</span>
         <span class="chip">PostgreSQL · Drizzle</span>
-        <span class="chip">Git — kettős remote</span>
+        <span class="chip">PostgreSQL — revíziótörténet</span>
         <span class="chip">Docker Compose</span>
         <span class="chip">OIDC: Google → Entra ID</span>
       </div>
@@ -409,14 +409,14 @@ footer p.note{color:var(--text-subtle);font-size:var(--text-sm);margin-top:var(-
       <p class="eyebrow">01 · Gyökerek</p>
       <h2>Adat és architektúra alapjai</h2>
       <p class="lead">
-        A rendszer alapja a tárolási réteg: A source-of-truth a Git repository, amely a markdown fájlokat tartalmazza.
-        A backend a Git repository-t indexeli, és a felhasználói felület számára egy REST API-n keresztül elérhetővé teszi a tartalmat.
-        A felhasználói felület egy React SPA, amely a REST API-t használja a tartalom megjelenítésére.
+        A rendszer alapja a tárolási réteg: <strong>egyetlen</strong> adatréteg, a PostgreSQL — nincs külön repo és külön index.
+        A tartalom, a teljes revíziótörténet és a keresőindex is közvetlenül az adatbázisban él, ugyanabban a tranzakcióban frissülve.
+        A backend ezt egy REST API-n keresztül teszi elérhetővé a felhasználói felület — egy React SPA — számára.
       </p>
     </div>
 
     <figure class="diagram" style="margin-bottom:var(--space-10);">
-      <svg viewBox="0 0 860 400" width="100%" role="img" aria-label="Architektúra-diagram">
+      <svg viewBox="0 0 860 340" width="100%" role="img" aria-label="Architektúra-diagram">
         <defs>
           <marker id="arrowG" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
             <path d="M0,0 L6,3 L0,6 Z" fill="var(--border-strong)"/>
@@ -437,24 +437,14 @@ footer p.note{color:var(--text-subtle);font-size:var(--text-sm);margin-top:var(-
         <!-- Backend -->
         <rect x="270" y="176" width="320" height="60" rx="10" fill="var(--primary-soft)" stroke="var(--primary)"/>
         <text x="430" y="200" text-anchor="middle" style="fill:var(--text);font:600 13px var(--font-body);">Backend API — Fastify (TypeScript)</text>
-        <text x="430" y="220" text-anchor="middle" style="fill:var(--text-muted);font:10px var(--font-mono);">pg-boss worker queue · GitService · lock · audit</text>
+        <text x="430" y="220" text-anchor="middle" style="fill:var(--text-muted);font:10px var(--font-mono);">lock · audit · diff-számítás (mentés = DB-tranzakció)</text>
 
-        <!-- Local clone <-> remote -->
-        <path d="M300,236 L170,270" stroke="var(--border-strong)" stroke-width="1.4" marker-end="url(#arrowG)"/>
-        <rect x="30" y="272" width="220" height="52" rx="10" fill="var(--surface)" stroke="var(--border-strong)"/>
-        <text x="140" y="294" text-anchor="middle" style="fill:var(--text);font:600 12px var(--font-body);">Lokális Git clone</text>
-        <text x="140" y="310" text-anchor="middle" style="fill:var(--text-muted);font:10px var(--font-mono);">tartós volume · git log/diff/show</text>
-        <path d="M140,324 L140,352" stroke="var(--border-strong)" stroke-width="1.4" marker-end="url(#arrowG)"/>
-        <text x="180" y="342" style="fill:var(--text-subtle);font:9px var(--font-mono);">SSH push (queue)</text>
-        <rect x="20" y="354" width="240" height="42" rx="10" fill="var(--surface-sunken)" stroke="var(--border)"/>
-        <text x="140" y="380" text-anchor="middle" style="fill:var(--text);font:600 11px var(--font-body);">Remote repo (forrásigazság)</text>
-
-        <!-- Postgres -->
-        <path d="M470,236 L470,270" stroke="var(--border-strong)" stroke-width="1.4" marker-end="url(#arrowG)"/>
-        <rect x="340" y="272" width="260" height="66" rx="10" fill="var(--surface)" stroke="var(--border-strong)"/>
-        <text x="470" y="296" text-anchor="middle" style="fill:var(--text);font:600 12px var(--font-body);">PostgreSQL</text>
-        <text x="470" y="313" text-anchor="middle" style="fill:var(--text-muted);font:10px var(--font-mono);">index (eldobható) + events/comments/</text>
-        <text x="470" y="327" text-anchor="middle" style="fill:var(--text-muted);font:10px var(--font-mono);">favorites/allowlist (elsődleges!)</text>
+        <!-- Postgres: egyetlen adatréteg -->
+        <path d="M430,236 L430,262" stroke="var(--border-strong)" stroke-width="1.4" marker-end="url(#arrowG)"/>
+        <rect x="230" y="264" width="400" height="70" rx="10" fill="var(--surface)" stroke="var(--border-strong)" stroke-width="1.6"/>
+        <text x="430" y="288" text-anchor="middle" style="fill:var(--text);font:600 13px var(--font-body);">PostgreSQL — egyetlen adatréteg</text>
+        <text x="430" y="305" text-anchor="middle" style="fill:var(--text-muted);font:10px var(--font-mono);">documents + document_revisions (revíziótörténet)</text>
+        <text x="430" y="319" text-anchor="middle" style="fill:var(--text-muted);font:10px var(--font-mono);">+ generált tsvector-index + events/comments/favorites/allowlist</text>
 
         <!-- OIDC -->
         <path d="M590,206 L680,206" stroke="var(--border-strong)" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#arrowG)"/>
@@ -462,17 +452,15 @@ footer p.note{color:var(--text-subtle);font-size:var(--text-sm);margin-top:var(-
         <text x="767" y="202" text-anchor="middle" style="fill:var(--text);font:600 11px var(--font-body);">OIDC szolgáltató</text>
         <text x="767" y="218" text-anchor="middle" style="fill:var(--text-muted);font:10px var(--font-mono);">dev: Google · éles: Entra ID</text>
       </svg>
-      <figcaption>1. ábra — a rendszer réteg-architektúrája: böngésző → SPA → backend, amely a Git-et és a Postgrest is önállóan kezeli.</figcaption>
+      <figcaption>1. ábra — a rendszer réteg-architektúrája: böngésző → SPA → backend → PostgreSQL. Nincs külön repo és külön index — a tartalom, a revíziótörténet és a keresőindex egyetlen adatrétegben él.</figcaption>
     </figure>
 
     <div class="table-wrap" style="margin-bottom:var(--space-10);">
       <table>
         <thead><tr><th>Réteg</th><th>Feladata</th></tr></thead>
         <tbody>
-          <tr><td>Lokális Git clone</td><td>A tudásanyagok munkapéldánya; minden olvasás (történet, diff, korábbi verzió) helyben, API-hívás nélkül.</td></tr>
-          <tr><td>Remote repo</td><td>Forrásigazság + tartalmi backup. Fejlesztésben GitHub, élesben Azure Repos.</td></tr>
-          <tr><td>PostgreSQL</td><td>Újraépíthető keresőindex + elsődleges adatok: audit-események, kommentek, allowlist, lockok.</td></tr>
-          <tr><td>Backend API</td><td>Minden írás egyetlen kapuja; commit a felhasználó nevében; Git-műveletek sorosítása; eseménynaplózás.</td></tr>
+          <tr><td>PostgreSQL</td><td>Egyetlen adatréteg: tartalom + teljes revíziótörténet + generált keresőindex + audit-események, kommentek, allowlist, lockok — mind elsődleges, mentendő adat.</td></tr>
+          <tr><td>Backend API</td><td>Minden írás egyetlen kapuja; egy DB-tranzakcióban ír revíziót; lock-kezelés; eseménynaplózás; diff-számítás alkalmazásszinten.</td></tr>
           <tr><td>Frontend</td><td>Szerkesztés, böngészés, keresés, kommentfolyam, diff-megjelenítés.</td></tr>
           <tr><td>OIDC szolgáltató</td><td>Csak autentikáció — a jelszó- és identitáskezelés kiszervezve.</td></tr>
         </tbody>
@@ -481,9 +469,10 @@ footer p.note{color:var(--text-subtle);font-size:var(--text-sm);margin-top:var(-
 
     <h3 style="font:var(--weight-semibold) var(--text-xl)/1.3 var(--font-body);margin-bottom:var(--space-4);">Adatmodell — mi mentendő, mi épül újra?</h3>
     <div class="grid grid-3" style="margin-bottom:var(--space-10);">
-      <div class="card"><span class="card-badge badge badge--info">vegyes</span><h3><span class="tag">documents</span></h3><p>Cím, státusz, tulajdonos, is_template, utolsó commit hash, tsvector-index. A szöveg Git-ben, az index Postgresben él.</p></div>
-      <div class="card"><span class="card-badge badge badge--danger">elsődleges</span><h3><span class="tag">categories</span></h3><p>Kategória mint entitás; az üres (még nem használt) kategória csak itt él — nem épül vissza a repóból.</p></div>
-      <div class="card"><span class="card-badge badge badge--success">újraépíthető</span><h3><span class="tag">document_categories</span></h3><p>Dokumentum↔kategória kapcsolótábla — a frontmatter kategórianév-listájából reindexeléskor visszaépül.</p></div>
+      <div class="card"><span class="card-badge badge badge--danger">elsődleges</span><h3><span class="tag">documents</span></h3><p>Cím, státusz, tulajdonos, is_template, jelenlegi tartalom, generált <span class="tag">search_vector</span> (tsvector) — minden egy helyen, egy tranzakcióban frissül.</p></div>
+      <div class="card"><span class="card-badge badge badge--danger">elsődleges</span><h3><span class="tag">document_revisions</span></h3><p>Teljes szövegű pillanatkép mentésenként — a korábbi Git-történet helyettesítője; szerző, időbélyeg, iteration-szám.</p></div>
+      <div class="card"><span class="card-badge badge badge--danger">elsődleges</span><h3><span class="tag">categories</span></h3><p>Kategória mint entitás; az üres (még nem használt) kategória csak itt él.</p></div>
+      <div class="card"><span class="card-badge badge badge--danger">elsődleges</span><h3><span class="tag">document_categories</span></h3><p>Dokumentum↔kategória kapcsolótábla — tisztán relációs adat, nincs második forrás, amivel szinkronban kellene tartani.</p></div>
       <div class="card"><span class="card-badge badge badge--danger">elsődleges</span><h3><span class="tag">favorites</span></h3><p>Felhasználó↔dokumentum, privát kedvencek. Az első valódi, kizárólag per-user elsődleges adat.</p></div>
       <div class="card"><span class="card-badge badge badge--danger">elsődleges</span><h3><span class="tag">events</span></h3><p>A teljes auditnyom: ki, mit, mikor — ebből épül a rendszerüzenet-folyam és a globális audit-nézet.</p></div>
       <div class="card"><span class="card-badge badge badge--danger">elsődleges</span><h3><span class="tag">comments</span></h3><p>Szerző, tartalom, szerkesztve-jelölés, soft delete jelölés; a rendszerüzenetek az events-ből vetítve.</p></div>
@@ -495,38 +484,25 @@ footer p.note{color:var(--text-subtle);font-size:var(--text-sm);margin-top:var(-
     <h3 style="font:var(--weight-semibold) var(--text-xl)/1.3 var(--font-body);margin-bottom:var(--space-4);">Tárolási döntések</h3>
     <div class="acc">
       <details class="acc-item" open>
-        <summary>Git a forrásigazság, Postgres az index<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+        <summary>PostgreSQL — tartalom, revíziótörténet és index egyben<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
         <div class="acc-body">
-          A Git ingyen adja a verziótörténetet, a diffet, a visszaállítást és a fájlrendszer-szintű
-          hordozhatóságot (a teljes tudásbázis egy clone-nal menthető). A Postgres a keresés és a
-          metaadat-lekérdezések gyengeségét pótolja. Mérlegelt alternatívák: tisztán PostgreSQL;
-          hálózati meghajtó / Obsidian vault; kész platform (Outline, Wiki.js).
-          <div class="price">Ár: <strong>két mozgó alkatrész</strong> — a commit ↔ index varratot kezelni kell.</div>
+          A tartalom és a teljes revíziótörténet közvetlenül a PostgreSQL-ben él — nincs külön forrás
+          (repo) és külön index, tehát nincs a kettő közti varrat sem. A diffet és a visszaállítást
+          alkalmazásszintű logika adja (két revízió-pillanatkép összevetése). Korábban mérlegelt és
+          elvetett út: Git (source of truth) + Postgres index.
+          <div class="price">Ár: a teljes revíziótörténet (minden mentés teljes szövegű pillanatkép) a mentésszámmal arányosan növeli az adatbázis méretét — becslés ajánlott.</div>
         </div>
       </details>
       <details class="acc-item">
-        <summary>A Postgres index eldobható — a Postgres nem<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+        <summary>Generált keresőindex — nincs külön konzisztencia-varrat<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
         <div class="acc-body">
-          Mentési sorrend: Git commit → indexfrissítés. Ha az indexelés hibázik, a mentés attól még
-          sikeres; automatikus reindex kijavítja. Az eldobhatóság <strong>kizárólag</strong> az indexelt
-          mezőkre igaz — az <span class="tag">events</span>, <span class="tag">comments</span> és
-          <span class="tag">allowlist</span> táblák elsődleges adatok, kötelező pg_dump-pal mentve.
+          A <span class="tag">search_vector</span> (tsvector, magyar konfiguráció) generált oszlopként
+          (<span class="tag">GENERATED ALWAYS AS … STORED</span>) él, a tartalommal egy tranzakcióban
+          frissül — nincs mit reindex-elni, nincs mit konzisztencia-ellenőrizni. Minden adat (a tartalom
+          is) elsődleges, kötelező pg_dump-pal mentve.
           <ul>
-            <li>Automatizált konzisztencia-őr: commit hash összevetés, eltérésnél automatikus reindex.</li>
             <li>Ütemezett napi pg_dump, külön tárolóra, dokumentált visszaállítási eljárással.</li>
-          </ul>
-        </div>
-      </details>
-      <details class="acc-item">
-        <summary>Lokális clone + git protokoll <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
-        <div class="acc-body">
-          Minden olvasás (történet, diff, korábbi verzió) lokális, ezredmásodperces
-          <span class="tag">git log/diff/show</span> — nulla hálózati hívás, nulla rate limit.
-          Egyben ez adja a provider-függetlenséget: GitHub → Azure Repos átállás csupán remote URL +
-          kulcs csere.
-          <ul>
-            <li>Sorosítás pg-boss worker queue-n keresztül — konkurens <span class="tag">index.lock</span> ütközés kizárva.</li>
-            <li>Push retry exponenciális visszavárakozással; lemaradás-monitoring riasztással.</li>
+            <li>Mivel a pg_dump immár az egyetlen backup-mechanizmus, WAL-archiválás / point-in-time recovery mérlegelendő élesben.</li>
           </ul>
         </div>
       </details>
@@ -542,15 +518,15 @@ footer p.note{color:var(--text-subtle);font-size:var(--text-sm);margin-top:var(-
       <h2>Backend — a rendszer gerince</h2>
       <p class="lead">
         Végponttól végpontig TypeScript, séma-vezérelt API, és egyetlen kapu minden íráshoz —
-        a Fastify-backend fogja össze a Git-műveleteket, a keresőindexet és az auditnyomot.
+        a Fastify-backend egyetlen DB-tranzakcióban ír revíziót, tartja karban a keresőindexet és az auditnyomot.
       </p>
     </div>
 
     <div class="grid grid-4" style="margin-bottom:var(--space-10);">
       <div class="card"><h3>Fastify · TypeScript</h3><p>Könnyű, séma-vezérelt keretrendszer; a JSON Schema validáció az API-kontraktus egyetlen forrása.</p></div>
       <div class="card"><h3>Drizzle ORM</h3><p>Típusos query builder + generált migrációk; a keresési infrastruktúra kézzel írt SQL-migrációként él mellette.</p></div>
-      <div class="card"><h3>pg-boss queue</h3><p>A meglévő PostgreSQL-re épülő worker queue — nincs új üzemeltetendő alkatrész (nincs Redis).</p></div>
-      <div class="card"><h3>simple-git · GitService</h3><p>Saját szerviz-absztrakció mögé rejtett natív git CLI-hívás — egy helyen cserélhető, ha kell.</p></div>
+      <div class="card"><h3>document_revisions</h3><p>Teljes szövegű pillanatkép mentésenként — a revíziótörténet és a diff-alap, a korábbi Git-történet helyén.</p></div>
+      <div class="card"><h3>Nincs worker queue</h3><p>A mentés egyetlen ACID-tranzakció; a Postgres natívan kezeli a konkurens írásokat — nincs új üzemeltetendő alkatrész.</p></div>
     </div>
 
     <h3 style="font:var(--weight-semibold) var(--text-xl)/1.3 var(--font-body);margin-bottom:var(--space-4);">Döntési csoportok</h3>
@@ -559,10 +535,9 @@ footer p.note{color:var(--text-subtle);font-size:var(--text-sm);margin-top:var(-
         <summary>Hitelesítés &amp; hozzáférés <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
         <div class="acc-body">
           <ul>
-            <li><strong>SSH kulcs, provider-agnosztikusan:</strong> a backend deploy key/service-account kulccsal hitelesít — GitHubon és Azure Reposon azonos mechanizmus.</li>
             <li><strong>Cserélhető OIDC réteg:</strong> fejlesztésben Google, élesben Microsoft Entra ID; az allowlist-tagság minden kérésnél ellenőrzött, nem csak beléptetéskor.</li>
             <li><strong>Jogosultságkezelés és review:</strong> a korábban tervezett, teljesen nyitott hozzáférés elvét felülírtuk — a rendszerben szerepkör-alapú jogosultságkezelés és egy jóváhagyási (review) lépés is lesz. A pontos szerepkör- és workflow-modell kidolgozása folyamatban.</li>
-            <li><strong>Secret-kezelés:</strong> SSH kulcs és minden secret Docker Compose secrets-ként, sosem repóban; környezetenként külön kulcspár, dokumentált rotációval.</li>
+            <li><strong>Secret-kezelés:</strong> az OIDC client secret és a DB-jelszó Docker Compose secrets-ként, sosem repóban vagy image-ben; a Git-alapú tárolás elhagyásával nincs többé SSH-kulcs, amit külön rotálni kellene.</li>
           </ul>
         </div>
       </details>
@@ -580,7 +555,7 @@ footer p.note{color:var(--text-subtle);font-size:var(--text-sm);margin-top:var(-
         <summary>Tartalom-modell<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
         <div class="acc-body">
           <ul>
-            <li><strong>Csak szöveg a repóban:</strong> a statikus képek alkalmazásszintű, mountolt assets mappából jelennek meg — nincs képfeltöltés.</li>
+            <li><strong>Csak szöveg a Postgresben:</strong> a statikus képek alkalmazásszintű, mountolt assets mappából jelennek meg (nem a DB-ben, nagy bináris blobok elkerülése) — nincs képfeltöltés.</li>
             <li><strong>@uiw/react-md-editor + rehype-sanitize:</strong> a nyers HTML és a külső kép-URL kizárva; szerkesztő és olvasó nézet azonos render-pipeline-t használ.</li>
             <li><strong>Sablon = tudásanyag:</strong> „létrehozás forrásból" egységes művelet üres canvasból, sablonból vagy duplikálással — a származás <span class="tag">duplicated_from</span> eseményben nyomon követve.</li>
             <li><strong>Lapos kategória-rendszer:</strong> egy dokumentum több kategóriába tartozhat; használatban lévő kategória nem törölhető/nevezhető át.</li>
@@ -593,7 +568,7 @@ footer p.note{color:var(--text-subtle);font-size:var(--text-sm);margin-top:var(-
           <ul>
             <li>REST <span class="tag">/api/v1</span>, httpOnly cookie-session + CSRF-token a mutáló kéréseken.</li>
             <li>Hibaformátum: RFC 9457 Problem Details + stabil, gépi hibakód.</li>
-            <li>Mentés: a lokális commit szinkron visszaigazolt, a push aszinkron retry-jal fut; kötelező <span class="tag">baseCommitHash</span> optimista ellenőrzés a lock mellett második védvonalként.</li>
+            <li>Mentés: egyetlen szinkron DB-tranzakció (200 + új <span class="tag">revisionId</span>); kötelező <span class="tag">baseRevisionId</span> optimista ellenőrzés a lock mellett második védvonalként.</li>
             <li>Code-first kontraktus: az OpenAPI a Fastify JSON Schema-ból generálódik — validálás és dokumentáció nem csúszhat szét.</li>
           </ul>
         </div>
@@ -603,8 +578,8 @@ footer p.note{color:var(--text-subtle);font-size:var(--text-sm);margin-top:var(-
         <div class="acc-body">
           A fejlesztés jól elhatárolt munkacsomagokban halad, négy elv szerint:
           <ul>
-            <li><strong>Kockázat-előrehozás:</strong> a Git-kezelő szolgáltatás és a háttérfeldolgozó sor közvetlenül a séma után épül — minden funkciós csomag előtt tisztázza a legkockázatosabb alkatrészt.</li>
-            <li><strong>Gerinc először:</strong> a korai szakasz végén már végigjátszható alapmag áll rendelkezésre (login → létrehozás → mentés=commit); a további funkciók erre rakódnak, egymástól függetlenül.</li>
+            <li><strong>Kockázat-előrehozás:</strong> a korábban legkockázatosabbnak jelölt Git-írási alrendszer megszűnt; a helyette előrehozott elem a keresőindex (magyar tsvector, pg_trgm) és a diff-motor, közvetlenül a séma után.</li>
+            <li><strong>Gerinc először:</strong> a korai szakasz végén már végigjátszható alapmag áll rendelkezésre (login → létrehozás → mentés = DB-tranzakció); a további funkciók erre rakódnak, egymástól függetlenül.</li>
             <li><strong>Hátulról védett demó-érték:</strong> határidő-nyomásnál a csomagok hátulról előre esnek ki, elsőként az export.</li>
             <li><strong>Csomag-zárási fegyelem:</strong> minden csomag CI-zöld tesztekkel zárul; új igény csak a döntési naplón át kerülhet be.</li>
           </ul>
@@ -614,7 +589,7 @@ footer p.note{color:var(--text-subtle);font-size:var(--text-sm);margin-top:var(-
 
     <div class="two-col">
       <div>
-        <h3 style="font:var(--weight-semibold) var(--text-xl)/1.3 var(--font-body);margin-bottom:var(--space-4);">MVP — 13 pont</h3>
+        <h3 style="font:var(--weight-semibold) var(--text-xl)/1.3 var(--font-body);margin-bottom:var(--space-4);">MVP — 12 pont</h3>
         <ul class="checklist">
           <li><span class="num">01</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Google OIDC login + e-mail allowlist</li>
           <li><span class="num">02</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Dokumentum CRUD, „létrehozás forrásból" (canvas / sablon / duplikálás)</li>
@@ -622,21 +597,21 @@ footer p.note{color:var(--text-subtle);font-size:var(--text-sm);margin-top:var(-
           <li><span class="num">04</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Teljes szövegű keresés (magyar) + kategória/státusz/kedvenc szűrés</li>
           <li><span class="num">05</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Lock heartbeat-tel</li>
           <li><span class="num">06</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Eseménynaplózás + kommentfolyam auditnyommal</li>
-          <li><span class="num">07</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Reindex parancs + automatizált konzisztencia-ellenőrzés</li>
-          <li><span class="num">08</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Archívum + visszaállítás felület</li>
-          <li><span class="num">09</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Postgres backup (ütemezett pg_dump)</li>
-          <li><span class="num">10</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Kategóriakezelés (CRUD, védelmi szabályokkal)</li>
-          <li><span class="num">11</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Kedvencek — privát megjelölés és szűrés</li>
-          <li><span class="num">12</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Vágólapra másolás + nyers .md letöltés</li>
-          <li class="deferred"><span class="num">13</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Export .pdf/.docx (pandoc) — <em>hátrasorolt, elsőként kieső</em></li>
+          <li><span class="num">07</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Archívum + visszaállítás felület</li>
+          <li><span class="num">08</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Postgres backup (ütemezett pg_dump — az egyetlen backup-mechanizmus)</li>
+          <li><span class="num">09</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Kategóriakezelés (CRUD, védelmi szabályokkal)</li>
+          <li><span class="num">10</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Kedvencek — privát megjelölés és szűrés</li>
+          <li><span class="num">11</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Vágólapra másolás + nyers .md letöltés</li>
+          <li class="deferred"><span class="num">12</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Export .pdf/.docx (pandoc) — <em>hátrasorolt, elsőként kieső</em></li>
         </ul>
+        <p style="color:var(--text-subtle);font-size:var(--text-xs);margin-top:var(--space-3);">A korábbi „reindex + konzisztencia-ellenőrzés" tétel törölve — tárgytalan, mert nincs külön index-forrás a Postgres-only architektúrában.</p>
       </div>
       <div>
         <h3 style="font:var(--weight-semibold) var(--text-xl)/1.3 var(--font-body);margin-bottom:var(--space-4);">Vállalt kockázatok</h3>
         <ul style="display:flex;flex-direction:column;gap:var(--space-3);">
           <li class="card" style="padding:var(--space-4);"><p style="color:var(--text);font-size:var(--text-sm);">A pontos jogosultsági szerepkör- és jóváhagyási (review) modell kidolgozása folyamatban.</p></li>
           <li class="card" style="padding:var(--space-4);"><p style="color:var(--text);font-size:var(--text-sm);">Az audit megbízhatósági gyökere az alkalmazás-backend maga — kriptográfiai kötés nélkül.</p></li>
-          <li class="card" style="padding:var(--space-4);"><p style="color:var(--text);font-size:var(--text-sm);">A vészhelyzeti elérés (clone+Obsidian) a szöveget adja, a képeket nem - ez még tervezés alatt.</p></li>
+          <li class="card" style="padding:var(--space-4);"><p style="color:var(--text);font-size:var(--text-sm);">Nincs offline/klónozható vészhelyzeti olvasási mód (a Postgres-only pivot elhozta ezt a cserét); teljes leállásnál a pg_dump backup és a szolgáltatás-újraindítás az egyetlen helyreállítási út.</p></li>
           <li class="card" style="padding:var(--space-4);"><p style="color:var(--text);font-size:var(--text-sm);">Egyszemélyes fejlesztés és üzemeltetés a bevezetésig. </p></li>
         </ul>
       </div>
@@ -723,7 +698,7 @@ footer p.note{color:var(--text-subtle);font-size:var(--text-sm);margin-top:var(-
           <span class="badge badge--info">review</span>
           <span class="badge badge--warning">tesztelt</span>
           <span class="badge badge--success">publikált</span>
-          <span class="tag">git · commit a1b2c3</span>
+          <span class="tag">revízió · #128</span>
         </div>
         <div class="alert alert--info">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 8v5m0 4h.01" stroke="var(--info)" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="var(--info)" stroke-width="1.6"/></svg>
