@@ -71,11 +71,6 @@
         }
         return pairs[pairs.length - 1].v;
       },
-      hash7: function () {
-        var h = '';
-        while (h.length < 7) h += Math.floor(next() * 0x10000).toString(16);
-        return h.slice(0, 7);
-      }
     };
     rng.pickN = function (a, n) { return rng.shuffle(a).slice(0, n); };
     return rng;
@@ -388,8 +383,8 @@
     ]
   };
 
-  var COMMIT_MESSAGES_FIRST = ['Első vázlat', 'Kezdeti leírás', 'Első verzió', 'Vázlat'];
-  var COMMIT_MESSAGES_LATER = [
+  var SAVE_MESSAGES_FIRST = ['Első vázlat', 'Kezdeti leírás', 'Első verzió', 'Vázlat'];
+  var SAVE_MESSAGES_LATER = [
     'Pontosítás a visszajelzések alapján', 'Elírások javítása', 'Példa hozzáadva',
     'Átszerkesztett bevezető', 'Elavult rész törölve', 'Hivatkozások frissítve'
   ];
@@ -616,12 +611,11 @@
         // a szerző körbejár az author-poolban → az `authorIds` valóban több szerzős
         var author = authorPool[k % authorPool.length];
         var msg = k === 0
-          ? rng.pick(COMMIT_MESSAGES_FIRST)
+          ? rng.pick(SAVE_MESSAGES_FIRST)
           : (rng.chance(0.55) && sections[k]
               ? '„' + sections[k].title + '" szekció hozzáadva'
-              : rng.pick(COMMIT_MESSAGES_LATER));
+              : rng.pick(SAVE_MESSAGES_LATER));
         versions.push({
-          hash: rng.hash7(),
           ts: now - age,
           authorId: author.id,
           message: msg,
@@ -629,6 +623,9 @@
         });
       }
       versions.sort(function (a, b) { return a.ts - b.ts; });
+      // A revizió-sorszám a RENDEZÉS UTÁN kerül rá, így garantáltan időrendi:
+      // r1 a legrégebbi, a legnagyobb sorszám a jelenlegi verzió.
+      for (k = 0; k < versions.length; k++) versions[k].rev = k + 1;
 
       // --- státusz, sablon, archiválás ---
       var status = rng.weighted(STATUS_WEIGHTS);
@@ -660,7 +657,7 @@
         events.push({
           id: 'e-' + docId + '-' + k, docId: docId, type: 'edited',
           userId: versions[k].authorId, ts: versions[k].ts,
-          details: { commit: versions[k].hash }
+          details: { rev: versions[k].rev }
         });
       }
       if (status !== 'draft') {

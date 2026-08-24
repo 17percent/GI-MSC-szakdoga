@@ -179,16 +179,6 @@ mark {
 
 .sidebar .spacer { flex: 1 1 auto; }
 
-.git-status {
-  padding: var(--space-3) var(--space-2) var(--space-1);
-  border-top: 1px solid var(--border);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  line-height: var(--leading-relaxed);
-  color: var(--text-subtle);
-}
-.git-status .dot { color: var(--success); }
-
 .main {
   display: flex;
   flex-direction: column;
@@ -896,7 +886,7 @@ input[type="checkbox"], input[type="radio"] {
   color: var(--text-muted);
 }
 
-/* Adat-segédosztály (UUID, hash, útvonal — bárhol a tartalomban) */
+/* Adat-segédosztály (azonosító, sorszám, útvonal — bárhol a tartalomban) */
 .mono {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -1005,7 +995,7 @@ input[type="checkbox"], input[type="radio"] {
   font-size: var(--text-sm);
 }
 .version-row:last-child { border-bottom: none; }
-.version-row .hash {
+.version-row .rev {
   padding: 0 var(--space-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -1021,7 +1011,7 @@ input[type="checkbox"], input[type="radio"] {
   color: var(--text-subtle);
 }
 .version-row.head-row .msg::after {
-  content: " · HEAD";
+  content: " · jelenlegi";
   color: var(--success);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -1384,8 +1374,6 @@ html.theme-anim *::after {
   .nav-item.active { box-shadow: inset 0 -2px 0 var(--primary); }
   .nav-item.active:focus-visible { box-shadow: inset 0 -2px 0 var(--primary), var(--focus-ring); }
   .sidebar .spacer { display: none; }
-  .git-status { display: none; }
-
   .doc-grid, .editor-grid, .create-cards { grid-template-columns: minmax(0, 1fr); }
   .editor-grid textarea, .editor-preview { min-height: 40vh; }
 }

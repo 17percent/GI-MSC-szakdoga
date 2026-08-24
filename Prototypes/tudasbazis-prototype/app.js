@@ -1,5 +1,5 @@
 // PROTOTÍPUS — tudásbázis mock, vanilla JS, hash-routing, memóriában tartott állapot.
-// A "backend" (Git commit, queue, index) itt csak szimuláció: mentés = új verzió a
+// A "backend" (revizió-írás, index) itt csak szimuláció: mentés = új verzió a
 // versions tömbben + esemény a naplóban.
 
 'use strict';
@@ -18,7 +18,7 @@ const state = {
   locks: {},          // docId -> { userId, acquiredAt, lastHeartbeat }
   docTab: {},         // docId -> 'tartalom' | 'feed' | 'verziok'
   sort: { feed: 'asc', versions: 'desc' }, // rendezési irány fülönként
-  diffSelection: {},  // docId -> [hash, hash]
+  diffSelection: {},  // docId -> [rev, rev]
   loginError: null,
 };
 
@@ -30,7 +30,6 @@ const STATUSES = ['draft', 'review', 'tesztelt', 'publikált'];
 const $ = sel => document.querySelector(sel);
 
 function uid() { return (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2)); }
-function shortHash() { return Math.random().toString(16).slice(2, 9); }
 
 function esc(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -38,7 +37,16 @@ function esc(s) {
 
 function user(id) { return state.users.find(u => u.id === id) || { name: '?', initials: '?', avatar: 4 }; }
 function doc(id) { return state.docs.find(d => d.id === id); }
-function head(d) { return d.versions[d.versions.length - 1]; }
+
+// A dokumentum JELENLEGI verziója (a legutóbbi revizió-pillanatkép).
+function latest(d) { return d.versions[d.versions.length - 1]; }
+// A következő revizió sorszáma. A verziók sorszáma dokumentumon belül
+// monoton nő — visszaállításkor is ÚJ, nagyobb sorszám keletkezik, a történet
+// soha nem íródik át.
+function nextRev(d) { return (latest(d) ? latest(d).rev : 0) + 1; }
+// Felületi megjelenítés: `r3`. A revizió-sorszám az azonosító, nem a tartalom
+// lenyomata — a felület sehol nem mutat commit-hasht.
+function revLabel(rev) { return 'r' + rev; }
 
 function fmtDate(ts) {
   const diff = Date.now() - ts;
@@ -396,11 +404,6 @@ function ensureShell() {
         <div class="brand"><span class="logo" data-mark></span> Táltos</div>
         <nav id="nav-slot" aria-label="Fő navigáció"></nav>
         <div class="spacer"></div>
-        <div class="git-status">
-          <span class="dot">●</span> Git szinkron: naprakész<br>
-          push-lemaradás: 0 commit<br>
-          (szimulált /status — D12)
-        </div>
       </aside>
       <main class="main">
         <div class="topbar">
@@ -471,7 +474,7 @@ function atlasData() {
   const favSet = state.favorites[state.currentUser.id] || new Set();
   return {
     docs: activeDocs().map(d => {
-      const h = head(d);
+      const h = latest(d);
       const authorIds = [];
       d.versions.forEach(v => { if (authorIds.indexOf(v.authorId) < 0) authorIds.push(v.authorId); });
       return {
@@ -648,7 +651,7 @@ function activeDocs() { return state.docs.filter(d => !d.deletedAt); }
 
 function snippet(d, q) {
   if (!q) return '';
-  const content = head(d).content;
+  const content = latest(d).content;
   const idx = norm(content).indexOf(norm(q));
   if (idx < 0) return '';
   const start = Math.max(0, idx - 40);
@@ -672,7 +675,6 @@ function toggleFav(docId) {
 
 function viewDoc(d) {
   const tab = state.docTab[d.id] || 'tartalom';
-  const h = head(d);
   const lock = lockOf(d.id);
   const lockedByOther = lock && lock.userId !== state.currentUser.id;
 
@@ -690,7 +692,6 @@ function viewDoc(d) {
         <span class="badge st-${d.status}">${d.status}</span>
         ${d.isTemplate ? '<span class="badge tpl">sablon</span>' : ''}
       </div>
-      <div class="pathline">${esc(d.repoPath)} · HEAD: ${h.hash}</div>
     </div>
 
     ${lockedByOther ? `<div class="lock-note">🔒 <strong>${esc(user(lock.userId).name)}</strong> éppen szerkeszti ezt a dokumentumot
@@ -732,7 +733,7 @@ function sortToggleHtml(key) {
 function viewDocContent(d) {
   return `
     <div class="doc-grid">
-      <div class="panel"><div class="panel-body md">${renderMarkdown(head(d).content)}</div></div>
+      <div class="panel"><div class="panel-body md">${renderMarkdown(latest(d).content)}</div></div>
       <div>
         <div class="panel">
           <h3 class="panel-title">Metaadatok</h3>
@@ -742,7 +743,7 @@ function viewDocContent(d) {
               <tr><td>Státusz</td><td><span class="badge st-${d.status}">${d.status}</span></td></tr>
               <tr><td>Iteráció</td><td>${d.iteration}</td></tr>
               <tr><td>Kategóriák</td><td>${d.categories.map(c => `<span class="badge cat">${esc(c)}</span>`).join(' ') || '—'}</td></tr>
-              <tr><td>Verziók</td><td>${d.versions.length} commit</td></tr>
+              <tr><td>Verziók</td><td>${d.versions.length} verzió</td></tr>
               <tr><td>UUID</td><td class="mono">${d.id}</td></tr>
             </table>
             <div class="frontmatter">${esc(frontmatter(d))}</div>
@@ -756,11 +757,11 @@ function viewDocContent(d) {
 
 const EVENT_TEXT = {
   created:         () => 'létrehozta a dokumentumot',
-  edited:          ev => `mentette a dokumentumot (commit ${ev.details.commit || '?'})`,
+  edited:          ev => `mentette a dokumentumot (${ev.details.rev ? revLabel(ev.details.rev) : '?'})`,
   status_changed:  ev => `státuszt váltott: ${ev.details.from} → ${ev.details.to}`,
   deleted:         ev => `archiválta a dokumentumot${ev.details.reason ? ` („${ev.details.reason}")` : ''}`,
   restored:        () => 'visszaállította a dokumentumot az archívumból',
-  reverted:        ev => `visszaállította a(z) ${ev.details.toHash} verziót (új commit: ${ev.details.commit})`,
+  reverted:        ev => `visszaállította a(z) ${revLabel(ev.details.toRev)} verziót (új verzió: ${revLabel(ev.details.rev)})`,
   renamed:         ev => `átnevezte: ${ev.details.from} → ${ev.details.to}`,
   duplicated_from: ev => `duplikálta a(z) „${ev.details.sourceTitle}" dokumentumból`,
   duplicated_to:   ev => `dokumentumot duplikált ebből: „${ev.details.targetTitle}"`,
@@ -879,17 +880,17 @@ function deleteComment(commentId) {
 function viewVersions(d) {
   const sel = state.diffSelection[d.id] || [];
   const versions = state.sort.versions === 'desc' ? [...d.versions].reverse() : [...d.versions];
-  const headHash = head(d).hash;
+  const latestRev = latest(d).rev;
 
   let diffHtml = '';
   if (sel.length === 2) {
-    const [ha, hb] = sel;
-    const va = d.versions.find(v => v.hash === ha), vb = d.versions.find(v => v.hash === hb);
+    const [ra, rb] = sel;
+    const va = d.versions.find(v => v.rev === ra), vb = d.versions.find(v => v.rev === rb);
     const [older, newer] = va.ts <= vb.ts ? [va, vb] : [vb, va];
     const rows = diffLines(older.content, newer.content);
     diffHtml = `
       <div class="diff-block">
-        <h3>Diff: ${older.hash} → ${newer.hash}</h3>
+        <h3>Diff: ${revLabel(older.rev)} → ${revLabel(newer.rev)}</h3>
         <div class="diff-view">
           ${rows.map(r => `<div class="diff-line ${r.t}">${r.t === 'add' ? '+' : r.t === 'del' ? '−' : ' '} ${esc(r.s) || '&nbsp;'}</div>`).join('')}
         </div>
@@ -900,37 +901,43 @@ function viewVersions(d) {
     <div class="panel">
       <div class="panel-body panel-body--flush">
         ${versions.map(v => `
-          <div class="version-row ${v.hash === headHash ? 'head-row' : ''}">
+          <div class="version-row ${v.rev === latestRev ? 'head-row' : ''}">
             <input type="checkbox" title="Kijelölés diffhez (pontosan kettőt)"
-                   ${sel.includes(v.hash) ? 'checked' : ''} onchange="toggleDiffSel('${d.id}','${v.hash}')">
-            <span class="hash">${v.hash}</span>
+                   ${sel.includes(v.rev) ? 'checked' : ''} onchange="toggleDiffSel('${d.id}',${v.rev})">
+            <span class="rev">${revLabel(v.rev)}</span>
             <span class="msg">${esc(v.message)}</span>
             <span class="when">${esc(user(v.authorId).name)} · ${fmtDate(v.ts)}</span>
-            ${v.hash !== headHash ? `<button class="btn sm" onclick="revertTo('${d.id}','${v.hash}')">⏪ Visszaállítás</button>` : ''}
+            ${v.rev !== latestRev ? `<button class="btn sm" onclick="revertTo('${d.id}',${v.rev})">⏪ Visszaállítás</button>` : ''}
           </div>`).join('')}
       </div>
     </div>
-    <div class="draft-note">Jelölj ki két verziót a diffhez. Visszaállítás = új commit — a történet soha nem íródik át.</div>
+    <div class="draft-note">Jelölj ki két verziót a diffhez. Visszaállítás = új verzió — a történet soha nem íródik át.</div>
     ${diffHtml}`;
 }
 
-function toggleDiffSel(docId, hash) {
+// A revizió-sorszám SZÁM, az inline `onchange`/`onclick` viszont szöveget adhat
+// át — ezért itt kényszerítjük számmá, különben a `===` összehasonlítások és a
+// `sel.includes()` csendben mindig hamisak lennének.
+function toggleDiffSel(docId, rev) {
+  rev = Number(rev);
   let sel = state.diffSelection[docId] || [];
-  if (sel.includes(hash)) sel = sel.filter(h => h !== hash);
-  else { sel = [...sel, hash]; if (sel.length > 2) sel = sel.slice(-2); }
+  if (sel.includes(rev)) sel = sel.filter(r => r !== rev);
+  else { sel = [...sel, rev]; if (sel.length > 2) sel = sel.slice(-2); }
   state.diffSelection[docId] = sel;
   render();
 }
 
-function revertTo(docId, hash) {
+function revertTo(docId, rev) {
+  rev = Number(rev);
   const d = doc(docId);
-  const v = d.versions.find(x => x.hash === hash);
-  const newHash = shortHash();
-  d.versions.push({ hash: newHash, ts: Date.now(), authorId: state.currentUser.id, message: `Visszaállítás: ${hash}`, content: v.content });
+  const v = d.versions.find(x => x.rev === rev);
+  if (!v) return;
+  const newRev = nextRev(d);
+  d.versions.push({ rev: newRev, ts: Date.now(), authorId: state.currentUser.id, message: `Visszaállítás: ${revLabel(rev)}`, content: v.content });
   d.iteration += 1;
-  logEvent(docId, 'reverted', { toHash: hash, commit: newHash });
+  logEvent(docId, 'reverted', { toRev: rev, rev: newRev });
   state.diffSelection[docId] = [];
-  toast(`Visszaállítva a(z) ${hash} verzió — új commit: ${newHash}`);
+  toast(`Visszaállítva a(z) ${revLabel(rev)} verzió — új verzió: ${revLabel(newRev)}`);
   render();
 }
 
@@ -956,7 +963,7 @@ function viewEdit(d) {
   startHeartbeat(d.id);
 
   if (!editorDraft || editorDraft.docId !== d.id) {
-    editorDraft = { docId: d.id, title: d.title, content: head(d).content, status: d.status, categories: [...d.categories] };
+    editorDraft = { docId: d.id, title: d.title, content: latest(d).content, status: d.status, categories: [...d.categories] };
   }
 
   return `
@@ -964,7 +971,7 @@ function viewEdit(d) {
       <div class="titleline"><h1>Szerkesztés</h1>
         <span class="badge lock-badge">🔒 lock nálad · heartbeat 30 mp-enként</span>
       </div>
-      <div class="pathline">${esc(d.repoPath)} · baseCommitHash: ${head(d).hash}</div>
+      <div class="pathline">Alapverzió: ${revLabel(latest(d).rev)}</div>
     </div>
 
     <div class="editor-meta">
@@ -988,12 +995,12 @@ function viewEdit(d) {
           <div class="md" id="edit-preview">${renderMarkdown(editorDraft.content)}</div>
         </div>
       </div>
-      <div class="draft-note">A valóságban: mentés = szinkron lokális commit a queue-n át (200 + commitHash), a push aszinkron retry-jal fut (D26 A3).
+      <div class="draft-note">A valóságban a mentés egyetlen adatbázis-tranzakcióban ír új reviziót, a keresőindex ugyanabban frissül.
       A piszkozat-őrzés (D7) itt memóriában van — a böngésző újratöltése a prototípusban törli.</div>
     </div>
 
     <div class="doc-actions">
-      <button class="btn primary" onclick="saveDoc('${d.id}')">💾 Mentés (= commit)</button>
+      <button class="btn primary" onclick="saveDoc('${d.id}')">💾 Mentés</button>
       <button class="btn" onclick="cancelEdit('${d.id}')">Mégse</button>
     </div>`;
 }
@@ -1015,12 +1022,12 @@ function saveDoc(docId) {
   const draft = editorDraft;
   if (!draft.title.trim()) { toast('A cím nem lehet üres', true); return; }
 
-  const contentChanged = draft.content !== head(d).content || draft.title !== d.title;
+  const contentChanged = draft.content !== latest(d).content || draft.title !== d.title;
   if (contentChanged) {
-    const newHash = shortHash();
-    d.versions.push({ hash: newHash, ts: Date.now(), authorId: state.currentUser.id, message: 'Mentés a szerkesztőből', content: draft.content });
+    const newRev = nextRev(d);
+    d.versions.push({ rev: newRev, ts: Date.now(), authorId: state.currentUser.id, message: 'Mentés a szerkesztőből', content: draft.content });
     d.iteration += 1;
-    logEvent(docId, 'edited', { commit: newHash });
+    logEvent(docId, 'edited', { rev: newRev });
   }
   if (draft.status !== d.status) {
     logEvent(docId, 'status_changed', { from: d.status, to: draft.status });
@@ -1032,7 +1039,7 @@ function saveDoc(docId) {
   releaseLock(docId);
   stopHeartbeat();
   editorDraft = null;
-  toast(contentChanged ? `Mentve — új commit: ${head(d).hash} (a push a háttérben fut)` : 'Mentve — a tartalom nem változott, nincs új commit');
+  toast(contentChanged ? `Mentve — új verzió: ${revLabel(latest(d).rev)}` : 'Mentve — a tartalom nem változott, nincs új verzió');
   navigate('doc/' + docId);
 }
 
@@ -1099,7 +1106,7 @@ function pickSourceModal(templatesOnly) {
       ${sources.map(d => `
         <button class="source-item" onclick="closeModal();duplicateFrom('${d.id}')">
           <strong>${esc(d.title)}</strong> ${d.isTemplate ? '<span class="badge tpl">sablon</span>' : ''}<br>
-          <span class="sub">${esc(d.repoPath)} · ${d.categories.join(', ') || 'nincs kategória'}</span>
+          <span class="sub">${d.categories.join(', ') || 'nincs kategória'}</span>
         </button>`).join('')}
       ${sources.length === 0 ? '<div class="empty-state">Nincs elérhető forrás.</div>' : ''}
     </div>
@@ -1112,12 +1119,11 @@ function createFromEmpty() {
 
 function duplicateFrom(sourceId) {
   const src = doc(sourceId);
-  createDoc(src.title + ' (másolat)', head(src).content, [...src.categories], src);
+  createDoc(src.title + ' (másolat)', latest(src).content, [...src.categories], src);
 }
 
 function createDoc(title, content, categories, source) {
   const id = uid();
-  const hash = shortHash();
   const slug = norm(title).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'uj-dokumentum';
   const d = {
     id,
@@ -1129,7 +1135,7 @@ function createDoc(title, content, categories, source) {
     categories,
     isTemplate: false,
     deletedAt: null,
-    versions: [{ hash, ts: Date.now(), authorId: state.currentUser.id, message: source ? `Létrehozás forrásból: ${source.repoPath}` : 'Létrehozás üres canvasból', content }],
+    versions: [{ rev: 1, ts: Date.now(), authorId: state.currentUser.id, message: source ? `Létrehozás forrásból: ${source.title}` : 'Létrehozás üres canvasból', content }],
   };
   state.docs.push(d);
   logEvent(id, 'created', {});
@@ -1149,7 +1155,7 @@ function archiveDoc(docId) {
   openModal(`
     <h2>Archiválás — ${esc(d.title)}</h2>
     <p class="note">Minden törlés soft delete (D20): a dokumentum az archívumba kerül,
-    a Git-történet és minden esemény megmarad, és bármikor visszaállítható.</p>
+    a teljes revíziótörténet és minden esemény megmarad, és bármikor visszaállítható.</p>
     <input type="text" id="archive-reason" placeholder="Indoklás (opcionális)">
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">Mégse</button>
@@ -1179,7 +1185,6 @@ function viewArchive() {
           <div class="title">${esc(d.title)} <span class="badge arch">archivált</span></div>
           <button class="btn sm" onclick="restoreDoc('${d.id}')">♻️ Visszaállítás</button>
           <div class="meta">
-            <span>${esc(d.repoPath)}</span>
             <span>archiválva: ${fmtDate(d.deletedAt)}</span>
             <span>tulajdonos: ${esc(user(d.ownerId).name)}</span>
           </div>
@@ -1304,7 +1309,7 @@ function viewAudit() {
 
 // ================= Vágólap + .md letöltés (WP13) =================
 
-function rawMd(d) { return frontmatter(d) + '\n\n' + head(d).content; }
+function rawMd(d) { return frontmatter(d) + '\n\n' + latest(d).content; }
 
 function copyToClipboard(docId) {
   const d = doc(docId);

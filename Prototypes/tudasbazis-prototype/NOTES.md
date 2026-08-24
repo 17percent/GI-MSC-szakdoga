@@ -2,7 +2,7 @@
 
 **Kérdés, amire a prototípus válaszol:** hogyan érződik a tervezett tudásbázis
 (döntési napló v7 + WP-terv) felülete és fő folyamatai egyben — mielőtt a valódi
-stack (Fastify + React + Postgres + Git) megépülne?
+stack (Fastify + React + Postgres) megépülne?
 
 **Forma:** egyetlen leegyszerűsített HTML+JS+CSS mock (nincs build, nincs backend,
 nincs perzisztencia — újratöltéskor a seed áll vissza). A felhasználó kifejezetten
@@ -18,7 +18,7 @@ Nyisd meg az `index.html`-t böngészőben (dupla katt is elég, nem kell szerve
 |---|---|
 | 1. OIDC + allowlist | mock login képernyő; a „Szabó Kata" identitás 403 `not_on_allowlist`-et kap |
 | 2. CRUD + szerkesztő + létrehozás forrásból | üres / sablonból / duplikálás (D17: új UUID, draft, iteráció reset, `duplicated_from` esemény mindkét oldalon); split szerkesztő élő előnézettel, azonos render-pipeline (D16) |
-| 3. Verziótörténet + diff + visszaállítás | Verziók fül: két commit kijelölése → soronkénti diff; visszaállítás = új commit |
+| 3. Verziótörténet + diff + visszaállítás | Verziók fül: két revizió (`r1`, `r2`, …) kijelölése → soronkénti diff; visszaállítás = új revizió |
 | 4. Keresés + szűrők | cím+tartalom keresés snippet-kiemeléssel (a valódi FTS/trgm helyett substring), státusz/kategória/sablon/kedvenc szűrők |
 | 5. Lock heartbeat-tel | szerkesztőbe lépés = lock; másik userre váltva a szerkesztés tiltott, 2 perc heartbeat-hiány után lejár (`lock_expired` esemény) |
 | 6. Események + kommentfolyam | egyesített feed; komment szerkesztés/törlés csak szerzőnek, soft delete placeholderrel (D20) |
@@ -28,8 +28,9 @@ Nyisd meg az `index.html`-t böngészőben (dupla katt is elég, nem kell szerve
 | 12. Vágólap + .md | frontmatterrel együtt másol/tölt le |
 | 13. Export | mock gomb — toast jelzi, hogy szerveroldali pandoc lenne (WP14) |
 
-Nem UI-elem, ezért csak jelzésszerű: 7. reindex/konzisztencia-őr és a Git-státusz
-(sidebar alján szimulált /status), 9. backup (kimaradt).
+Nem UI-elem, ezért kimaradt: 7. reindex/konzisztencia-őr, 9. backup. (A sidebar
+alján korábban egy szimulált Git-`/status` blokk állt — a Postgres-alapú
+architektúrában nincs mit szinkronizálni, ezért kikerült.)
 
 Extra demó-eszköz: **felhasználóváltó** a fejlécben — a lock, a privát kedvencek
 és a komment-jogosultság (D20) két-useres eseteihez.
@@ -37,7 +38,7 @@ Extra demó-eszköz: **felhasználóváltó** a fejlécben — a lock, a privát
 ## Visszajelzések alapján beépítve (1. kör)
 
 - **Rendezés-váltó** a „Kommentek és események" és a „Verziók" fülön
-  (legújabb elöl ↔ legrégebbi elöl; alapértelmezés: feed időrendben, verziók HEAD elöl).
+  (legújabb elöl ↔ legrégebbi elöl; alapértelmezés: feed időrendben, verziók a jelenlegivel elöl).
 - **Fix fejléc-elrendezés:** az oldal maga nem görget — csak a tartalmi konténer
   (`.scroll-area`): lista, fültartalom, táblázat. A cím, akciógombok, fülek és a
   szűrősáv görgetés közben is láthatók maradnak; a szerkesztőben a Mentés-gombsor
@@ -47,7 +48,7 @@ Extra demó-eszköz: **felhasználóváltó** a fejlécben — a lock, a privát
 
 - **Design system újratervezve** (Hallmark · modern-minimal genre · Cobalt téma):
   hűvös, kontrasztos paletta egyetlen kobalt akcenttel, Space Grotesk (display) +
-  Inter (body) + JetBrains Mono (technikai elemek: hash, repo-út, frontmatter,
+  Inter (body) + JetBrains Mono (technikai elemek: revizió-sorszám, frontmatter,
   panel-címkék). A teljes token-készlet a [`tokens.css`](tokens.css)-ben, a zárolt
   rendszer leírása a [`design.md`](design.md)-ben él — későbbi felület-módosítás
   ezt olvassa először.

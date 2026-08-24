@@ -41,7 +41,7 @@ const NOT_ALLOWED_USER = SEED.notAllowedUser;
 
 const SEED_CATEGORIES = SEED.categories;
 
-// Dokumentumok. Verzió = commit: {hash, ts, authorId, message, content}
+// Dokumentumok. Verzió = revizió-pillanatkép: {rev, ts, authorId, message, content}
 const SEED_DOCS = SEED.docs;
 
 // Kommentek: {id, docId, authorId, ts, content, editedAt, deletedAt}
